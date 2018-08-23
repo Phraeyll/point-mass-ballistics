@@ -1,49 +1,39 @@
 extern crate ndarray;
 extern crate ndarray_linalg;
 
-use ::std::f64::consts::{PI, E};
-use super::consts::*;
-use ndarray::*;
-use ndarray_linalg::*;
+use std::f64::consts::{E, PI};
+
+use self::ndarray::*;
+use self::ndarray_linalg::*;
+
+use consts::*;
 
 #[derive(Debug)]
 pub struct Projectile {
     // Constant properties
-    pub m: f64,          // Mass (kg)
-    pub r: f64,          // Radius (m)
-    pub i: f64,          // Form Factor (dimensionless)
+    pub m: f64, // Mass (kg)
+    pub r: f64, // Radius (m)
+    pub i: f64, // Form Factor (dimensionless)
 
     // Mutatable from ballistic calculations
-    pub a: Array1<f64>,  // Acceleration (m/s^2)
-    pub v: Array1<f64>,  // Velocity (m/s)
-    pub p: Array1<f64>,  // Position (m)
-    pub t: f64,          // Position in time (s)
+    pub a: Array1<f64>, // Acceleration (m/s^2)
+    pub v: Array1<f64>, // Velocity (m/s)
+    pub p: Array1<f64>, // Position (m)
+    pub t: f64,         // Position in time (s)
 }
 
 impl Projectile {
     pub fn new(weight_grains: f64, caliber: f64, bc: f64, initial_velocity: f64) -> Self {
         let m = weight_grains * GRAINS_TO_KG;
         let r = (caliber / 2.0) * INCHES_TO_METERS;
-        let i = (weight_grains * GRAINS_TO_LBS ) / (caliber.powf(2.0) * bc);
+        let i = (weight_grains * GRAINS_TO_LBS) / (caliber.powf(2.0) * bc);
         Self {
             m: m,
             r: r,
             i: i,
-            a: arr1(&[
-                0.0,
-                0.0,
-                0.0,
-            ]),
-            v: arr1(&[
-                initial_velocity * FEET_TO_METERS,
-                0.0,
-                0.0,
-            ]),
-            p: arr1(&[
-                0.0,
-                0.0,
-                0.0,
-            ]),
+            a: arr1(&[0.0, 0.0, 0.0]),
+            v: arr1(&[initial_velocity * FEET_TO_METERS, 0.0, 0.0]),
+            p: arr1(&[0.0, 0.0, 0.0]),
             t: 0.0,
         }
     }
@@ -63,21 +53,21 @@ pub struct Conditions {
 }
 
 impl Conditions {
-    pub fn new(temp: f64, wind_velocity: f64, wind_angle: f64, pressure: f64, humidity: f64) -> Self {
+    pub fn new(
+        temp: f64,
+        wind_velocity: f64,
+        wind_angle: f64,
+        pressure: f64,
+        humidity: f64,
+    ) -> Self {
         let wv = wind_velocity * MILES_PER_HOUR_TO_METERS_PER_SECOND;
         let temp_c = (temp + F_TO_C) * F_TO_CK;
         let temp_k = (temp + F_TO_K) * F_TO_CK;
         let pa = pressure * INHG_TO_PA;
-        let pv = humidity * 6.1121 * E.powf(
-                (18.678 - (temp_c / 234.5)) * temp_c /
-                (257.14 + temp_c)
-        );
+        let pv =
+            humidity * 6.1121 * E.powf((18.678 - (temp_c / 234.5)) * temp_c / (257.14 + temp_c));
         Self {
-            wv: arr1(&[
-                wv * wind_angle.cos(),
-                0.0,
-                wv * wind_angle.sin(),
-            ]),
+            wv: arr1(&[wv * wind_angle.cos(), 0.0, wv * wind_angle.sin()]),
             rho: ((pa * MOLAR_AIR) + (pv * MOLAR_WATER_VAPOR)) / (UNIVERSAL_GAS * temp_k),
         }
     }
@@ -99,7 +89,7 @@ pub trait Ballistic {
 
 impl Ballistic for Projectile {
     fn area(&self) -> f64 {
-       PI * self.r.powf(2.0)
+        PI * self.r.powf(2.0)
     }
 
     // BC math (dependent on units)

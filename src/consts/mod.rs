@@ -1,15 +1,10 @@
-pub use self::{
-    physics::*,
-    conversions::{
-        multiplicative::{
-            similar::*,
-            different::*,
-        },
-        additive::{
-            different::*,
-        },
-    },
-};
-
-mod physics;
 mod conversions;
+mod physics;
+
+pub use self::{
+    conversions::{
+        additive::different::*,
+        multiplicative::{different::*, similar::*},
+    },
+    physics::*,
+};
