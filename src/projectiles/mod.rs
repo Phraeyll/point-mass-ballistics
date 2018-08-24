@@ -1,15 +1,10 @@
-// extern crate ndarray;
-// extern crate ndarray_linalg;
 extern crate nalgebra as na;
 
-use std::f64::consts::{E, PI};
-
-// use self::ndarray::*;
-// use self::ndarray_linalg::*;
 use self::na::Vector3;
 
-
 use consts::*;
+
+use std::f64::consts::{E, PI};
 
 #[derive(Debug)]
 pub struct Projectile {
