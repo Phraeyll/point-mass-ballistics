@@ -1,8 +1,4 @@
 extern crate ballistics;
-extern crate ndarray;
-extern crate ndarray_linalg;
-
-use ndarray_linalg::*;
 
 use ballistics::{consts::*, projectiles::*};
 
@@ -42,7 +38,7 @@ fn main() {
     println!(
         "t: {}, v: {}, x: {}, y: {}",
         projectile.t,
-        projectile.v.norm_l2() * METERS_TO_FEET,
+        projectile.vnorm() * METERS_TO_FEET,
         projectile.p[0] * METERS_TO_YARDS,
         projectile.p[1] * METERS_TO_INCHES,
     );

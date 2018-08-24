@@ -1,10 +1,13 @@
-extern crate ndarray;
-extern crate ndarray_linalg;
+// extern crate ndarray;
+// extern crate ndarray_linalg;
+extern crate nalgebra as na;
 
 use std::f64::consts::{E, PI};
 
-use self::ndarray::*;
-use self::ndarray_linalg::*;
+// use self::ndarray::*;
+// use self::ndarray_linalg::*;
+use self::na::Vector3;
+
 
 use consts::*;
 
@@ -16,9 +19,9 @@ pub struct Projectile {
     pub i: f64, // Form Factor (dimensionless)
 
     // Mutatable from ballistic calculations
-    pub a: Array1<f64>, // Acceleration (m/s^2)
-    pub v: Array1<f64>, // Velocity (m/s)
-    pub p: Array1<f64>, // Position (m)
+    pub p: Vector3<f64>, // Position (m)
+    pub v: Vector3<f64>, // Velocity (m/s)
+    pub a: Vector3<f64>, // Acceleration (m/s^2)
     pub t: f64,         // Position in time (s)
 }
 
@@ -31,9 +34,9 @@ impl Projectile {
             m: m,
             r: r,
             i: i,
-            a: arr1(&[0.0, 0.0, 0.0]),
-            v: arr1(&[initial_velocity * FEET_TO_METERS, 0.0, 0.0]),
-            p: arr1(&[0.0, 0.0, 0.0]),
+            a: Vector3::new(0.0, 0.0, 0.0),
+            v: Vector3::new(initial_velocity * FEET_TO_METERS, 0.0, 0.0),
+            p: Vector3::new(0.0, 0.0, 0.0),
             t: 0.0,
         }
     }
@@ -41,7 +44,7 @@ impl Projectile {
 
 #[derive(Debug)]
 pub struct Conditions {
-    pub wv: Array1<f64>, // Wind Velocity (m/s)
+    pub wv: Vector3<f64>, // Wind Velocity (m/s)
     pub rho: f64,        // Density of air (kg/m^3)
 
     // pub ptmp: f64,       // Powder Temperature (K?)
@@ -67,7 +70,7 @@ impl Conditions {
         let pv =
             humidity * 6.1121 * E.powf((18.678 - (temp_c / 234.5)) * temp_c / (257.14 + temp_c));
         Self {
-            wv: arr1(&[wv * wind_angle.cos(), 0.0, wv * wind_angle.sin()]),
+            wv: Vector3::new(wv * wind_angle.cos(), 0.0, wv * wind_angle.sin()),
             rho: ((pa * MOLAR_AIR) + (pv * MOLAR_WATER_VAPOR)) / (UNIVERSAL_GAS * temp_k),
         }
     }
@@ -80,9 +83,13 @@ pub trait Ballistic {
     fn sd(&self) -> f64;
     fn bc(&self) -> f64;
 
-    fn a_after_drag(&self, &Conditions, f64) -> Array1<f64>;
-    fn delta_p(&self, f64) -> Array1<f64>;
-    fn delta_v(&self, f64) -> Array1<f64>;
+    fn delta_p(&self, f64) -> Vector3<f64>;
+    fn delta_v(&self, f64) -> Vector3<f64>;
+    fn a_after_drag(&self, &Conditions, f64) -> Vector3<f64>;
+
+    fn pnorm(&self) -> f64;
+    fn vnorm(&self) -> f64;
+    fn anorm(&self) -> f64;
 
     fn step_forward(&mut self, f64, &Conditions, f64);
 }
@@ -107,14 +114,14 @@ impl Ballistic for Projectile {
     }
 
     // New Acceleration (deceleration) due to drag force and gravity
-    fn a_after_drag(&self, c: &Conditions, cd: f64) -> Array1<f64> {
+    fn a_after_drag(&self, c: &Conditions, cd: f64) -> Vector3<f64> {
         // Force of drag, based on specified table and current velocity (mach)
         // Coefficient of drag to be looked up from table - passed by parameter, for now, for testing
-        -((c.rho * self.area() * &self.v * self.v.norm_l2() * cd * self.i) / 2.0) / self.m
+        -((c.rho * self.area() * &self.v * self.vnorm() * cd * self.i) / 2.0) / self.m
     }
 
     // New position
-    fn delta_p(&self, t: f64) -> Array1<f64> {
+    fn delta_p(&self, t: f64) -> Vector3<f64> {
         // Not sure if second half is actually necesarry - look into differential equations
         // Intuition seems to make sense; velocity per time, then modify based on velocity
         // due to the integral of acceleration (1/2 A * t^2)
@@ -122,7 +129,7 @@ impl Ballistic for Projectile {
     }
 
     // New velocity
-    fn delta_v(&self, t: f64) -> Array1<f64> {
+    fn delta_v(&self, t: f64) -> Vector3<f64> {
         &self.a * t
     }
 
@@ -136,5 +143,16 @@ impl Ballistic for Projectile {
         self.p = &self.p + &self.delta_p(t);
 
         self.v = &self.v + &self.delta_v(t);
+    }
+
+    // Reduction of vectors to normalized values
+    fn pnorm(&self) -> f64 {
+        self.p.norm()
+    }
+    fn vnorm(&self) -> f64 {
+        self.v.norm()
+    }
+    fn anorm(&self) -> f64 {
+        self.a.norm()
     }
 }
