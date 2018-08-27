@@ -2,12 +2,10 @@ extern crate ballistics;
 
 use ballistics::{cdtables::*, projectiles::*};
 
-fn usage(name: String) {
-    println!("Usage: {} velocity(ft/s) weight(gr) caliber(in) bc dragtable wind_velocity(ft/s) wind_angle(deg) temp(F) pressure(inHg) humidity(0-1) range(yd) step(yd)", name);
-}
+use std::env;
 
 fn main() {
-    let argv: Vec<String> = ::std::env::args().collect();
+    let argv: Vec<String> = env::args().collect();
 
     if argv.len() <= 13 {
         eprintln!("error: wrong number of args");
@@ -40,19 +38,14 @@ fn main() {
         pressure,
         humidity,
     );
-    let timestep: f64 = 1.0 / (ts_factor * initial_velocity);
     let table = Table::new(dragtable);
+    let timestep: f64 = 1.0 / (ts_factor * initial_velocity);
 
-    let printouts: Vec<f64> = (0..((range / step) as u32 + 2))
-        .into_iter()
-        .map(|n| n as f64 * step)
-        .collect();
-
-    let mut start: usize = 0;
     println!("time(s), velocity(ft/s), distance(yd), drop(in), windage(in)");
+    let mut current_step: f64 = step;
     while projectile.distance() <= range {
         projectile.step_forward(&table, timestep);
-        if projectile.distance() > printouts[start] {
+        if projectile.distance() > current_step {
             println!(
                 "{} {} {} {} {}",
                 projectile.time(),
@@ -61,9 +54,28 @@ fn main() {
                 projectile.drop(),
                 projectile.windage(),
             );
-            if start < printouts.len() {
-                start += 1;
-            }
+            current_step += step;
         }
     }
+}
+
+fn usage(name: String) {
+    println!(
+        "Usage: {} 
+        velocity (ft/s)
+        weight (gr)
+        caliber (in)
+        bc
+        dragtable
+        wind_velocity (ft/s)
+        wind_angle (deg)
+        temp (F)
+        pressure (inHg)
+        humidity (0-1)
+        range (yd)
+        step (yd)
+        timestep_factor
+        ",
+        name
+    );
 }
