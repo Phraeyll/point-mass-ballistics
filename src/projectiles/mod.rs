@@ -91,11 +91,15 @@ impl Simulation {
         let temp_k = (temp + F_TO_K) * F_TO_CK;
         let pa = pressure * INHG_TO_PA;
         let pv =
-            humidity * 6.1121 * E.powf((18.678 - (temp_c / 234.5)) * temp_c / (257.14 + temp_c));
+            humidity * 611.21 * E.powf((18.678 - (temp_c / 234.5)) * (temp_c / (257.14 + temp_c)));
         let rho = ((pa * MOLAR_AIR) + (pv * MOLAR_WATER_VAPOR)) / (UNIVERSAL_GAS * temp_k);
 
         let c = (1.4 * pa / rho).sqrt();
         let g = Vector3::new(0.0, GRAVITY, 0.0);
+
+        println!("pv: {}", pv);
+        println!("rho: {}", rho * KG_PER_METERS3_TO_LB_PER_FEET3);
+        println!("c: {}", c * METERS_TO_FEET);
 
         Self {
             m,

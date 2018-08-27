@@ -51,6 +51,9 @@ pub mod multiplicative {
         // Temperature
         pub const F_TO_CK: f64 = 5.0 / 9.0;
         pub const CK_TO_F: f64 = 1.0 / F_TO_CK;
+        // Pressure
+        pub const LB_PER_FEET3_TO_KG_PER_METERS3: f64 = 16.0185;
+        pub const KG_PER_METERS3_TO_LB_PER_FEET3: f64 = 1.0 / LB_PER_FEET3_TO_KG_PER_METERS3;
         // Scaled
         // Length
         pub const INCHES_TO_METERS: f64 = super::similar::INCHES_TO_FEET * FEET_TO_METERS;
@@ -81,7 +84,7 @@ pub mod additive {
         pub const F_TO_K: f64 = 459.67;
         pub const K_TO_F: f64 = -F_TO_K;
 
-        pub const C_TO_F: f64 = 32.0;
-        pub const F_TO_C: f64 = -C_TO_F;
+        pub const F_TO_C: f64 = -32.0;
+        pub const C_TO_F: f64 = -F_TO_C;
     }
 }
