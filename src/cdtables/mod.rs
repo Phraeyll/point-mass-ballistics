@@ -1,19 +1,20 @@
-extern crate ordered_float as of;
-
-use self::of::OrderedFloat;
+use of::OrderedFloat;
 
 pub use self::TableKind::*;
 
 use std::collections::BTreeMap;
 
-pub enum TableKind {
-    G1,
-    G2,
-    G5,
-    G6,
-    G7,
-    G8,
-    GI,
+custom_derive! {
+    #[derive(Debug, EnumFromStr)]
+    pub enum TableKind {
+        G1,
+        G2,
+        G5,
+        G6,
+        G7,
+        G8,
+        GI,
+    }
 }
 
 #[derive(Debug)]

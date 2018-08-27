@@ -1,6 +1,4 @@
-extern crate nalgebra as na;
-
-use self::na::Vector3;
+use na::Vector3;
 
 use cdtables::*;
 use consts::*;
