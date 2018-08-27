@@ -1,6 +1,6 @@
 extern crate ballistics;
 
-use ballistics::{cdtables::*, consts::*, projectiles::*};
+use ballistics::{cdtables::*, projectiles::*};
 
 fn usage(name: String) {
     println!("Usage: {} velocity:ft/s weight:gr caliber:in bc wind_velocity:ft/s wind_angle temp:F pressure:inHg humidity:0-1", name);
@@ -47,15 +47,17 @@ fn main() {
     ];
     let mut start: usize = 0;
     let range: f64 = 1000.0f64;
-    while projectile.p[0] <= (range * YARDS_TO_METERS) {
+    println!("time(s), velocity(ft/s), distance(yd), drop(in), windage(in)");
+    while projectile.distance() <= range {
         projectile.step_forward(&table, timestep);
-        if (projectile.p[0] * METERS_TO_YARDS) > printouts[start] {
+        if projectile.distance() > printouts[start] {
             println!(
-                "t: {}, v: {}, x: {}, y: {}\n",
-                projectile.t,
-                projectile.vnorm() * METERS_TO_FEET,
-                projectile.p[0] * METERS_TO_YARDS,
-                projectile.p[1] * METERS_TO_INCHES,
+                "{} {} {} {} {}",
+                projectile.time(),
+                projectile.velocity(),
+                projectile.distance(),
+                projectile.drop(),
+                projectile.windage(),
             );
             if start < printouts.len() {
                 start += 1;

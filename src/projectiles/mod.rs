@@ -92,9 +92,16 @@ pub trait Ballistic {
     fn weight(&self) -> f64;
     fn sd(&self) -> f64;
     fn bc(&self) -> f64;
+
     fn pnorm(&self) -> f64;
     fn vnorm(&self) -> f64;
     fn anorm(&self) -> f64;
+
+    fn time(&self) -> f64;
+    fn velocity(&self) -> f64;
+    fn distance(&self) -> f64;
+    fn drop(&self) -> f64;
+    fn windage(&self) -> f64;
 
     fn cd(&self, &Table) -> f64;
     fn a_after_drag(&self, &Table) -> Vector3<f64>;
@@ -117,6 +124,7 @@ impl Ballistic for Projectile {
     fn bc(&self) -> f64 {
         self.sd() / self.i
     }
+
     fn pnorm(&self) -> f64 {
         self.p.norm()
     }
@@ -125,6 +133,22 @@ impl Ballistic for Projectile {
     }
     fn anorm(&self) -> f64 {
         self.a.norm()
+    }
+
+    fn time(&self) -> f64 {
+        self.t
+    }
+    fn velocity(&self) -> f64 {
+        self.vnorm() * METERS_TO_FEET
+    }
+    fn distance(&self) -> f64 {
+        self.p[0] * METERS_TO_YARDS
+    }
+    fn drop(&self) -> f64 {
+        self.p[1] * METERS_TO_INCHES
+    }
+    fn windage(&self) -> f64 {
+        self.p[2] * METERS_TO_INCHES
     }
 
     fn cd(&self, table: &Table) -> f64 {
