@@ -24,11 +24,8 @@ fn main() {
     let temp: f64 = argv[7].parse().unwrap(); // f
     let pressure: f64 = argv[8].parse().unwrap(); // inHg
     let humidity: f64 = argv[9].parse().unwrap(); // dimensionless, percentage
-
-    let timestep: f64 = 1.0 / (4.0 * initial_velocity);
-    let table = Table::new(G7);
-    // println!("{:?}", con);
-    // println!("{:?}", table);
+    let range: f64 = argv[10].parse().unwrap(); // range in yd
+    let step: f64 = argv[11].parse().unwrap(); // step output in yd
 
     let mut projectile = Projectile::new(
         weight,
@@ -41,12 +38,15 @@ fn main() {
         pressure,
         humidity,
     );
-    let printouts = [
-        0.0f64, 100.0f64, 200.0f64, 300.0f64, 400.0f64, 500.0f64, 600.0f64, 700.0f64, 800.0f64,
-        900.0f64, 1000.0f64,
-    ];
+    let timestep: f64 = 1.0 / (4.0 * initial_velocity);
+    let table = Table::new(G7);
+
+    let printouts: Vec<f64> = (0..((range / step) as u32 + 2))
+        .into_iter()
+        .map(|n| n as f64 * step)
+        .collect();
+
     let mut start: usize = 0;
-    let range: f64 = 1000.0f64;
     println!("time(s), velocity(ft/s), distance(yd), drop(in), windage(in)");
     while projectile.distance() <= range {
         projectile.step_forward(&table, timestep);
