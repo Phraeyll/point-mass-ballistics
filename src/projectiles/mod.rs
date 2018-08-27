@@ -5,7 +5,7 @@ use consts::*;
 
 use std::f64::consts::{E, PI};
 
-pub struct Projectile {
+pub struct Simulation {
     // Constant properties
     pub m: f64, // Mass (kg)
     pub r: f64, // Radius (m)
@@ -23,7 +23,7 @@ pub struct Projectile {
     pub c: f64,           // Speed of sound (m/s)
     pub g: Vector3<f64>,  // Gravity (m/s^2)
 
-    // Other factors, not caldulated yet
+    // Other factors, not calculated yet
     // pub ptmp: f64,       // Powder Temperature (K?)
     // pub lat:  f64,       // Lattitude (Coriolis Effect)
     // pub long: f64,       // Longitude (Coriolis Effect)
@@ -31,30 +31,36 @@ pub struct Projectile {
     // pub spin: f64,       // Spin drift (Gyroscopic Drift)
 }
 
-pub trait Ballistic {
+pub trait Projectile {
     fn new(f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Self;
     fn area(&self) -> f64;
     fn caliber(&self) -> f64;
     fn weight(&self) -> f64;
     fn sd(&self) -> f64;
     fn bc(&self) -> f64;
+}
 
+pub trait Normalize {
     fn pnorm(&self) -> f64;
     fn vnorm(&self) -> f64;
     fn anorm(&self) -> f64;
+}
 
-    fn time(&self) -> f64;
-    fn velocity(&self) -> f64;
-    fn distance(&self) -> f64;
-    fn drop(&self) -> f64;
-    fn windage(&self) -> f64;
-
+pub trait Simulatable {
     fn cd(&self, &Table) -> f64;
     fn a_after_drag(&self, &Table) -> Vector3<f64>;
     fn step_forward(&mut self, &Table, f64);
 }
 
-impl Ballistic for Projectile {
+pub trait Output {
+    fn time(&self) -> f64;
+    fn velocity(&self) -> f64;
+    fn distance(&self) -> f64;
+    fn drop(&self) -> f64;
+    fn windage(&self) -> f64;
+}
+
+impl Projectile for Simulation {
     fn new(
         weight_grains: f64,
         caliber: f64,
@@ -119,7 +125,9 @@ impl Ballistic for Projectile {
     fn bc(&self) -> f64 {
         self.sd() / self.i
     }
+}
 
+impl Normalize for Simulation {
     fn pnorm(&self) -> f64 {
         self.p.norm()
     }
@@ -129,7 +137,9 @@ impl Ballistic for Projectile {
     fn anorm(&self) -> f64 {
         self.a.norm()
     }
+}
 
+impl Output for Simulation {
     fn time(&self) -> f64 {
         self.t
     }
@@ -145,7 +155,9 @@ impl Ballistic for Projectile {
     fn windage(&self) -> f64 {
         self.p[2] * METERS_TO_INCHES
     }
+}
 
+impl Simulatable for Simulation {
     fn cd(&self, table: &Table) -> f64 {
         let x = self.vnorm() / self.c;
         let mut cd = 0.0; // beter defaults?

@@ -27,7 +27,7 @@ fn main() {
     let step: f64 = argv[12].parse().unwrap(); // step output in yd
     let ts_factor: f64 = argv[13].parse().unwrap(); // factor to determin step size
 
-    let mut projectile = Projectile::new(
+    let mut projectile = Simulation::new(
         weight,
         caliber,
         bc,
