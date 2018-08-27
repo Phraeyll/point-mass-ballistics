@@ -32,7 +32,6 @@ pub struct Simulation {
 }
 
 pub trait Projectile {
-    fn new(f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Self;
     fn area(&self) -> f64;
     fn caliber(&self) -> f64;
     fn weight(&self) -> f64;
@@ -47,9 +46,9 @@ pub trait Normalize {
 }
 
 pub trait Simulatable {
-    fn cd(&self, &Table) -> f64;
-    fn a_after_drag(&self, &Table) -> Vector3<f64>;
     fn step_forward(&mut self, &Table, f64);
+    fn a_after_drag(&self, &Table) -> Vector3<f64>;
+    fn cd(&self, &Table) -> f64;
 }
 
 pub trait Output {
@@ -60,8 +59,8 @@ pub trait Output {
     fn windage(&self) -> f64;
 }
 
-impl Projectile for Simulation {
-    fn new(
+impl Simulation {
+    pub fn new(
         weight_grains: f64,
         caliber: f64,
         bc: f64,
@@ -110,6 +109,9 @@ impl Projectile for Simulation {
             g,
         }
     }
+}
+
+impl Projectile for Simulation {
     fn area(&self) -> f64 {
         PI * self.r.powf(2.0)
     }
@@ -158,6 +160,17 @@ impl Output for Simulation {
 }
 
 impl Simulatable for Simulation {
+    fn step_forward(&mut self, table: &Table, timestep: f64) {
+        self.a = self.a_after_drag(&table);
+        self.p = self.p + self.v * timestep + self.a * (timestep.powf(2.0) / 2.0);
+        self.v = self.v + self.a * timestep;
+        self.t += timestep;
+    }
+    fn a_after_drag(&self, table: &Table) -> Vector3<f64> {
+        let cd = (self.rho * self.area() * self.cd(&table) * self.i) / (2.0 * self.m);
+        let vv = self.v - self.wv; // should z wind be calculated once at end?
+        -cd * self.vnorm() * vv + self.g
+    }
     fn cd(&self, table: &Table) -> f64 {
         let x = self.vnorm() / self.c;
         let mut cd = 0.0; // beter defaults?
@@ -176,19 +189,5 @@ impl Simulatable for Simulation {
             y0 = y1;
         }
         cd
-    }
-
-    fn a_after_drag(&self, table: &Table) -> Vector3<f64> {
-        let cd = (self.rho * self.area() * self.cd(&table) * self.i) / (2.0 * self.m);
-        let vv = self.v - self.wv;
-        -cd * self.vnorm() * vv + self.g
-    }
-
-    fn step_forward(&mut self, table: &Table, timestep: f64) {
-        self.a = self.a_after_drag(&table);
-        self.p = self.p + self.v * timestep + self.a * (timestep.powf(2.0) / 2.0);
-        self.v = self.v + self.a * timestep;
-
-        self.t += timestep;
     }
 }
