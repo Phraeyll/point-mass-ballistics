@@ -30,25 +30,36 @@ fn main() {
     // println!("{:?}", con);
     // println!("{:?}", table);
 
-    let mut projectile =
-        Projectile::new(weight, caliber, bc, initial_velocity, wind_velocity, wind_angle, temp, pressure, humidity);
-    let printouts =
-        [0.0f64, 100.0f64, 200.0f64, 300.0f64, 400.0f64, 500.0f64, 600.0f64, 700.0f64, 800.0f64, 900.0f64, 1000.0f64];
+    let mut projectile = Projectile::new(
+        weight,
+        caliber,
+        bc,
+        initial_velocity,
+        wind_velocity,
+        wind_angle,
+        temp,
+        pressure,
+        humidity,
+    );
+    let printouts = [
+        0.0f64, 100.0f64, 200.0f64, 300.0f64, 400.0f64, 500.0f64, 600.0f64, 700.0f64, 800.0f64,
+        900.0f64, 1000.0f64,
+    ];
     let mut start: usize = 0;
     let range: f64 = 1000.0f64;
     while projectile.p[0] <= (range * YARDS_TO_METERS) {
         projectile.step_forward(&table, timestep);
         if (projectile.p[0] * METERS_TO_YARDS) > printouts[start] {
-                println!(
-                    "t: {}, v: {}, x: {}, y: {}\n",
-                    projectile.t,
-                    projectile.vnorm() * METERS_TO_FEET,
-                    projectile.p[0] * METERS_TO_YARDS,
-                    projectile.p[1] * METERS_TO_INCHES,
-                );
-                if start < printouts.len() {
-                    start += 1;
-                }
+            println!(
+                "t: {}, v: {}, x: {}, y: {}\n",
+                projectile.t,
+                projectile.vnorm() * METERS_TO_FEET,
+                projectile.p[0] * METERS_TO_YARDS,
+                projectile.p[1] * METERS_TO_INCHES,
+            );
+            if start < printouts.len() {
+                start += 1;
+            }
         }
     }
 }

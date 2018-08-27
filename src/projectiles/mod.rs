@@ -24,7 +24,7 @@ pub struct Projectile {
     pub wv: Vector3<f64>, // Wind Velocity (m/s)
     pub rho: f64,         // Density of air (kg/m^3)
     pub c: f64,           // Speed of sound (m/s)
-    pub g: Vector3<f64>   // Gravity (m/s^2)
+    pub g: Vector3<f64>,  // Gravity (m/s^2)
 
     // Other factors, not caldulated yet
     // pub ptmp: f64,       // Powder Temperature (K?)
@@ -54,7 +54,6 @@ impl Projectile {
         let v = Vector3::new(initial_velocity * FEET_TO_METERS, 0.0, 0.0);
         let p = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
-
 
         let wind = wind_velocity * MILES_PER_HOUR_TO_METERS_PER_SECOND;
         let wv = Vector3::new(wind * wind_angle.cos(), 0.0, wind * wind_angle.sin());
@@ -86,7 +85,6 @@ impl Projectile {
         }
     }
 }
-
 
 pub trait Ballistic {
     fn area(&self) -> f64;
