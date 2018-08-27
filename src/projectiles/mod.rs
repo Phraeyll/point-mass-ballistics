@@ -11,7 +11,10 @@ pub struct Simulation {
     pub r: f64, // Radius (m)
     pub i: f64, // Form Factor (dimensionless)
 
-    // Mutatable from ballistic calculations
+    // Variables for Simulation
+    pub table: Table,  // Drag Function Table
+    pub timestep: f64, // Timestamp for simulation (s)
+
     pub p: Vector3<f64>, // Position (m)
     pub v: Vector3<f64>, // Velocity (m/s)
     pub a: Vector3<f64>, // Acceleration (m/s^2)
@@ -45,10 +48,9 @@ pub trait Normalize {
     fn anorm(&self) -> f64;
 }
 
-pub trait Simulatable {
-    fn step_forward(&mut self, &Table, f64);
-    fn a_after_drag(&self, &Table) -> Vector3<f64>;
-    fn cd(&self, &Table) -> f64;
+pub trait Simulate {
+    fn a_after_drag(&self) -> Vector3<f64>;
+    fn cd(&self) -> f64;
 }
 
 pub trait Output {
@@ -65,6 +67,8 @@ impl Simulation {
         caliber: f64,
         bc: f64,
         initial_velocity: f64,
+        table: Table,
+        timestep: f64,
         wind_velocity: f64,
         wind_angle: f64,
         temp: f64,
@@ -75,9 +79,9 @@ impl Simulation {
         let r = (caliber / 2.0) * INCHES_TO_METERS;
         let i = (weight_grains * GRAINS_TO_LBS) / (caliber.powf(2.0) * bc);
 
-        let a = Vector3::new(0.0, 0.0, 0.0);
-        let v = Vector3::new(initial_velocity * FEET_TO_METERS, 0.0, 0.0);
         let p = Vector3::new(0.0, 0.0, 0.0);
+        let v = Vector3::new(initial_velocity * FEET_TO_METERS, 0.0, 0.0);
+        let a = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
 
         let wind = wind_velocity * MILES_PER_HOUR_TO_METERS_PER_SECOND;
@@ -98,9 +102,12 @@ impl Simulation {
             r,
             i,
 
-            a,
-            v,
+            table,
+            timestep,
+
             p,
+            v,
+            a,
             t,
 
             wv,
@@ -149,34 +156,28 @@ impl Output for Simulation {
         self.vnorm() * METERS_TO_FEET
     }
     fn distance(&self) -> f64 {
-        self.p[0] * METERS_TO_YARDS
+        self.p.x * METERS_TO_YARDS
     }
     fn drop(&self) -> f64 {
-        self.p[1] * METERS_TO_INCHES
+        self.p.y * METERS_TO_INCHES
     }
     fn windage(&self) -> f64 {
-        self.p[2] * METERS_TO_INCHES
+        self.p.z * METERS_TO_INCHES
     }
 }
 
-impl Simulatable for Simulation {
-    fn step_forward(&mut self, table: &Table, timestep: f64) {
-        self.a = self.a_after_drag(&table);
-        self.p = self.p + self.v * timestep + self.a * (timestep.powf(2.0) / 2.0);
-        self.v = self.v + self.a * timestep;
-        self.t += timestep;
-    }
-    fn a_after_drag(&self, table: &Table) -> Vector3<f64> {
-        let cd = (self.rho * self.area() * self.cd(&table) * self.i) / (2.0 * self.m);
+impl Simulate for Simulation {
+    fn a_after_drag(&self) -> Vector3<f64> {
+        let cd = (self.rho * self.area() * self.cd() * self.i) / (2.0 * self.m);
         let vv = self.v - self.wv; // should z wind be calculated once at end?
         -cd * self.vnorm() * vv + self.g
     }
-    fn cd(&self, table: &Table) -> f64 {
+    fn cd(&self) -> f64 {
         let x = self.vnorm() / self.c;
         let mut cd = 0.0; // beter defaults?
         let mut x0 = 0.0;
         let mut y0 = 0.0;
-        for (k, v) in table.0.iter() {
+        for (k, v) in self.table.0.iter() {
             let (x1, y1) = (k.0, *v);
             if x1 == x {
                 cd = y1;
@@ -189,5 +190,16 @@ impl Simulatable for Simulation {
             y0 = y1;
         }
         cd
+    }
+}
+
+impl Iterator for Simulation {
+    type Item = f64;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.a = self.a_after_drag();
+        self.p = self.p + self.v * self.timestep + self.a * (self.timestep.powf(2.0) / 2.0);
+        self.v = self.v + self.a * self.timestep;
+        self.t += self.timestep;
+        Some(self.distance())
     }
 }

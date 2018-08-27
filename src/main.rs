@@ -27,34 +27,39 @@ fn main() {
     let step: f64 = argv[12].parse().unwrap(); // step output in yd
     let ts_factor: f64 = argv[13].parse().unwrap(); // factor to determin step size
 
-    let mut projectile = Simulation::new(
+    let table = Table::new(dragtable);
+    let timestep: f64 = 1.0 / (ts_factor * initial_velocity);
+
+    let mut simulation = Simulation::new(
         weight,
         caliber,
         bc,
         initial_velocity,
+        table,
+        timestep,
         wind_velocity,
         wind_angle,
         temp,
         pressure,
         humidity,
     );
-    let table = Table::new(dragtable);
-    let timestep: f64 = 1.0 / (ts_factor * initial_velocity);
 
     println!("time(s), velocity(ft/s), distance(yd), drop(in), windage(in)");
     let mut current_step: f64 = step;
-    while projectile.distance() <= range {
-        projectile.step_forward(&table, timestep);
-        if projectile.distance() > current_step {
+    while let Some(distance) = simulation.next() {
+        if distance > current_step {
             println!(
                 "{} {} {} {} {}",
-                projectile.time(),
-                projectile.velocity(),
-                projectile.distance(),
-                projectile.drop(),
-                projectile.windage(),
+                simulation.time(),
+                simulation.velocity(),
+                simulation.distance(),
+                simulation.drop(),
+                simulation.windage(),
             );
             current_step += step;
+        }
+        if distance > range {
+            break;
         }
     }
 }
