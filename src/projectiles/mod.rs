@@ -7,7 +7,6 @@ use consts::*;
 
 use std::f64::consts::{E, PI};
 
-#[derive(Debug)]
 pub struct Projectile {
     // Constant properties
     pub m: f64, // Mass (kg)
@@ -34,8 +33,31 @@ pub struct Projectile {
     // pub spin: f64,       // Spin drift (Gyroscopic Drift)
 }
 
-impl Projectile {
-    pub fn new(
+pub trait Ballistic {
+    fn new(f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Self;
+    fn area(&self) -> f64;
+    fn caliber(&self) -> f64;
+    fn weight(&self) -> f64;
+    fn sd(&self) -> f64;
+    fn bc(&self) -> f64;
+
+    fn pnorm(&self) -> f64;
+    fn vnorm(&self) -> f64;
+    fn anorm(&self) -> f64;
+
+    fn time(&self) -> f64;
+    fn velocity(&self) -> f64;
+    fn distance(&self) -> f64;
+    fn drop(&self) -> f64;
+    fn windage(&self) -> f64;
+
+    fn cd(&self, &Table) -> f64;
+    fn a_after_drag(&self, &Table) -> Vector3<f64>;
+    fn step_forward(&mut self, &Table, f64);
+}
+
+impl Ballistic for Projectile {
+    fn new(
         weight_grains: f64,
         caliber: f64,
         bc: f64,
@@ -84,31 +106,6 @@ impl Projectile {
             g,
         }
     }
-}
-
-pub trait Ballistic {
-    fn area(&self) -> f64;
-    fn caliber(&self) -> f64;
-    fn weight(&self) -> f64;
-    fn sd(&self) -> f64;
-    fn bc(&self) -> f64;
-
-    fn pnorm(&self) -> f64;
-    fn vnorm(&self) -> f64;
-    fn anorm(&self) -> f64;
-
-    fn time(&self) -> f64;
-    fn velocity(&self) -> f64;
-    fn distance(&self) -> f64;
-    fn drop(&self) -> f64;
-    fn windage(&self) -> f64;
-
-    fn cd(&self, &Table) -> f64;
-    fn a_after_drag(&self, &Table) -> Vector3<f64>;
-    fn step_forward(&mut self, &Table, f64);
-}
-
-impl Ballistic for Projectile {
     fn area(&self) -> f64 {
         PI * self.r.powf(2.0)
     }
