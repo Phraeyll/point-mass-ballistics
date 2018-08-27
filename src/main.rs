@@ -61,7 +61,8 @@ fn main() {
 
 fn usage(name: String) {
     println!(
-        "Usage: {} 
+        r#"
+        Usage: {} 
         velocity (ft/s)
         weight (gr)
         caliber (in)
@@ -75,7 +76,7 @@ fn usage(name: String) {
         range (yd)
         step (yd)
         timestep_factor
-        ",
+        "#,
         name
     );
 }
