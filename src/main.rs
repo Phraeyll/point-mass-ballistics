@@ -15,7 +15,7 @@ fn main() {
         return;
     }
 
-    let velocity: f64 = argv[1].parse().unwrap(); // ft/s
+    let initial_velocity: f64 = argv[1].parse().unwrap(); // ft/s
     let weight: f64 = argv[2].parse().unwrap(); // grains
     let caliber: f64 = argv[3].parse().unwrap(); // inches
     let bc: f64 = argv[4].parse().unwrap(); // dimensionless, implied inches/lbs
@@ -25,18 +25,19 @@ fn main() {
     let pressure: f64 = argv[8].parse().unwrap(); // inHg
     let humidity: f64 = argv[9].parse().unwrap(); // dimensionless, percentage
 
-    let timestep: f64 = 1.0 / (4.0 * velocity);
-    let con = Conditions::new(wind_velocity, wind_angle, temp, pressure, humidity);
+    let timestep: f64 = 1.0 / (4.0 * initial_velocity);
     let table = Table::new(G7);
     // println!("{:?}", con);
     // println!("{:?}", table);
 
-    let mut projectile = Projectile::new(weight, caliber, bc, velocity);
-    let printouts = [0.0f64, 100.0f64, 200.0f64, 300.0f64, 400.0f64, 500.0f64, 600.0f64, 700.0f64, 800.0f64, 900.0f64, 1000.0f64];
+    let mut projectile =
+        Projectile::new(weight, caliber, bc, initial_velocity, wind_velocity, wind_angle, temp, pressure, humidity);
+    let printouts =
+        [0.0f64, 100.0f64, 200.0f64, 300.0f64, 400.0f64, 500.0f64, 600.0f64, 700.0f64, 800.0f64, 900.0f64, 1000.0f64];
     let mut start: usize = 0;
     let range: f64 = 1000.0f64;
     while projectile.p[0] <= (range * YARDS_TO_METERS) {
-        projectile.step_forward(timestep, &con, &table);
+        projectile.step_forward(&table, timestep);
         if (projectile.p[0] * METERS_TO_YARDS) > printouts[start] {
                 println!(
                     "t: {}, v: {}, x: {}, y: {}\n",

@@ -8,7 +8,12 @@ use std::collections::BTreeMap;
 
 pub enum TableKind {
     G1,
+    G2,
+    G5,
+    G6,
     G7,
+    G8,
+    GI,
 }
 
 #[derive(Debug)]
