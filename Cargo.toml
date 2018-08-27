@@ -5,6 +5,7 @@ authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
 nalgebra = "0.16.0"
+new-ordered-float = "1.0"
 
 [[bin]]
 name = "ballistics"

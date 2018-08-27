@@ -2,6 +2,7 @@ extern crate nalgebra as na;
 
 use self::na::Vector3;
 
+use cdtables::*;
 use consts::*;
 
 use std::f64::consts::{E, PI};
@@ -17,7 +18,7 @@ pub struct Projectile {
     pub p: Vector3<f64>, // Position (m)
     pub v: Vector3<f64>, // Velocity (m/s)
     pub a: Vector3<f64>, // Acceleration (m/s^2)
-    pub t: f64,         // Position in time (s)
+    pub t: f64,          // Position in time (s)
 }
 
 impl Projectile {
@@ -40,7 +41,8 @@ impl Projectile {
 #[derive(Debug)]
 pub struct Conditions {
     pub wv: Vector3<f64>, // Wind Velocity (m/s)
-    pub rho: f64,        // Density of air (kg/m^3)
+    pub rho: f64,         // Density of air (kg/m^3)
+    pub c: f64,           // Speed of sound (m/s)
 
     // pub ptmp: f64,       // Powder Temperature (K?)
 
@@ -52,9 +54,9 @@ pub struct Conditions {
 
 impl Conditions {
     pub fn new(
-        temp: f64,
         wind_velocity: f64,
         wind_angle: f64,
+        temp: f64,
         pressure: f64,
         humidity: f64,
     ) -> Self {
@@ -64,9 +66,12 @@ impl Conditions {
         let pa = pressure * INHG_TO_PA;
         let pv =
             humidity * 6.1121 * E.powf((18.678 - (temp_c / 234.5)) * temp_c / (257.14 + temp_c));
+        let rho = ((pa * MOLAR_AIR) + (pv * MOLAR_WATER_VAPOR)) / (UNIVERSAL_GAS * temp_k);
+        let c = (1.4 * pa / rho).sqrt();
         Self {
             wv: Vector3::new(wv * wind_angle.cos(), 0.0, wv * wind_angle.sin()),
-            rho: ((pa * MOLAR_AIR) + (pv * MOLAR_WATER_VAPOR)) / (UNIVERSAL_GAS * temp_k),
+            rho: rho,
+            c: c,
         }
     }
 }
@@ -80,13 +85,14 @@ pub trait Ballistic {
 
     fn delta_p(&self, f64) -> Vector3<f64>;
     fn delta_v(&self, f64) -> Vector3<f64>;
-    fn a_after_drag(&self, &Conditions, f64) -> Vector3<f64>;
+    fn a_after_drag(&self, &Conditions, &Table) -> Vector3<f64>;
 
     fn pnorm(&self) -> f64;
     fn vnorm(&self) -> f64;
     fn anorm(&self) -> f64;
 
-    fn step_forward(&mut self, f64, &Conditions, f64);
+    fn cd(&self, &Conditions, &Table) -> f64;
+    fn step_forward(&mut self, f64, &Conditions, &Table);
 }
 
 impl Ballistic for Projectile {
@@ -108,11 +114,32 @@ impl Ballistic for Projectile {
         self.sd() / self.i
     }
 
+    fn cd(&self, con: &Conditions, table: &Table) -> f64 {
+        let x = self.vnorm() / con.c;
+        let mut cd = 0.0; // beter defaults?
+        let mut x0 = 0.0;
+        let mut y0 = 0.0;
+        for (k, v) in table.0.iter() {
+            let (x1, y1) = (k.0, *v);
+            if x1 == x {
+                cd = y1;
+                break;
+            } else if x1 > x {
+                cd = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+                break;
+            }
+            x0 = x1;
+            y0 = y1;
+        }
+        println!("m: {}, cd: {}", x, cd);
+        cd
+    }
     // New Acceleration (deceleration) due to drag force and gravity
-    fn a_after_drag(&self, c: &Conditions, cd: f64) -> Vector3<f64> {
+    fn a_after_drag(&self, con: &Conditions, table: &Table) -> Vector3<f64> {
         // Force of drag, based on specified table and current velocity (mach)
         // Coefficient of drag to be looked up from table - passed by parameter, for now, for testing
-        -((c.rho * self.area() * &self.v * self.vnorm() * cd * self.i) / 2.0) / self.m
+        -((con.rho * self.area() * &self.v * self.vnorm() * self.cd(&con, &table) * self.i) / 2.0)
+            / self.m
     }
 
     // New position
@@ -129,10 +156,10 @@ impl Ballistic for Projectile {
     }
 
     // Step forward t increments in time (seconds)
-    fn step_forward(&mut self, t: f64, c: &Conditions, cd: f64) {
+    fn step_forward(&mut self, t: f64, con: &Conditions, table: &Table) {
         self.t += t;
 
-        self.a = self.a_after_drag(&c, cd);
+        self.a = self.a_after_drag(&con, &table);
         self.a[1] += GRAVITY;
 
         self.p = &self.p + &self.delta_p(t);
