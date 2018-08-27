@@ -131,7 +131,6 @@ impl Ballistic for Projectile {
             x0 = x1;
             y0 = y1;
         }
-        println!("m: {}, cd: {}", x, cd);
         cd
     }
     // New Acceleration (deceleration) due to drag force and gravity
