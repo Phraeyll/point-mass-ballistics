@@ -3,7 +3,7 @@ extern crate ballistics;
 use ballistics::{cdtables::*, projectiles::*};
 
 fn usage(name: String) {
-    println!("Usage: {} velocity:ft/s weight:gr caliber:in bc wind_velocity:ft/s wind_angle temp:F pressure:inHg humidity:0-1", name);
+    println!("Usage: {} velocity(ft/s) weight(gr) caliber(in) bc wind_velocity(ft/s) wind_angle(deg) temp(F) pressure(inHg) humidity(0-1) range(yd) step(yd)", name);
 }
 
 fn main() {
