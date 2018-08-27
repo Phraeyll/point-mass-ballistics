@@ -69,19 +69,19 @@ impl Projectile {
         let g = Vector3::new(0.0, GRAVITY, 0.0);
 
         Self {
-            m: m,
-            r: r,
-            i: i,
+            m,
+            r,
+            i,
 
-            a: a,
-            v: v,
-            p: p,
-            t: t,
+            a,
+            v,
+            p,
+            t,
 
-            wv: wv,
-            rho: rho,
-            c: c,
-            g: g,
+            wv,
+            rho,
+            c,
+            g,
         }
     }
 }
@@ -148,14 +148,14 @@ impl Ballistic for Projectile {
     }
 
     fn a_after_drag(&self, table: &Table) -> Vector3<f64> {
-        let cdv = (self.rho * self.area() * self.cd(&table) * self.i) / (2.0 * self.m);
+        let cd = (self.rho * self.area() * self.cd(&table) * self.i) / (2.0 * self.m);
         let vv = self.v - self.wv;
-        -cdv * self.vnorm() * vv + self.g
+        -cd * self.vnorm() * vv + self.g
     }
 
     fn step_forward(&mut self, table: &Table, timestep: f64) {
         self.a = self.a_after_drag(&table);
-        self.p = self.p + self.v * timestep;
+        self.p = self.p + self.v * timestep + self.a * (timestep.powf(2.0) / 2.0);
         self.v = self.v + self.a * timestep;
 
         self.t += timestep;
