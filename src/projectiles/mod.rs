@@ -56,6 +56,7 @@ pub trait Drag {
 pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
+    fn mach(&self) -> f64;
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
@@ -83,7 +84,7 @@ impl Simulation {
         let velocity = initial_velocity * FEET_TO_METERS;
         let la = launch_angle.to_radians();
         let p = Vector3::new(0.0, 0.0, 0.0);
-        let v = Vector3::new(velocity * la.cos() , velocity * la.sin(), 0.0);
+        let v = Vector3::new(velocity * la.cos(), velocity * la.sin(), 0.0);
         let a = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
 
@@ -160,6 +161,9 @@ impl Output for Simulation {
     fn velocity(&self) -> f64 {
         self.vnorm() * METERS_TO_FEET
     }
+    fn mach(&self) -> f64 {
+        self.vnorm() / self.c
+    }
     fn distance(&self) -> f64 {
         self.p.x * METERS_TO_YARDS
     }
@@ -178,23 +182,9 @@ impl Drag for Simulation {
         -cd * vv.norm() * vv + self.g
     }
     fn cd(&self) -> f64 {
-        let x = self.vnorm() / self.c; // mach
-        let mut cd = 0.0;
-        let mut x0 = 0.0;
-        let mut y0 = 0.0;
-        for (k, v) in self.table.0.iter() {
-            let (x1, y1) = (k.0, *v);
-            if x1 == x {
-                cd = y1;
-                break;
-            } else if x1 > x {
-                cd = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-                break;
-            }
-            x0 = x1;
-            y0 = y1;
-        }
-        cd
+        let x = self.mach();
+        let ((x0, y0), (x1, y1)) = self.table.find(x);
+        y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     }
 }
 
