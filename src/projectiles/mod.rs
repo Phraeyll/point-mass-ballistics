@@ -67,6 +67,7 @@ impl Simulation {
         caliber: f64,
         bc: f64,
         initial_velocity: f64,
+        launch_angle: f64,
         table: Table,
         timestep: f64,
         wind_velocity: f64,
@@ -79,13 +80,16 @@ impl Simulation {
         let r = (caliber / 2.0) * INCHES_TO_METERS;
         let i = (weight_grains * GRAINS_TO_LBS) / (caliber.powf(2.0) * bc);
 
+        let velocity = initial_velocity * FEET_TO_METERS;
+        let la = launch_angle.to_radians();
         let p = Vector3::new(0.0, 0.0, 0.0);
-        let v = Vector3::new(initial_velocity * FEET_TO_METERS, 0.0, 0.0);
+        let v = Vector3::new(velocity * la.cos() , velocity * la.sin(), 0.0);
         let a = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
 
         let wind = wind_velocity * MILES_PER_HOUR_TO_METERS_PER_SECOND;
-        let wv = Vector3::new(wind * wind_angle.cos(), 0.0, wind * wind_angle.sin());
+        let wa = wind_angle.to_radians();
+        let wv = Vector3::new(wind * wa.cos(), 0.0, wind * wa.sin());
 
         let temp_c = (temp + F_TO_C) * F_TO_CK;
         let temp_k = (temp + F_TO_K) * F_TO_CK;
