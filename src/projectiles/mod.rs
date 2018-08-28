@@ -48,7 +48,7 @@ pub trait Normalize {
     fn anorm(&self) -> f64;
 }
 
-pub trait Simulate {
+pub trait Drag {
     fn a_after_drag(&self) -> Vector3<f64>;
     fn cd(&self) -> f64;
 }
@@ -171,15 +171,15 @@ impl Output for Simulation {
     }
 }
 
-impl Simulate for Simulation {
+impl Drag for Simulation {
     fn a_after_drag(&self) -> Vector3<f64> {
         let cd = (self.rho * self.area() * self.cd() * self.i) / (2.0 * self.m);
-        let vv = self.v - self.wv; // should z wind be calculated once at end?
+        let vv = self.v - self.wv;
         -cd * vv.norm() * vv + self.g
     }
     fn cd(&self) -> f64 {
-        let x = self.vnorm() / self.c;
-        let mut cd = 0.0; // beter defaults?
+        let x = self.vnorm() / self.c; // mach
+        let mut cd = 0.0;
         let mut x0 = 0.0;
         let mut y0 = 0.0;
         for (k, v) in self.table.0.iter() {
