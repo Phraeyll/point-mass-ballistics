@@ -34,12 +34,14 @@ impl Tabular for Table {
     }
     fn find(&self, k: f64) -> ((f64, f64), (f64, f64)) {
         let key = OrderedFloat(k);
+
         let x0 = self.0.range(..key).next_back().unwrap().0;
         let y0 = self.0.get(&x0).unwrap();
 
         let x1 = self.0.range(key..).next().unwrap().0;
         let y1 = self.0.get(&x1).unwrap();
-        ((x0.0, *y0), (x1.0, *y1))
+
+        ((x0.0, x1.0), (*y0, *y1))
     }
     fn new(k: Self::K) -> Self {
         let mut t = Table(BTreeMap::new());

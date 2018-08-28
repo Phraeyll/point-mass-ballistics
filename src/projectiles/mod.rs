@@ -182,9 +182,9 @@ impl Drag for Simulation {
         -cd * vv.norm() * vv + self.g
     }
     fn cd(&self) -> f64 {
-        let x = self.mach();
-        let ((x0, y0), (x1, y1)) = self.table.find(x);
-        y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+        let mach = self.mach();
+        let (x, y) = self.table.find(mach);
+        y.0 + (mach - x.0) * (y.1 - y.0) / (x.1 - x.0)
     }
 }
 
