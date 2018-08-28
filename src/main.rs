@@ -45,7 +45,7 @@ fn main() {
     );
 
     println!("time(s), velocity(ft/s), distance(yd), drop(in), windage(in)");
-    let mut current_step: f64 = step;
+    let mut current_step: f64 = 0.0;
     while let Some(distance) = simulation.next() {
         if distance > current_step {
             println!(

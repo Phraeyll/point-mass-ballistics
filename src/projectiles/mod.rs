@@ -95,12 +95,8 @@ impl Simulation {
         let pd = pa - pv;
         let rho = ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * temp_k);
 
-        let c = (1.4 * pa / rho).sqrt();
+        let c = (1.4 * (pa / rho)).sqrt();
         let g = Vector3::new(0.0, GRAVITY, 0.0);
-
-        println!("pv: {}", pv);
-        println!("rho: {}", rho * KG_PER_METERS3_TO_LB_PER_FEET3);
-        println!("c: {}", c * METERS_TO_FEET);
 
         Self {
             m,
@@ -175,7 +171,7 @@ impl Simulate for Simulation {
     fn a_after_drag(&self) -> Vector3<f64> {
         let cd = (self.rho * self.area() * self.cd() * self.i) / (2.0 * self.m);
         let vv = self.v - self.wv; // should z wind be calculated once at end?
-        -cd * self.vnorm() * vv + self.g
+        -cd * vv.norm() * vv + self.g
     }
     fn cd(&self) -> f64 {
         let x = self.vnorm() / self.c;
