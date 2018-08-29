@@ -1,8 +1,8 @@
 use na::Vector3;
 
-use physics::*;
 use conversions::*;
 use dragtables::*;
+use physics::*;
 
 pub use dragtables::TableKind;
 pub use physics::VelocityKind;
@@ -44,12 +44,6 @@ pub trait Projectile {
     fn weight(&self) -> f64;
     fn sd(&self) -> f64;
     fn bc(&self) -> f64;
-}
-
-pub trait Normalize {
-    fn pnorm(&self) -> f64;
-    fn vnorm(&self) -> f64;
-    fn anorm(&self) -> f64;
 }
 
 pub trait Drag {
@@ -116,10 +110,10 @@ impl Projectile for Simulation {
         PI * self.r.powf(2.0)
     }
     fn caliber(&self) -> f64 {
-        self.r * METERS_TO_INCHES * 2.0
+        f64::from(Length::Meters(self.r * 2.0).to_inches())
     }
     fn weight(&self) -> f64 {
-        self.m * KGS_TO_LBS
+        f64::from(WeightMass::Kgs(self.m).to_lbs())
     }
     fn sd(&self) -> f64 {
         self.weight() / self.caliber().powf(2.0)
@@ -129,36 +123,24 @@ impl Projectile for Simulation {
     }
 }
 
-impl Normalize for Simulation {
-    fn pnorm(&self) -> f64 {
-        self.p.norm()
-    }
-    fn vnorm(&self) -> f64 {
-        self.v.norm()
-    }
-    fn anorm(&self) -> f64 {
-        self.a.norm()
-    }
-}
-
 impl Output for Simulation {
     fn time(&self) -> f64 {
-        self.t
+        f64::from(Time::Seconds(self.t).to_seconds())
     }
     fn velocity(&self) -> f64 {
-        self.vnorm() * MPS_TO_FPS
+        f64::from(Velocity::Mps(self.v.norm()).to_fps())
     }
     fn mach(&self) -> f64 {
-        self.vnorm() / self.c
+        self.v.norm() / self.c
     }
     fn distance(&self) -> f64 {
-        self.p.x * METERS_TO_YARDS
+        f64::from(Length::Meters(self.p.x).to_yards())
     }
     fn drop(&self) -> f64 {
-        self.p.y * METERS_TO_INCHES
+        f64::from(Length::Meters(self.p.y).to_inches())
     }
     fn windage(&self) -> f64 {
-        self.p.z * METERS_TO_INCHES
+        f64::from(Length::Meters(self.p.z).to_inches())
     }
 }
 

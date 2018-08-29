@@ -1,7 +1,7 @@
 use conversions::*;
 
-use std::f64::consts::E;
 use std::f64;
+use std::f64::consts::E;
 
 const GRAVITY: f64 = -9.80665; // Local gravity in m/s
 const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
@@ -23,7 +23,6 @@ pub fn air_density(temp: f64, humidity: f64, pressure: f64) -> f64 {
         humidity * 611.21 * E.powf((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius)));
     let pd = pa - pv;
     ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * kelvin)
-
 }
 pub fn speed_sound(rho: f64, pressure: f64) -> f64 {
     let pa = f64::from(Pressure::Inhg(pressure).to_pascals());
