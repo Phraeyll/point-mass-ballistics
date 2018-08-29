@@ -1,12 +1,6 @@
 pub use self::{
+    conversions::{derived::*, distance::*, temperature::*, time::*, weightmass::*},
     physics::*,
-    conversions::{
-        distance::*,
-        time::*,
-        weightmass::*,
-        temperature::*,
-        derived::*,
-    },
 };
 
 pub mod physics {
@@ -80,7 +74,8 @@ pub mod conversions {
     }
     pub mod derived {
         use super::{distance::*, time::*, weightmass::*};
-        pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KG / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+        pub const LBPF3_TO_KGPM3: f64 =
+            LBS_TO_KG / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
         pub const KGPM3_TO_LBPF3: f64 = 1.0 / LBPF3_TO_KGPM3;
 
         pub const INHG_TO_PA: f64 = 3386.38;
