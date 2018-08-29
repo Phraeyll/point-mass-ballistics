@@ -22,14 +22,14 @@ pub struct Table(pub BTreeMap<OrderedFloat<f64>, f64>);
 
 pub trait Tabular {
     type K;
-    fn insert(&mut self, Vec<(f64, f64)>);
+    fn iter_insert(&mut self, Vec<(f64, f64)>);
     fn new(Self::K) -> Self;
     fn find(&self, f64) -> ((f64, f64), (f64, f64));
 }
 
 impl Tabular for Table {
     type K = TableKind;
-    fn insert(&mut self, v: Vec<(f64, f64)>) {
+    fn iter_insert(&mut self, v: Vec<(f64, f64)>) {
         for (k, v) in v.iter() {
             self.0.insert(OrderedFloat(*k), *v);
         }
@@ -49,7 +49,7 @@ impl Tabular for Table {
         let mut t = Table(BTreeMap::new());
         match tk {
             G1 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.2629),
                     (0.05, 0.2558),
                     (0.10, 0.2487),
@@ -132,7 +132,7 @@ impl Tabular for Table {
                 ]);
             }
             G2 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.2303),
                     (0.05, 0.2298),
                     (0.10, 0.2287),
@@ -221,7 +221,7 @@ impl Tabular for Table {
                 ]);
             }
             G5 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.1710),
                     (0.05, 0.1719),
                     (0.10, 0.1727),
@@ -301,7 +301,7 @@ impl Tabular for Table {
                 ]);
             }
             G6 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.2617),
                     (0.05, 0.2553),
                     (0.10, 0.2491),
@@ -384,7 +384,7 @@ impl Tabular for Table {
                 ]);
             }
             G7 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.1198),
                     (0.05, 0.1197),
                     (0.10, 0.1196),
@@ -472,7 +472,7 @@ impl Tabular for Table {
                 ]);
             }
             G8 => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.2105),
                     (0.05, 0.2105),
                     (0.10, 0.2104),
@@ -554,7 +554,7 @@ impl Tabular for Table {
                 ]);
             }
             GI => {
-                t.insert(vec![
+                t.iter_insert(vec![
                     (0.00, 0.2282),
                     (0.05, 0.2282),
                     (0.10, 0.2282),
