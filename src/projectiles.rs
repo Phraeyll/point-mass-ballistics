@@ -1,7 +1,8 @@
 use na::Vector3;
 
-use cdtables::*;
+use dragtables::*;
 use consts::*;
+use conversions::*;
 
 use std::f64::consts::{E, PI};
 
@@ -88,12 +89,12 @@ impl Simulation {
         let a = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
 
-        let wind = wind_velocity * MPH_TO_FPS;
+        let wind = wind_velocity * MPH_TO_MPS;
         let wa = wind_angle.to_radians();
         let wv = Vector3::new(wind * wa.cos(), 0.0, wind * wa.sin());
 
-        let temp_c = (temp + F_TO_C) * F_TO_CK;
-        let temp_k = (temp + F_TO_K) * F_TO_CK;
+        let temp_c = f_to_c(temp);
+        let temp_k = f_to_k(temp);
         let pa = pressure * INHG_TO_PA;
         let pv =
             humidity * 611.21 * E.powf((18.678 - (temp_c / 234.5)) * (temp_c / (257.14 + temp_c)));
