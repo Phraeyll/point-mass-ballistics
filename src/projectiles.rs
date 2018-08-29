@@ -1,8 +1,8 @@
 use na::Vector3;
 
-use dragtables::*;
 use consts::*;
 use conversions::*;
+use dragtables::*;
 
 use std::f64::consts::{E, PI};
 
