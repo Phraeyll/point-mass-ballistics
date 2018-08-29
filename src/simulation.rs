@@ -4,21 +4,9 @@ use consts::*;
 use conversions::*;
 use dragtables::*;
 
-use std::f64::consts::{E, PI};
+pub use dragtables::TableKind;
 
-pub use self::TableKind::*;
-custom_derive! {
-    #[derive(Debug, EnumFromStr)]
-    pub enum TableKind {
-        G1,
-        G2,
-        G5,
-        G6,
-        G7,
-        G8,
-        GI,
-    }
-}
+use std::f64::consts::{E, PI};
 
 pub struct Simulation {
     // Constant properties
