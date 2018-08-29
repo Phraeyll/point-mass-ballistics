@@ -26,17 +26,17 @@ pub mod conversions {
         pub const FEET_TO_INCHES: f64 = 12.0;
         pub const INCHES_TO_FEET: f64 = 1.0 / FEET_TO_INCHES;
 
+        pub const FEET_TO_METERS: f64 = 0.3048;
+        pub const METERS_TO_FEET: f64 = 1.0 / FEET_TO_METERS;
+
         pub const MILES_TO_FEET: f64 = MILES_TO_YARDS * YARDS_TO_FEET;
         pub const FEET_TO_MILES: f64 = 1.0 / MILES_TO_FEET;
 
-        pub const MILES_TO_METERS: f64 = MILES_TO_YARDS * YARDS_TO_METERS;
+        pub const MILES_TO_METERS: f64 = MILES_TO_FEET * FEET_TO_METERS;
         pub const METERS_TO_MILES: f64 = 1.0 / MILES_TO_METERS;
 
         pub const YARDS_TO_METERS: f64 = YARDS_TO_FEET * FEET_TO_METERS;
         pub const METERS_TO_YARDS: f64 = 1.0 / YARDS_TO_METERS;
-
-        pub const FEET_TO_METERS: f64 = 0.3048;
-        pub const METERS_TO_FEET: f64 = 1.0 / FEET_TO_METERS;
 
         pub const INCHES_TO_METERS: f64 = INCHES_TO_FEET * FEET_TO_METERS;
         pub const METERS_TO_INCHES: f64 = 1.0 / INCHES_TO_METERS;
@@ -76,16 +76,17 @@ pub mod conversions {
         // Additive
         pub const F_TO_C: f64 = -32.0;
         pub const C_TO_F: f64 = -F_TO_C;
+
     }
     pub mod derived {
-        use super::{distance::*, time::*};
-        pub const LBF3_TO_KGM3: f64 = 16.0185;
-        pub const KGM3_TO_LBF3: f64 = 1.0 / LBF3_TO_KGM3;
+        use super::{distance::*, time::*, weightmass::*};
+        pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KG / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+        pub const KGPM3_TO_LBPF3: f64 = 1.0 / LBPF3_TO_KGPM3;
 
         pub const INHG_TO_PA: f64 = 3386.38;
         pub const PA_TO_INHG: f64 = 1.0 / INHG_TO_PA;
 
-        pub const MPH_TO_MPS: f64 = MPH_TO_FPS * FEET_TO_METERS;
+        pub const MPH_TO_MPS: f64 = MPH_TO_FPS * FPS_TO_MPS;
         pub const MPS_TO_MPH: f64 = 1.0 / MPH_TO_MPS;
 
         pub const MPH_TO_FPS: f64 = MILES_TO_FEET / HOURS_TO_SECONDS;
