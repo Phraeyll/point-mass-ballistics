@@ -8,5 +8,5 @@ extern crate ordered_float as of;
 
 pub mod consts;
 pub mod conversions;
-pub mod projectiles;
 pub mod dragtables;
+pub mod projectiles;
