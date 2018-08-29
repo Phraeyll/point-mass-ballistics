@@ -1,12 +1,13 @@
 use na::Vector3;
 
-use consts::*;
+use physics::*;
 use conversions::*;
 use dragtables::*;
 
 pub use dragtables::TableKind;
+pub use physics::VelocityKind;
 
-use std::f64::consts::{E, PI};
+use std::f64::consts::PI;
 
 pub struct Simulation {
     // Constant properties
@@ -80,31 +81,15 @@ impl Simulation {
         pressure: f64,
         humidity: f64,
     ) -> Self {
-        let m = weight_grains * GRAINS_TO_KG;
-        let r = (caliber / 2.0) * INCHES_TO_METERS;
-        let i = (weight_grains * GRAINS_TO_LBS) / (caliber.powf(2.0) * bc);
+        let m = mass(weight_grains);
+        let r = radius(caliber);
+        let i = form_factor(weight_grains, caliber, bc);
 
-        let velocity = initial_velocity * FEET_TO_METERS;
-        let la = launch_angle.to_radians();
-        let p = Vector3::new(0.0, 0.0, 0.0);
-        let v = Vector3::new(velocity * la.cos(), velocity * la.sin(), 0.0);
-        let a = Vector3::new(0.0, 0.0, 0.0);
-        let t = 0.0;
-
-        let wind = wind_velocity * MPH_TO_MPS;
-        let wa = wind_angle.to_radians();
-        let wv = Vector3::new(wind * wa.cos(), 0.0, wind * wa.sin());
-
-        let temp_c = f_to_c(temp);
-        let temp_k = f_to_k(temp);
-        let pa = pressure * INHG_TO_PA;
-        let pv =
-            humidity * 611.21 * E.powf((18.678 - (temp_c / 234.5)) * (temp_c / (257.14 + temp_c)));
-        let pd = pa - pv;
-        let rho = ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * temp_k);
-
-        let c = (1.4 * (pa / rho)).sqrt();
-        let g = Vector3::new(0.0, GRAVITY, 0.0);
+        let iv = velocity_tuple(Projectile(initial_velocity), launch_angle);
+        let wv = velocity_tuple(Wind(wind_velocity), wind_angle);
+        let g = gravity();
+        let rho = air_density(temp, humidity, pressure);
+        let c = speed_sound(rho, pressure);
 
         let table = Table::new(drag_table);
 
@@ -112,19 +97,16 @@ impl Simulation {
             m,
             r,
             i,
-
             table,
             timestep,
-
-            p,
-            v,
-            a,
-            t,
-
-            wv,
             rho,
             c,
-            g,
+            p: Vector3::new(0.0, 0.0, 0.0),
+            v: Vector3::new(iv.0, iv.1, iv.2),
+            a: Vector3::new(0.0, 0.0, 0.0),
+            wv: Vector3::new(wv.0, wv.1, wv.2),
+            g: Vector3::new(g.0, g.1, g.2),
+            t: 0.0,
         }
     }
 }
@@ -137,7 +119,7 @@ impl Projectile for Simulation {
         self.r * METERS_TO_INCHES * 2.0
     }
     fn weight(&self) -> f64 {
-        self.m * KG_TO_LBS
+        self.m * KGS_TO_LBS
     }
     fn sd(&self) -> f64 {
         self.weight() / self.caliber().powf(2.0)

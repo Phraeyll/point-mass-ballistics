@@ -6,8 +6,8 @@ extern crate enum_derive;
 extern crate nalgebra as na;
 extern crate ordered_float as of;
 
-pub mod consts;
 pub mod simulation;
 
+mod physics;
 mod conversions;
 mod dragtables;
