@@ -88,7 +88,7 @@ impl Simulation {
         let a = Vector3::new(0.0, 0.0, 0.0);
         let t = 0.0;
 
-        let wind = wind_velocity * MILES_PER_HOUR_TO_METERS_PER_SECOND;
+        let wind = wind_velocity * MPH_TO_FPS;
         let wa = wind_angle.to_radians();
         let wv = Vector3::new(wind * wa.cos(), 0.0, wind * wa.sin());
 
@@ -159,7 +159,7 @@ impl Output for Simulation {
         self.t
     }
     fn velocity(&self) -> f64 {
-        self.vnorm() * METERS_TO_FEET
+        self.vnorm() * MPS_TO_FPS
     }
     fn mach(&self) -> f64 {
         self.vnorm() / self.c
