@@ -6,6 +6,20 @@ use dragtables::*;
 
 use std::f64::consts::{E, PI};
 
+pub use self::TableKind::*;
+custom_derive! {
+    #[derive(Debug, EnumFromStr)]
+    pub enum TableKind {
+        G1,
+        G2,
+        G5,
+        G6,
+        G7,
+        G8,
+        GI,
+    }
+}
+
 pub struct Simulation {
     // Constant properties
     pub m: f64, // Mass (kg)
@@ -70,7 +84,7 @@ impl Simulation {
         bc: f64,
         initial_velocity: f64,
         launch_angle: f64,
-        table: Table,
+        drag_table: TableKind,
         timestep: f64,
         wind_velocity: f64,
         wind_angle: f64,
@@ -103,6 +117,8 @@ impl Simulation {
 
         let c = (1.4 * (pa / rho)).sqrt();
         let g = Vector3::new(0.0, GRAVITY, 0.0);
+
+        let table = Table::new(drag_table);
 
         Self {
             m,

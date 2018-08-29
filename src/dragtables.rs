@@ -1,21 +1,8 @@
 use of::OrderedFloat;
 
-pub use self::TableKind::*;
+use simulation::{TableKind, TableKind::*};
 
 use std::collections::BTreeMap;
-
-custom_derive! {
-    #[derive(Debug, EnumFromStr)]
-    pub enum TableKind {
-        G1,
-        G2,
-        G5,
-        G6,
-        G7,
-        G8,
-        GI,
-    }
-}
 
 #[derive(Debug)]
 pub struct Table(pub BTreeMap<OrderedFloat<f64>, f64>);
