@@ -1,6 +1,6 @@
 [package]
-name = "ballistics"
-version = "0.1.0"
+name = "rballistics-flat"
+version = "0.0.1"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
@@ -8,7 +8,3 @@ nalgebra = "0.16"
 new-ordered-float = "1.0"
 custom_derive = "0.1"
 enum_derive = "0.1"
-
-[[bin]]
-name = "ballistics"
-doc = false

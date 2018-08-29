@@ -1,4 +1,3 @@
-
 /target/
 **/*.rs.bk
 # swap
@@ -13,3 +12,5 @@ Session.vim
 *~
 # auto-generated tag files
 tags
+# Cargo lock, shouldn't be tracked for libraries
+Cargo.lock
