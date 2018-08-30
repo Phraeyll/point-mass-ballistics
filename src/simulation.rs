@@ -6,7 +6,6 @@ use conversions::*;
 use dragtables::*;
 use physics;
 
-use self::constructors::VelocityKind::*;
 use self::constructors::*;
 
 use std::f64::consts::PI;
@@ -169,22 +168,23 @@ impl Iterator for Simulation {
 }
 
 mod constructors {
-    pub use self::VelocityKind::*;
+    pub use self::AngleKind::*;
+
     use conversions::*;
     use na::{Rotation3, Vector3};
 
-    pub enum VelocityKind {
+    pub enum AngleKind {
         Projectile(f64),
         Wind(f64),
     }
 
-    pub fn construct_velocity(vel: Velocity, vk: VelocityKind) -> Vector3<f64> {
+    pub fn construct_velocity(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
         let (axis, angle) = match vk {
-            VelocityKind::Projectile(deg) => {
+            Projectile(deg) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
                 (Vector3::z_axis(), deg.to_radians())
             }
-            VelocityKind::Wind(deg) => {
+            Wind(deg) => {
                 // Rotation along y axis is yaw, wind left/right relative to x/z plane
                 (Vector3::y_axis(), deg.to_radians())
             }
