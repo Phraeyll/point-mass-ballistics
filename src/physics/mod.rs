@@ -6,7 +6,7 @@ use self::consts::*;
 use conversions::*;
 
 use std::f64;
-use std::f64::consts::E;
+use std::f64::consts::{E, PI};
 
 pub enum VelocityKind {
     Projectile(f64),
@@ -50,4 +50,7 @@ pub fn form_factor(weight_grains: f64, caliber: f64, bc: f64) -> f64 {
 }
 pub fn gravity() -> (f64, f64, f64) {
     (0.0, GRAVITY, 0.0)
+}
+pub fn area(radius: f64) -> f64 {
+    PI * radius.powf(2.0)
 }

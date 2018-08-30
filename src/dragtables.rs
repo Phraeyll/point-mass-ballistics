@@ -23,7 +23,7 @@ pub trait Tabular {
     type K;
     fn iter_insert(&mut self, Vec<(f64, f64)>);
     fn new(Self::K) -> Self;
-    fn find(&self, f64) -> ((f64, f64), (f64, f64));
+    fn lerp(&self, f64) -> f64;
 }
 
 impl Tabular for Table {
@@ -33,7 +33,7 @@ impl Tabular for Table {
             self.0.insert(OrderedFloat(*k), *v);
         }
     }
-    fn find(&self, k: f64) -> ((f64, f64), (f64, f64)) {
+    fn lerp(&self, k: f64) -> f64 {
         let key = OrderedFloat(k);
 
         let x0 = self.0.range(..key).next_back().unwrap().0;
@@ -42,7 +42,8 @@ impl Tabular for Table {
         let x1 = self.0.range(key..).next().unwrap().0;
         let y1 = self.0.get(&x1).unwrap();
 
-        ((x0.0, x1.0), (*y0, *y1))
+        let (x, y) = ((x0.0, x1.0), (*y0, *y1));
+        y.0 + (k - x.0) * (y.1 - y.0) / (x.1 - x.0)
     }
     fn new(tk: Self::K) -> Self {
         let mut t = Table(BTreeMap::new());
