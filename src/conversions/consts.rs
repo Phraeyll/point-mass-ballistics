@@ -1,6 +1,4 @@
-pub use self::{
-    derived::*, length::*, temperature::*, time::*, weight_mass::*
-};
+pub use self::{derived::*, length::*, temperature::*, time::*, weight_mass::*};
 
 mod length {
     pub const MILES_TO_YARDS: f64 = 1760.0;
@@ -76,8 +74,7 @@ mod derived {
     pub const PASCALS_TO_INHG: f64 = 1.0 / INHG_TO_PASCALS;
 
     // Density
-    pub const LBPF3_TO_KGPM3: f64 =
-        LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+    pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
     pub const KGPM3_TO_LBPF3: f64 = 1.0 / LBPF3_TO_KGPM3;
 
     // Velocity

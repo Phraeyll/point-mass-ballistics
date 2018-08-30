@@ -5,8 +5,8 @@ mod consts;
 use self::consts::*;
 
 mod length {
-    use super::*;
     use self::Length::*;
+    use super::*;
     pub enum Length {
         Meters(f64),
         Miles(f64),
@@ -74,8 +74,8 @@ mod length {
     }
 }
 mod time {
-    use super::*;
     use self::Time::*;
+    use super::*;
     pub enum Time {
         Hours(f64),
         Minutes(f64),
@@ -115,8 +115,8 @@ mod time {
     }
 }
 mod weight_mass {
-    use super::*;
     use self::WeightMass::*;
+    use super::*;
     pub enum WeightMass {
         Grains(f64),
         Lbs(f64),
@@ -156,8 +156,8 @@ mod weight_mass {
     }
 }
 mod temperature {
-    use super::*;
     use self::Temperature::*;
+    use super::*;
     pub enum Temperature {
         C(f64),
         K(f64),
@@ -197,8 +197,8 @@ mod temperature {
     }
 }
 mod derived {
-    use super::*;
     use self::{Density::*, Pressure::*, Velocity::*};
+    use super::*;
 
     pub enum Pressure {
         Pascals(f64),
