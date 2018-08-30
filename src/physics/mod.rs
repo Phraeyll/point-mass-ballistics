@@ -1,14 +1,12 @@
+pub use self::VelocityKind::*;
+
+mod consts;
+
 use conversions::*;
+use self::consts::*;
 
 use std::f64;
 use std::f64::consts::E;
-
-const GRAVITY: f64 = -9.80665; // Local gravity in m/s
-const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
-const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
-const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
-
-pub use self::VelocityKind::*;
 
 pub enum VelocityKind {
     Projectile(f64),

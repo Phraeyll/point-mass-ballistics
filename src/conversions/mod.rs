@@ -1,8 +1,11 @@
 pub use self::{derived::*, length::*, temperature::*, time::*, weight_mass::*};
 
-pub use consts::*;
+mod consts;
+
+use self::consts::*;
 
 mod length {
+    use super::*;
     use self::Length::*;
     pub enum Length {
         Meters(f64),
@@ -14,11 +17,11 @@ mod length {
     impl From<Length> for f64 {
         fn from(u: Length) -> f64 {
             match u {
-                Length::Meters(u) => u,
-                Length::Miles(u) => u,
-                Length::Yards(u) => u,
-                Length::Feet(u) => u,
-                Length::Inches(u) => u,
+                Meters(u) => u,
+                Miles(u) => u,
+                Yards(u) => u,
+                Feet(u) => u,
+                Inches(u) => u,
             }
         }
     }
@@ -71,6 +74,7 @@ mod length {
     }
 }
 mod time {
+    use super::*;
     use self::Time::*;
     pub enum Time {
         Hours(f64),
@@ -80,9 +84,9 @@ mod time {
     impl From<Time> for f64 {
         fn from(u: Time) -> f64 {
             match u {
-                Time::Hours(u) => u,
-                Time::Minutes(u) => u,
-                Time::Seconds(u) => u,
+                Hours(u) => u,
+                Minutes(u) => u,
+                Seconds(u) => u,
             }
         }
     }
@@ -111,6 +115,7 @@ mod time {
     }
 }
 mod weight_mass {
+    use super::*;
     use self::WeightMass::*;
     pub enum WeightMass {
         Grains(f64),
@@ -120,9 +125,9 @@ mod weight_mass {
     impl From<WeightMass> for f64 {
         fn from(u: WeightMass) -> f64 {
             match u {
-                WeightMass::Grains(u) => u,
-                WeightMass::Lbs(u) => u,
-                WeightMass::Kgs(u) => u,
+                Grains(u) => u,
+                Lbs(u) => u,
+                Kgs(u) => u,
             }
         }
     }
@@ -151,6 +156,7 @@ mod weight_mass {
     }
 }
 mod temperature {
+    use super::*;
     use self::Temperature::*;
     pub enum Temperature {
         C(f64),
@@ -160,9 +166,9 @@ mod temperature {
     impl From<Temperature> for f64 {
         fn from(u: Temperature) -> f64 {
             match u {
-                Temperature::C(u) => u,
-                Temperature::K(u) => u,
-                Temperature::F(u) => u,
+                C(u) => u,
+                K(u) => u,
+                F(u) => u,
             }
         }
     }
@@ -191,6 +197,7 @@ mod temperature {
     }
 }
 mod derived {
+    use super::*;
     use self::{Density::*, Pressure::*, Velocity::*};
 
     pub enum Pressure {
@@ -200,8 +207,8 @@ mod derived {
     impl From<Pressure> for f64 {
         fn from(u: Pressure) -> f64 {
             match u {
-                Pressure::Pascals(u) => u,
-                Pressure::Inhg(u) => u,
+                Pascals(u) => u,
+                Inhg(u) => u,
             }
         }
     }
@@ -227,8 +234,8 @@ mod derived {
     impl From<Density> for f64 {
         fn from(u: Density) -> f64 {
             match u {
-                Density::Kgpm3(u) => u,
-                Density::Lbpf3(u) => u,
+                Kgpm3(u) => u,
+                Lbpf3(u) => u,
             }
         }
     }
@@ -255,9 +262,9 @@ mod derived {
     impl From<Velocity> for f64 {
         fn from(u: Velocity) -> f64 {
             match u {
-                Velocity::Mps(u) => u,
-                Velocity::Mph(u) => u,
-                Velocity::Fps(u) => u,
+                Mps(u) => u,
+                Mph(u) => u,
+                Fps(u) => u,
             }
         }
     }
