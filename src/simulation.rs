@@ -4,7 +4,7 @@ pub use dragtables::TableKind;
 
 use conversions::*;
 use dragtables::*;
-use physics::*;
+use physics;
 
 use self::constructors::VelocityKind::*;
 use self::constructors::*;
@@ -32,12 +32,14 @@ pub struct Simulation {
     pub rho: f64,                    // Density of air (kg/m^3)
     pub c: f64,                      // Speed of sound (m/s)
     pub g: Vector3<f64>,             // Gravity (m/s^2)
-                                     // Other factors, not calculated yet
-                                     // pub ptmp: f64,       // Powder Temperature (K?)
-                                     // pub lat:  f64,       // Lattitude (Coriolis Effect)
-                                     // pub long: f64,       // Longitude (Coriolis Effect)
-                                     // pub dir:  Direction, // Direction Facing (Coriolis Effect)
-                                     // pub spin: f64,       // Spin drift (Gyroscopic Drift)
+    /*
+    Other factors, not calculated yet
+    pub ptmp: f64,                   // Powder Temperature (K?)
+    pub lat:  f64,                   // Lattitude (Coriolis Effect)
+    pub long: f64,                   // Longitude (Coriolis Effect)
+    pub dir:  Direction,             // Direction Facing (Coriolis Effect)
+    pub spin: f64,                   // Spin drift (Gyroscopic Drift)
+    */
 }
 
 pub trait Projectile {
@@ -76,35 +78,31 @@ impl Simulation {
         pressure: f64,
         humidity: f64,
     ) -> Self {
-        let table = Table::new(drag_table);
-
-        let mass = mass(weight);
-        let radius = radius(caliber);
-        let i = form_factor(weight, caliber, bc);
-
-        let velocity = construct_velocity(Projectile(initial_velocity), launch_angle);
-        let wind_velocity = construct_velocity(Wind(wind_velocity), wind_angle);
-
-        let rho = air_density(temperature, humidity, pressure);
-        let c = speed_sound(rho, pressure);
+        let weight_lbs = WeightMass::Grains(weight);
+        let radius_inches = Length::Inches(caliber);
+        let initial_velocity_fps = Velocity::Fps(initial_velocity);
+        let temperature_f = Temperature::F(temperature);
+        let pressure_inhg = Pressure::Inhg(pressure);
+        let wind_velocity_mph = Velocity::Mph(wind_velocity);
+        let rho = physics::air_density(temperature_f, pressure_inhg, humidity);
 
         Self {
-            mass,
-            radius,
-            i,
+            mass: mass_kgs(weight_lbs),
+            radius: radius_meters(radius_inches),
+            i: form_factor(weight_lbs, radius_inches, bc),
 
             position: Vector3::new(0.0, 0.0, 0.0),
-            velocity,
+            velocity: construct_velocity(initial_velocity_fps, Projectile(launch_angle)),
             acceleration: Vector3::new(0.0, 0.0, 0.0),
             time: 0.0,
 
-            table,
-            time_step,
+            table: Table::new(drag_table),
+            time_step: time_step,
 
-            wind_velocity,
-            rho,
-            c,
-            g: Vector3::new(0.0, gravity(), 0.0),
+            wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
+            rho: rho,
+            c: physics::speed_sound(rho, pressure_inhg),
+            g: Vector3::new(0.0, physics::gravity(), 0.0),
         }
     }
 }
@@ -180,37 +178,33 @@ mod constructors {
         Wind(f64),
     }
 
-    pub fn construct_velocity(vk: VelocityKind, deg: f64) -> Vector3<f64> {
-        let (axis, velocity_mps) = match vk {
-            VelocityKind::Projectile(vel) => {
+    pub fn construct_velocity(vel: Velocity, vk: VelocityKind) -> Vector3<f64> {
+        let (axis, angle) = match vk {
+            VelocityKind::Projectile(deg) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
-                let axis = Vector3::z_axis();
-                let velocity_mps = f64::from(Velocity::Fps(vel).to_mps());
-                (axis, velocity_mps)
+                (Vector3::z_axis(), deg.to_radians())
             }
-            VelocityKind::Wind(vel) => {
+            VelocityKind::Wind(deg) => {
                 // Rotation along y axis is yaw, wind left/right relative to x/z plane
-                let axis = Vector3::y_axis();
-                let velocity_mps = f64::from(Velocity::Mph(vel).to_mps());
-                (axis, velocity_mps)
+                (Vector3::y_axis(), deg.to_radians())
             }
         };
-        let angle = deg.to_radians();
+        let velocity_mps = f64::from(vel.to_mps());
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let velocity = Vector3::new(velocity_mps, 0.0, 0.0);
         rotation * velocity
     }
 
-    pub fn mass(weight_grains: f64) -> f64 {
-        f64::from(WeightMass::Grains(weight_grains).to_kgs())
+    pub fn mass_kgs(weight: WeightMass) -> f64 {
+        f64::from(weight.to_kgs())
     }
 
-    pub fn radius(caliber: f64) -> f64 {
-        f64::from(Length::Inches(caliber).to_meters()) / 2.0
+    pub fn radius_meters(caliber: Length) -> f64 {
+        f64::from(caliber.to_meters()) / 2.0
     }
 
-    pub fn form_factor(weight_grains: f64, caliber: f64, bc: f64) -> f64 {
-        f64::from(WeightMass::Grains(weight_grains).to_lbs()) / (caliber.powf(2.0) * bc)
+    pub fn form_factor(weight: WeightMass, caliber: Length, bc: f64) -> f64 {
+        f64::from(weight.to_lbs()) / (f64::from(caliber.to_inches()).powf(2.0) * bc)
     }
 
 }
