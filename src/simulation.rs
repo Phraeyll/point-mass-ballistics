@@ -1,11 +1,13 @@
 use na::Vector3;
 
 pub use dragtables::TableKind;
-pub use physics::VelocityKind;
 
 use conversions::*;
 use dragtables::*;
 use physics::*;
+
+use self::constructors::VelocityKind::*;
+use self::constructors::*;
 
 use std::f64::consts::PI;
 
@@ -44,7 +46,7 @@ pub trait Projectile {
     fn weight(&self) -> f64; // Weight (grain)
     fn sd(&self) -> f64; // Sectional Density
     fn bc(&self) -> f64; // Ballistic Coefficient
-    fn mach(&self) -> f64;
+    fn mach(&self) -> f64; // Velocity relative to speed of sound
 }
 
 pub trait Output {
@@ -74,15 +76,17 @@ impl Simulation {
         pressure: f64,
         humidity: f64,
     ) -> Self {
+        let table = Table::new(drag_table);
+
         let mass = mass(weight);
         let radius = radius(caliber);
         let i = form_factor(weight, caliber, bc);
-        let iv = velocity_tuple(Projectile(initial_velocity), launch_angle);
-        let table = Table::new(drag_table);
-        let wv = velocity_tuple(Wind(wind_velocity), wind_angle);
+
+        let velocity = construct_velocity(Projectile(initial_velocity), launch_angle);
+        let wind_velocity = construct_velocity(Wind(wind_velocity), wind_angle);
+
         let rho = air_density(temperature, humidity, pressure);
         let c = speed_sound(rho, pressure);
-        let g = gravity();
 
         Self {
             mass,
@@ -90,17 +94,17 @@ impl Simulation {
             i,
 
             position: Vector3::new(0.0, 0.0, 0.0),
-            velocity: Vector3::new(iv.0, iv.1, iv.2),
+            velocity,
             acceleration: Vector3::new(0.0, 0.0, 0.0),
             time: 0.0,
 
             table,
             time_step,
 
-            wind_velocity: Vector3::new(wv.0, wv.1, wv.2),
+            wind_velocity,
             rho,
             c,
-            g: Vector3::new(g.0, g.1, g.2),
+            g: Vector3::new(0.0, gravity(), 0.0),
         }
     }
 }
@@ -164,4 +168,49 @@ impl Iterator for Simulation {
         self.time += self.time_step;
         Some(self.distance())
     }
+}
+
+mod constructors {
+    pub use self::VelocityKind::*;
+    use conversions::*;
+    use na::{Rotation3, Vector3};
+
+    pub enum VelocityKind {
+        Projectile(f64),
+        Wind(f64),
+    }
+
+    pub fn construct_velocity(vk: VelocityKind, deg: f64) -> Vector3<f64> {
+        let (axis, velocity_mps) = match vk {
+            VelocityKind::Projectile(vel) => {
+                // Rotation along z axis is pitch, projectile up/down relative to x/y plane
+                let axis = Vector3::z_axis();
+                let velocity_mps = f64::from(Velocity::Fps(vel).to_mps());
+                (axis, velocity_mps)
+            }
+            VelocityKind::Wind(vel) => {
+                // Rotation along y axis is yaw, wind left/right relative to x/z plane
+                let axis = Vector3::y_axis();
+                let velocity_mps = f64::from(Velocity::Mph(vel).to_mps());
+                (axis, velocity_mps)
+            }
+        };
+        let angle = deg.to_radians();
+        let rotation = Rotation3::from_axis_angle(&axis, angle);
+        let velocity = Vector3::new(velocity_mps, 0.0, 0.0);
+        rotation * velocity
+    }
+
+    pub fn mass(weight_grains: f64) -> f64 {
+        f64::from(WeightMass::Grains(weight_grains).to_kgs())
+    }
+
+    pub fn radius(caliber: f64) -> f64 {
+        f64::from(Length::Inches(caliber).to_meters()) / 2.0
+    }
+
+    pub fn form_factor(weight_grains: f64, caliber: f64, bc: f64) -> f64 {
+        f64::from(WeightMass::Grains(weight_grains).to_lbs()) / (caliber.powf(2.0) * bc)
+    }
+
 }
