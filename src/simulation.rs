@@ -1,21 +1,18 @@
 use na::Vector3;
 
+pub use dragtables::TableKind;
+pub use physics::VelocityKind;
+
 use conversions::*;
 use dragtables::*;
 use physics::*;
 
-pub use dragtables::TableKind;
-pub use physics::VelocityKind;
+use std::f64::consts::PI;
 
 pub struct Simulation {
     // Constant properties
     pub mass: f64,   // Mass (kg)
     pub radius: f64, // Radius (m)
-    pub area: f64,   // Area (m)
-    pub caliber: f64,// Caliber (inch)
-    pub weight: f64, // Weight (grain)
-    pub sd: f64,     // Sectional Density
-    pub bc: f64,     // Ballistic Coefficient
     pub i: f64,      // Form Factor
 
     // Envelope of motion
@@ -25,7 +22,7 @@ pub struct Simulation {
     pub time: f64,                  // Position in time (s)
 
     // Variables for simulation
-    pub table: Table,  // Drag Function Table
+    pub table: Table,   // Drag Function Table
     pub time_step: f64, // Timestep for simulation (s)
 
     // Environmental Conditions
@@ -33,25 +30,33 @@ pub struct Simulation {
     pub rho: f64,                    // Density of air (kg/m^3)
     pub c: f64,                      // Speed of sound (m/s)
     pub g: Vector3<f64>,             // Gravity (m/s^2)
-    // Other factors, not calculated yet
-    // pub ptmp: f64,       // Powder Temperature (K?)
-    // pub lat:  f64,       // Lattitude (Coriolis Effect)
-    // pub long: f64,       // Longitude (Coriolis Effect)
-    // pub dir:  Direction, // Direction Facing (Coriolis Effect)
-    // pub spin: f64,       // Spin drift (Gyroscopic Drift)
+                                     // Other factors, not calculated yet
+                                     // pub ptmp: f64,       // Powder Temperature (K?)
+                                     // pub lat:  f64,       // Lattitude (Coriolis Effect)
+                                     // pub long: f64,       // Longitude (Coriolis Effect)
+                                     // pub dir:  Direction, // Direction Facing (Coriolis Effect)
+                                     // pub spin: f64,       // Spin drift (Gyroscopic Drift)
 }
 
-pub trait Drag {
-    fn acceleration_from_drag(&self) -> Vector3<f64>;
+pub trait Projectile {
+    fn area(&self) -> f64; // Area (m)
+    fn caliber(&self) -> f64; // Caliber (inch)
+    fn weight(&self) -> f64; // Weight (grain)
+    fn sd(&self) -> f64; // Sectional Density
+    fn bc(&self) -> f64; // Ballistic Coefficient
+    fn mach(&self) -> f64;
 }
 
 pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
-    fn mach(&self) -> f64;
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
+}
+
+pub trait Drag {
+    fn acceleration_from_drag(&self) -> Vector3<f64>;
 }
 
 impl Simulation {
@@ -71,8 +76,6 @@ impl Simulation {
     ) -> Self {
         let mass = mass(weight);
         let radius = radius(caliber);
-        let area = area(radius);
-        let sd = weight / caliber.powf(2.0);
         let i = form_factor(weight, caliber, bc);
         let iv = velocity_tuple(Projectile(initial_velocity), launch_angle);
         let table = Table::new(drag_table);
@@ -84,11 +87,6 @@ impl Simulation {
         Self {
             mass,
             radius,
-            area,
-            caliber,
-            weight,
-            sd,
-            bc,
             i,
 
             position: Vector3::new(0.0, 0.0, 0.0),
@@ -107,15 +105,33 @@ impl Simulation {
     }
 }
 
+impl Projectile for Simulation {
+    fn area(&self) -> f64 {
+        PI * self.radius.powf(2.0)
+    }
+    fn caliber(&self) -> f64 {
+        f64::from(Length::Meters(self.radius * 2.0).to_inches())
+    }
+    fn weight(&self) -> f64 {
+        f64::from(WeightMass::Kgs(self.mass).to_lbs())
+    }
+    fn sd(&self) -> f64 {
+        self.weight() / self.caliber().powf(2.0)
+    }
+    fn bc(&self) -> f64 {
+        self.sd() / self.i
+    }
+    fn mach(&self) -> f64 {
+        self.velocity.norm() / self.c
+    }
+}
+
 impl Output for Simulation {
     fn time(&self) -> f64 {
         f64::from(Time::Seconds(self.time).to_seconds())
     }
     fn velocity(&self) -> f64 {
         f64::from(Velocity::Mps(self.velocity.norm()).to_fps())
-    }
-    fn mach(&self) -> f64 {
-        self.velocity.norm() / self.c
     }
     fn distance(&self) -> f64 {
         f64::from(Length::Meters(self.position.x).to_yards())
@@ -131,7 +147,7 @@ impl Output for Simulation {
 impl Drag for Simulation {
     fn acceleration_from_drag(&self) -> Vector3<f64> {
         let cd = self.table.lerp(self.mach());
-        let cdv = (self.rho * self.area * cd * self.i) / (2.0 * self.mass);
+        let cdv = (self.rho * self.area() * cd * self.i) / (2.0 * self.mass);
         let vv = self.velocity - self.wind_velocity;
         -cdv * vv.norm() * vv + self.g
     }
@@ -141,7 +157,9 @@ impl Iterator for Simulation {
     type Item = f64;
     fn next(&mut self) -> Option<Self::Item> {
         self.acceleration = self.acceleration_from_drag();
-        self.position = self.position + self.velocity * self.time_step + self.acceleration * (self.time_step.powf(2.0) / 2.0);
+        self.position = self.position
+            + self.velocity * self.time_step
+            + self.acceleration * (self.time_step.powf(2.0) / 2.0);
         self.velocity = self.velocity + self.acceleration * self.time_step;
         self.time += self.time_step;
         Some(self.distance())

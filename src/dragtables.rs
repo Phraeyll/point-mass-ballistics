@@ -35,13 +35,8 @@ impl Tabular for Table {
     }
     fn lerp(&self, k: f64) -> f64 {
         let key = OrderedFloat(k);
-
-        let x0 = self.0.range(..key).next_back().unwrap().0;
-        let y0 = self.0.get(&x0).unwrap();
-
-        let x1 = self.0.range(key..).next().unwrap().0;
-        let y1 = self.0.get(&x1).unwrap();
-
+        let (x0, y0) = self.0.range(..key).next_back().unwrap();
+        let (x1, y1) = self.0.range(key..).next().unwrap();
         let (x, y) = ((x0.0, x1.0), (*y0, *y1));
         y.0 + (k - x.0) * (y.1 - y.0) / (x.1 - x.0)
     }
