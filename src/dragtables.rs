@@ -2,10 +2,10 @@ use of::OrderedFloat;
 
 use std::collections::BTreeMap;
 
-pub use self::TableKind::*;
+pub use self::DragTableKind::*;
 custom_derive! {
-    #[derive(Debug, EnumFromStr)]
-    pub enum TableKind {
+    #[derive(EnumFromStr)]
+    pub enum DragTableKind {
         G1,
         G2,
         G5,
@@ -16,35 +16,26 @@ custom_derive! {
     }
 }
 
-#[derive(Debug)]
-pub struct Table(pub BTreeMap<OrderedFloat<f64>, f64>);
+pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
-pub trait Tabular {
-    type K;
-    fn iter_insert(&mut self, Vec<(f64, f64)>);
-    fn new(Self::K) -> Self;
-    fn lerp(&self, f64) -> f64;
-}
-
-impl Tabular for Table {
-    type K = TableKind;
-    fn iter_insert(&mut self, v: Vec<(f64, f64)>) {
-        for (k, v) in v.iter() {
-            self.0.insert(OrderedFloat(*k), *v);
+impl DragTable {
+    fn mut_iter_insert(&mut self, mach_cd_values: Vec<(f64, f64)>) {
+        for (x, y) in mach_cd_values.iter() {
+            self.0.insert(OrderedFloat(*x), *y);
         }
     }
-    fn lerp(&self, k: f64) -> f64 {
-        let key = OrderedFloat(k);
+    pub fn lerp(&self, mach: f64) -> f64 {
+        let key = OrderedFloat(mach);
         let (x0, y0) = self.0.range(..key).next_back().unwrap();
         let (x1, y1) = self.0.range(key..).next().unwrap();
         let (x, y) = ((x0.0, x1.0), (*y0, *y1));
-        y.0 + (k - x.0) * (y.1 - y.0) / (x.1 - x.0)
+        y.0 + (mach - x.0) * (y.1 - y.0) / (x.1 - x.0)
     }
-    fn new(tk: Self::K) -> Self {
-        let mut t = Table(BTreeMap::new());
-        match tk {
+    pub fn new(drag_table_kind: DragTableKind) -> Self {
+        let mut drag_table = DragTable(BTreeMap::new());
+        match drag_table_kind {
             G1 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.2629),
                     (0.05, 0.2558),
                     (0.10, 0.2487),
@@ -127,7 +118,7 @@ impl Tabular for Table {
                 ]);
             }
             G2 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.2303),
                     (0.05, 0.2298),
                     (0.10, 0.2287),
@@ -216,7 +207,7 @@ impl Tabular for Table {
                 ]);
             }
             G5 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.1710),
                     (0.05, 0.1719),
                     (0.10, 0.1727),
@@ -296,7 +287,7 @@ impl Tabular for Table {
                 ]);
             }
             G6 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.2617),
                     (0.05, 0.2553),
                     (0.10, 0.2491),
@@ -379,7 +370,7 @@ impl Tabular for Table {
                 ]);
             }
             G7 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.1198),
                     (0.05, 0.1197),
                     (0.10, 0.1196),
@@ -467,7 +458,7 @@ impl Tabular for Table {
                 ]);
             }
             G8 => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.2105),
                     (0.05, 0.2105),
                     (0.10, 0.2104),
@@ -549,7 +540,7 @@ impl Tabular for Table {
                 ]);
             }
             GI => {
-                t.iter_insert(vec![
+                drag_table.mut_iter_insert(vec![
                     (0.00, 0.2282),
                     (0.05, 0.2282),
                     (0.10, 0.2282),
@@ -634,6 +625,6 @@ impl Tabular for Table {
                 ]);
             }
         }
-        t
+        drag_table
     }
 }

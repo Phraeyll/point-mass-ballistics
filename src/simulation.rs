@@ -1,6 +1,6 @@
 use na::Vector3;
 
-pub use dragtables::TableKind;
+pub use dragtables::DragTableKind;
 
 use conversions::*;
 use dragtables::*;
@@ -23,7 +23,7 @@ pub struct Simulation {
     pub time: f64,                  // Position in time (s)
 
     // Variables for simulation
-    pub table: Table,   // Drag Function Table
+    pub table: DragTable,   // Drag Function DragTable
     pub time_step: f64, // Timestep for simulation (s)
 
     // Environmental Conditions
@@ -69,7 +69,7 @@ impl Simulation {
         bc: f64,
         initial_velocity: f64,
         launch_angle: f64,
-        drag_table: TableKind,
+        drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
         wind_angle: f64,
@@ -95,7 +95,7 @@ impl Simulation {
             acceleration: Vector3::new(0.0, 0.0, 0.0),
             time: 0.0,
 
-            table: Table::new(drag_table),
+            table: DragTable::new(drag_table),
             time_step: time_step,
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
