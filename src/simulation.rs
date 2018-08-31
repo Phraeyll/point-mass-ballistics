@@ -14,7 +14,7 @@ pub const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 pub const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 pub const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
 
-pub struct Simulation {
+pub struct PointMassModel {
     // Constant properties
     pub weight: WeightMass,   // Weight (grains)
     pub caliber: Length, // Caliber (inches)
@@ -54,7 +54,7 @@ pub trait Projectile {
     fn i(&self) -> f64; // Form Factor
 
 }
-pub trait Simulatable {
+pub trait DragSimulation {
     fn rho(&self) -> f64;  // Density of air (kg/m^3)
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
     fn drag_force(&self) -> Vector3<f64>;
@@ -69,7 +69,7 @@ pub trait Output {
 }
 
 
-impl Simulation {
+impl PointMassModel {
     pub fn new(
         weight: f64,
         caliber: f64,
@@ -126,7 +126,7 @@ impl Simulation {
     }
 }
 
-impl Projectile for Simulation {
+impl Projectile for PointMassModel {
     fn area(&self) -> f64 {
         PI * self.radius().powf(2.0)
     }
@@ -145,7 +145,7 @@ impl Projectile for Simulation {
 
 }
 
-impl Output for Simulation {
+impl Output for PointMassModel {
     fn time(&self) -> f64 {
         f64::from(Time::Seconds(self.time).to_seconds())
     }
@@ -163,7 +163,7 @@ impl Output for Simulation {
     }
 }
 
-impl Simulatable for Simulation {
+impl DragSimulation for PointMassModel {
     fn rho(&self) -> f64 {
         let celsius = f64::from(self.temperature.to_celsius());
         let kelvin = f64::from(self.temperature.to_kelvin());
@@ -185,7 +185,7 @@ impl Simulatable for Simulation {
     }
 }
 
-impl Iterator for Simulation {
+impl Iterator for PointMassModel {
     type Item = f64;
     fn next(&mut self) -> Option<Self::Item> {
         self.acceleration = self.drag_force() / self.mass() + self.g;
