@@ -147,10 +147,10 @@ impl Output for Simulation {
 
 impl Drag for Simulation {
     fn acceleration_from_drag(&self) -> Vector3<f64> {
-        let cd = self.table.lerp(self.mach());
-        let cdv = (self.rho * self.area() * cd * self.i) / (2.0 * self.mass);
+        let cdi = self.table.lerp(self.mach()) * self.i;
+        let cd = (self.rho * self.area() * cdi) / (2.0 * self.mass);
         let vv = self.velocity - self.wind_velocity;
-        -cdv * vv.norm() * vv + self.g
+        -cd * vv.norm() * vv + self.g
     }
 }
 
