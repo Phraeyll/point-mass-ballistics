@@ -23,8 +23,8 @@ pub struct Simulation {
     pub time: f64,                  // Position in time (s)
 
     // Variables for simulation
-    pub table: DragTable,   // Drag Function DragTable
-    pub time_step: f64, // Timestep for simulation (s)
+    pub table: DragTable, // Drag Function DragTable
+    pub time_step: f64,   // Timestep for simulation (s)
 
     // Environmental Conditions
     pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
