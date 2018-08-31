@@ -10,4 +10,3 @@ pub mod simulation;
 
 mod conversions;
 mod dragtables;
-mod physics;

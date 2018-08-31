@@ -6,15 +6,19 @@ use self::constructors::*;
 use conversions::consts::*;
 use conversions::*;
 use dragtables::*;
-use physics;
 
-use std::f64::consts::PI;
+use std::f64::consts::{PI, E};
+
+pub const GRAVITY: Acceleration = Acceleration::Mps2(-9.80665); // Local gravity in m/s
+pub const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
+pub const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
+pub const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
 
 pub struct Simulation {
     // Constant properties
-    pub mass: f64,   // Mass (kg)
-    pub radius: f64, // Radius (m)
-    pub i: f64,      // Form Factor
+    pub weight: WeightMass,   // Weight (grains)
+    pub caliber: Length, // Caliber (inches)
+    pub bc: f64,      // Ballistic Coefficient
 
     // Envelope of motion
     pub position: Vector3<f64>,     // Position (m)
@@ -28,8 +32,9 @@ pub struct Simulation {
 
     // Environmental Conditions
     pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
-    pub rho: f64,                    // Density of air (kg/m^3)
-    pub c: f64,                      // Speed of sound (m/s)
+    pub temperature: Temperature,    // Temperature (F)
+    pub pressure: Pressure,          // Pressure (InHg)
+    pub humidity: f64,               // Humidity (0-1)
     pub g: Vector3<f64>,             // Gravity (m/s^2)
     /*
     Other factors, not calculated yet
@@ -42,12 +47,18 @@ pub struct Simulation {
 }
 
 pub trait Projectile {
-    fn area(&self) -> f64; // Area (m)
-    fn caliber(&self) -> f64; // Caliber (inch)
-    fn weight(&self) -> f64; // Weight (grain)
+    fn area(&self) -> f64; // Area (meters)
+    fn mass(&self) -> f64; // Mass (kgs)
+    fn radius(&self) -> f64; // Radius (meters)
     fn sd(&self) -> f64; // Sectional Density
-    fn bc(&self) -> f64; // Ballistic Coefficient
+    fn i(&self) -> f64; // Form Factor
+
+}
+pub trait Simulatable {
+    fn rho(&self) -> f64;  // Density of air (kg/m^3)
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
+    fn c(&self) -> f64;    // Speed of sound based on conditions (m/s)
+    fn drag_force(&self) -> Vector3<f64>;
 }
 
 pub trait Output {
@@ -58,9 +69,6 @@ pub trait Output {
     fn windage(&self) -> f64;
 }
 
-pub trait Drag {
-    fn acceleration_from_drag(&self) -> Vector3<f64>;
-}
 
 impl Simulation {
     pub fn new(
@@ -83,13 +91,12 @@ impl Simulation {
         let temperature_f = Temperature::F(temperature);
         let pressure_inhg = Pressure::Inhg(pressure);
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
-        let rho = physics::air_density(temperature_f, pressure_inhg, humidity);
         let time_step_seconds = Time::Seconds(time_step);
 
         Self {
-            mass: weight_grains.to_kgs().into(),
-            radius: f64::from(diameter_inches.to_meters()) / 2.0,
-            i: form_factor(weight_grains, diameter_inches, bc),
+            weight: weight_grains,
+            caliber: diameter_inches,
+            bc,
 
             position: Vector3::new(ZERO_METERS.into(), ZERO_METERS.into(), ZERO_METERS.into()),
             velocity: construct_velocity(initial_velocity_fps, Projectile(launch_angle)),
@@ -100,11 +107,12 @@ impl Simulation {
             time_step: time_step_seconds.to_seconds().into(),
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
-            rho: rho,
-            c: physics::speed_sound(rho, pressure_inhg),
+            temperature: temperature_f,
+            pressure: pressure_inhg,
+            humidity,
             g: Vector3::new(
                 ZERO_MPS2.into(),
-                physics::gravity().into(),
+                GRAVITY.into(),
                 ZERO_MPS2.into(),
             ),
         }
@@ -113,23 +121,21 @@ impl Simulation {
 
 impl Projectile for Simulation {
     fn area(&self) -> f64 {
-        PI * self.radius.powf(2.0)
+        PI * self.radius().powf(2.0)
     }
-    fn caliber(&self) -> f64 {
-        f64::from(Length::Meters(self.radius * 2.0).to_inches())
+    fn mass(&self) -> f64 {
+        self.weight.to_kgs().into()
     }
-    fn weight(&self) -> f64 {
-        f64::from(WeightMass::Kgs(self.mass).to_lbs())
+    fn radius(&self) -> f64 {
+        f64::from(self.caliber.to_meters()) / 2.0
     }
     fn sd(&self) -> f64 {
-        self.weight() / self.caliber().powf(2.0)
+        f64::from(self.weight.to_lbs()) / f64::from(self.caliber.to_inches()).powf(2.0)
     }
-    fn bc(&self) -> f64 {
-        self.sd() / self.i
+    fn i(&self) -> f64 {
+        self.sd() / self.bc
     }
-    fn mach(&self) -> f64 {
-        self.velocity.norm() / self.c
-    }
+
 }
 
 impl Output for Simulation {
@@ -150,19 +156,34 @@ impl Output for Simulation {
     }
 }
 
-impl Drag for Simulation {
-    fn acceleration_from_drag(&self) -> Vector3<f64> {
-        let cdi = self.drag_table.lerp(self.mach()) * self.i;
-        let cd = (self.rho * self.area() * cdi) / (2.0 * self.mass);
+impl Simulatable for Simulation {
+    fn rho(&self) -> f64 {
+        let celsius = f64::from(self.temperature.to_celsius());
+        let kelvin = f64::from(self.temperature.to_kelvin());
+        let pa = f64::from(self.pressure.to_pascals());
+        let pv =
+            self.humidity * 611.21 * E.powf((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius)));
+        let pd = pa - pv;
+        ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * kelvin)
+    }
+    fn c(&self) -> f64 {
+        let pa = f64::from(self.pressure.to_pascals());
+        (1.4 * (pa / self.rho())).sqrt()
+    }
+    fn mach(&self) -> f64 {
+        self.velocity.norm() / self.c()
+    }
+    fn drag_force(&self) -> Vector3<f64> {
+        let cd = self.drag_table.lerp(self.mach()) * self.i();
         let vv = self.velocity - self.wind_velocity;
-        -cd * vv.norm() * vv + self.g
+        -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
 }
 
 impl Iterator for Simulation {
     type Item = f64;
     fn next(&mut self) -> Option<Self::Item> {
-        self.acceleration = self.acceleration_from_drag();
+        self.acceleration = self.drag_force() / self.mass() + self.g;
         self.position = self.position
             + self.velocity * self.time_step
             + self.acceleration * (self.time_step.powf(2.0) / 2.0);
@@ -200,9 +221,4 @@ mod constructors {
         let velocity = Vector3::new(velocity_mps, ZERO_MPS.into(), ZERO_MPS.into());
         rotation * velocity
     }
-
-    pub fn form_factor(weight: WeightMass, caliber: Length, bc: f64) -> f64 {
-        f64::from(weight.to_lbs()) / (f64::from(caliber.to_inches()).powf(2.0) * bc)
-    }
-
 }
