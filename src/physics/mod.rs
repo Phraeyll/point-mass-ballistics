@@ -1,5 +1,5 @@
-use conversions::*;
 use self::consts::*;
+use conversions::*;
 
 use std::f64;
 use std::f64::consts::E;

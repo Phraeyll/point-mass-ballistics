@@ -2,11 +2,11 @@ use na::Vector3;
 
 pub use dragtables::DragTableKind;
 
-use conversions::*;
+use self::constructors::*;
 use conversions::const_units::*;
+use conversions::*;
 use dragtables::*;
 use physics;
-use self::constructors::*;
 
 use std::f64::consts::PI;
 
@@ -102,7 +102,11 @@ impl Simulation {
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
             rho: rho,
             c: physics::speed_sound(rho, pressure_inhg),
-            g: Vector3::new(ZERO_MPS2.into(), physics::gravity().into(), ZERO_MPS2.into()),
+            g: Vector3::new(
+                ZERO_MPS2.into(),
+                physics::gravity().into(),
+                ZERO_MPS2.into(),
+            ),
         }
     }
 }
@@ -171,8 +175,8 @@ impl Iterator for Simulation {
 mod constructors {
     pub use self::AngleKind::*;
 
-    use conversions::*;
     use conversions::const_units::*;
+    use conversions::*;
     use na::{Rotation3, Vector3};
 
     pub enum AngleKind {

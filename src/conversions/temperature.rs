@@ -1,5 +1,5 @@
-use super::consts::*;
 use self::Temperature::*;
+use super::consts::*;
 
 #[derive(Copy, Clone)]
 pub enum Temperature {

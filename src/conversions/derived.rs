@@ -1,5 +1,5 @@
+use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*};
 use super::consts::*;
-use self::{Density::*, Pressure::*, Velocity::*, Acceleration::*};
 
 #[derive(Copy, Clone)]
 pub enum Pressure {
