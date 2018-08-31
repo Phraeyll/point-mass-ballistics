@@ -77,26 +77,27 @@ impl Simulation {
         pressure: f64,
         humidity: f64,
     ) -> Self {
-        let weight_lbs = WeightMass::Grains(weight);
-        let radius_inches = Length::Inches(caliber);
+        let weight_grains = WeightMass::Grains(weight);
+        let diameter_inches = Length::Inches(caliber);
         let initial_velocity_fps = Velocity::Fps(initial_velocity);
         let temperature_f = Temperature::F(temperature);
         let pressure_inhg = Pressure::Inhg(pressure);
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let rho = physics::air_density(temperature_f, pressure_inhg, humidity);
+        let time_step_seconds = Time::Seconds(time_step);
 
         Self {
-            mass: mass_kgs(weight_lbs),
-            radius: radius_meters(radius_inches),
-            i: form_factor(weight_lbs, radius_inches, bc),
+            mass: mass_kgs(weight_grains),
+            radius: radius_meters(diameter_inches),
+            i: form_factor(weight_grains, diameter_inches, bc),
 
             position: Vector3::new(0.0, 0.0, 0.0),
             velocity: construct_velocity(initial_velocity_fps, Projectile(launch_angle)),
             acceleration: Vector3::new(0.0, 0.0, 0.0),
-            time: 0.0,
+            time: time_seconds(Time::Seconds(0.0)),
 
             table: DragTable::new(drag_table),
-            time_step: time_step,
+            time_step: time_seconds(time_step_seconds),
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
             rho: rho,
@@ -201,6 +202,10 @@ mod constructors {
 
     pub fn radius_meters(caliber: Length) -> f64 {
         f64::from(caliber.to_meters()) / 2.0
+    }
+
+    pub fn time_seconds(time: Time) -> f64 {
+        f64::from(time.to_seconds())
     }
 
     pub fn form_factor(weight: WeightMass, caliber: Length, bc: f64) -> f64 {
