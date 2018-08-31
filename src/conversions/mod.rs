@@ -4,6 +4,14 @@ mod consts;
 
 use self::consts::*;
 
+pub mod units {
+    use super::*;
+    pub const ZERO_SECONDS: Time = Time::Seconds(0.0);
+    pub const ZERO_METERS: Length = Length::Meters(0.0);
+    pub const ZERO_MPS: Velocity = Velocity::Mps(0.0);
+    pub const ZERO_MPS2: Acceleration = Acceleration::Mps2(0.0);
+}
+
 mod length {
     use self::Length::*;
     use super::*;
@@ -205,7 +213,7 @@ mod temperature {
     }
 }
 mod derived {
-    use self::{Density::*, Pressure::*, Velocity::*};
+    use self::{Density::*, Pressure::*, Velocity::*, Acceleration::*};
     use super::*;
 
     #[derive(Copy, Clone)]
@@ -299,6 +307,45 @@ mod derived {
                 u @ Fps(_) => u,
                 Mps(u) => Fps(u * MPS_TO_FPS),
                 Mph(u) => Fps(u * MPH_TO_FPS),
+            }
+        }
+    }
+
+    #[derive(Copy, Clone)]
+    pub enum Acceleration {
+        Mps2(f64),
+        Mph2(f64),
+        Fps2(f64),
+    }
+    impl From<Acceleration> for f64 {
+        fn from(u: Acceleration) -> f64 {
+            match u {
+                Mps2(u) => u,
+                Mph2(u) => u,
+                Fps2(u) => u,
+            }
+        }
+    }
+    impl self::Acceleration {
+        pub fn to_mps2(self) -> Self {
+            match self {
+                u @ Mps2(_) => u,
+                Mph2(u) => Mps2(u * MPH2_TO_MPS2),
+                Fps2(u) => Mps2(u * FPS2_TO_MPS2),
+            }
+        }
+        pub fn to_mph2(self) -> Self {
+            match self {
+                u @ Mph2(_) => u,
+                Mps2(u) => Mph2(u * MPS2_TO_MPH2),
+                Fps2(u) => Mph2(u * FPS2_TO_MPH2),
+            }
+        }
+        pub fn to_fps2(self) -> Self {
+            match self {
+                u @ Fps2(_) => u,
+                Mps2(u) => Fps2(u * MPS2_TO_FPS2),
+                Mph2(u) => Fps2(u * MPH2_TO_FPS2),
             }
         }
     }

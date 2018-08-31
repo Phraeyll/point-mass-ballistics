@@ -3,12 +3,15 @@ use na::Vector3;
 pub use dragtables::DragTableKind;
 
 use conversions::*;
+use conversions::units::*;
 use dragtables::*;
 use physics;
 
 use self::constructors::*;
 
 use std::f64::consts::PI;
+
+
 
 pub struct Simulation {
     // Constant properties
@@ -47,7 +50,7 @@ pub trait Projectile {
     fn weight(&self) -> f64; // Weight (grain)
     fn sd(&self) -> f64; // Sectional Density
     fn bc(&self) -> f64; // Ballistic Coefficient
-    fn mach(&self) -> f64; // Velocity relative to speed of sound
+    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
 }
 
 pub trait Output {
@@ -87,22 +90,22 @@ impl Simulation {
         let time_step_seconds = Time::Seconds(time_step);
 
         Self {
-            mass: mass_kgs(weight_grains),
-            radius: radius_meters(diameter_inches),
+            mass: weight_grains.to_kgs().into(),
+            radius: f64::from(diameter_inches.to_meters()) / 2.0,
             i: form_factor(weight_grains, diameter_inches, bc),
 
-            position: Vector3::new(0.0, 0.0, 0.0),
+            position: Vector3::new(ZERO_METERS.into(), ZERO_METERS.into(), ZERO_METERS.into()),
             velocity: construct_velocity(initial_velocity_fps, Projectile(launch_angle)),
-            acceleration: Vector3::new(0.0, 0.0, 0.0),
-            time: time_seconds(Time::Seconds(0.0)),
+            acceleration: Vector3::new(ZERO_MPS2.into(), ZERO_MPS2.into(), ZERO_MPS2.into()),
+            time: ZERO_SECONDS.into(),
 
             table: DragTable::new(drag_table),
-            time_step: time_seconds(time_step_seconds),
+            time_step: time_step_seconds.to_seconds().into(),
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
             rho: rho,
             c: physics::speed_sound(rho, pressure_inhg),
-            g: Vector3::new(0.0, physics::gravity(), 0.0),
+            g: Vector3::new(ZERO_MPS2.into(), physics::gravity().into(), ZERO_MPS2.into()),
         }
     }
 }
@@ -172,6 +175,7 @@ mod constructors {
     pub use self::AngleKind::*;
 
     use conversions::*;
+    use conversions::units::*;
     use na::{Rotation3, Vector3};
 
     pub enum AngleKind {
@@ -190,22 +194,10 @@ mod constructors {
                 (Vector3::y_axis(), deg.to_radians())
             }
         };
-        let velocity_mps = f64::from(vel.to_mps());
+        let velocity_mps = vel.to_mps().into();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let velocity = Vector3::new(velocity_mps, 0.0, 0.0);
+        let velocity = Vector3::new(velocity_mps, ZERO_MPS.into(), ZERO_MPS.into());
         rotation * velocity
-    }
-
-    pub fn mass_kgs(weight: WeightMass) -> f64 {
-        f64::from(weight.to_kgs())
-    }
-
-    pub fn radius_meters(caliber: Length) -> f64 {
-        f64::from(caliber.to_meters()) / 2.0
-    }
-
-    pub fn time_seconds(time: Time) -> f64 {
-        f64::from(time.to_seconds())
     }
 
     pub fn form_factor(weight: WeightMass, caliber: Length, bc: f64) -> f64 {

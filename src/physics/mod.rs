@@ -21,6 +21,6 @@ pub fn speed_sound(rho: f64, pressure: Pressure) -> f64 {
     (1.4 * (pa / rho)).sqrt()
 }
 
-pub fn gravity() -> f64 {
+pub fn gravity() -> Acceleration {
     GRAVITY
 }
