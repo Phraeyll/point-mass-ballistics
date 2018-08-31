@@ -57,7 +57,6 @@ pub trait Projectile {
 pub trait Simulatable {
     fn rho(&self) -> f64;  // Density of air (kg/m^3)
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
-    fn c(&self) -> f64;    // Speed of sound based on conditions (m/s)
     fn drag_force(&self) -> Vector3<f64>;
 }
 
@@ -98,9 +97,17 @@ impl Simulation {
             caliber: diameter_inches,
             bc,
 
-            position: Vector3::new(ZERO_METERS.into(), ZERO_METERS.into(), ZERO_METERS.into()),
+            position: Vector3::new(
+                    ZERO_METERS.into(),
+                    ZERO_METERS.into(),
+                    ZERO_METERS.into()
+            ),
             velocity: construct_velocity(initial_velocity_fps, Projectile(launch_angle)),
-            acceleration: Vector3::new(ZERO_MPS2.into(), ZERO_MPS2.into(), ZERO_MPS2.into()),
+            acceleration: Vector3::new(
+                    ZERO_MPS2.into(),
+                    ZERO_MPS2.into(),
+                    ZERO_MPS2.into()
+            ),
             time: ZERO_SECONDS.into(),
 
             drag_table: DragTable::new(drag_table),
@@ -166,12 +173,10 @@ impl Simulatable for Simulation {
         let pd = pa - pv;
         ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * kelvin)
     }
-    fn c(&self) -> f64 {
-        let pa = f64::from(self.pressure.to_pascals());
-        (1.4 * (pa / self.rho())).sqrt()
-    }
     fn mach(&self) -> f64 {
-        self.velocity.norm() / self.c()
+        let pa = f64::from(self.pressure.to_pascals());
+        let c = (1.4 * (pa / self.rho())).sqrt();
+        self.velocity.norm() / c
     }
     fn drag_force(&self) -> Vector3<f64> {
         let cd = self.drag_table.lerp(self.mach()) * self.i();
