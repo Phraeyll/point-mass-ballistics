@@ -3,7 +3,7 @@ use na::Vector3;
 pub use dragtables::DragTableKind;
 
 use self::constructors::*;
-use conversions::const_units::*;
+use conversions::consts::*;
 use conversions::*;
 use dragtables::*;
 use physics;
@@ -175,7 +175,7 @@ impl Iterator for Simulation {
 mod constructors {
     pub use self::AngleKind::*;
 
-    use conversions::const_units::*;
+    use conversions::consts::*;
     use conversions::*;
     use na::{Rotation3, Vector3};
 

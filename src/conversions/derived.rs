@@ -1,5 +1,33 @@
 use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*};
-use super::consts::*;
+use super::{length::*, time::*, weight_mass::*};
+
+// Pressure
+pub const INHG_TO_PASCALS: f64 = 3386.38;
+pub const PASCALS_TO_INHG: f64 = 1.0 / INHG_TO_PASCALS;
+
+// Density
+pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+pub const KGPM3_TO_LBPF3: f64 = 1.0 / LBPF3_TO_KGPM3;
+
+// Velocity
+pub const MPH_TO_MPS: f64 = MPH_TO_FPS * FPS_TO_MPS;
+pub const MPS_TO_MPH: f64 = 1.0 / MPH_TO_MPS;
+
+pub const MPH_TO_FPS: f64 = MILES_TO_FEET / HOURS_TO_SECONDS;
+pub const FPS_TO_MPH: f64 = 1.0 / MPH_TO_FPS;
+
+pub const FPS_TO_MPS: f64 = FEET_TO_METERS;
+pub const MPS_TO_FPS: f64 = 1.0 / FPS_TO_MPS;
+
+// Acceleration ??
+pub const MPH2_TO_MPS2: f64 = MPH2_TO_FPS2 * FPS2_TO_MPS2;
+pub const MPS2_TO_MPH2: f64 = 1.0 / MPH2_TO_MPS2;
+
+pub const MPH2_TO_FPS2: f64 = MPH_TO_FPS / HOURS_TO_SECONDS;
+pub const FPS2_TO_MPH2: f64 = 1.0 / MPH2_TO_FPS2;
+
+pub const FPS2_TO_MPS2: f64 = FPS_TO_MPS;
+pub const MPS2_TO_FPS2: f64 = 1.0 / FPS2_TO_MPS2;
 
 #[derive(Copy, Clone)]
 pub enum Pressure {

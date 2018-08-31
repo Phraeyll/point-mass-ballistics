@@ -1,7 +1,6 @@
 pub use self::{derived::*, length::*, temperature::*, time::*, weight_mass::*};
 
-pub mod const_units;
-mod consts;
+pub mod consts;
 mod derived;
 mod length;
 mod temperature;

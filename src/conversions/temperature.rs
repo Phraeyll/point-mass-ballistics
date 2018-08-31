@@ -1,5 +1,19 @@
 use self::Temperature::*;
-use super::consts::*;
+
+pub const F_TO_CK: f64 = 5.0 / 9.0;
+pub const CK_TO_F: f64 = 1.0 / F_TO_CK;
+
+// Additive
+pub const C_TO_K: f64 = 273.15;
+pub const K_TO_C: f64 = -C_TO_K;
+
+// Additive
+pub const F_TO_K: f64 = 459.67;
+pub const K_TO_F: f64 = -F_TO_K;
+
+// Additive
+pub const F_TO_C: f64 = -32.0;
+pub const C_TO_F: f64 = -F_TO_C;
 
 #[derive(Copy, Clone)]
 pub enum Temperature {
