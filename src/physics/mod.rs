@@ -1,10 +1,10 @@
-mod consts;
-
-use self::consts::*;
 use conversions::*;
+use self::consts::*;
 
 use std::f64;
 use std::f64::consts::E;
+
+mod consts;
 
 pub fn air_density(temperature: Temperature, pressure: Pressure, humidity: f64) -> f64 {
     let celsius = f64::from(temperature.to_celsius());

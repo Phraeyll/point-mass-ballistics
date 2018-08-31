@@ -3,15 +3,12 @@ use na::Vector3;
 pub use dragtables::DragTableKind;
 
 use conversions::*;
-use conversions::units::*;
+use conversions::const_units::*;
 use dragtables::*;
 use physics;
-
 use self::constructors::*;
 
 use std::f64::consts::PI;
-
-
 
 pub struct Simulation {
     // Constant properties
@@ -175,7 +172,7 @@ mod constructors {
     pub use self::AngleKind::*;
 
     use conversions::*;
-    use conversions::units::*;
+    use conversions::const_units::*;
     use na::{Rotation3, Vector3};
 
     pub enum AngleKind {

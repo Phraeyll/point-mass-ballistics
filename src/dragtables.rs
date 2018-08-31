@@ -1,8 +1,9 @@
 use of::OrderedFloat;
 
+pub use self::DragTableKind::*;
+
 use std::collections::BTreeMap;
 
-pub use self::DragTableKind::*;
 custom_derive! {
     #[derive(EnumFromStr)]
     pub enum DragTableKind {
