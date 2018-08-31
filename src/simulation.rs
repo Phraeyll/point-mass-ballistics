@@ -23,7 +23,7 @@ pub struct Simulation {
     pub time: f64,                  // Position in time (s)
 
     // Variables for simulation
-    pub table: DragTable, // Drag Function DragTable
+    pub drag_table: DragTable, // Drag Function DragTable
     pub time_step: f64,   // Timestep for simulation (s)
 
     // Environmental Conditions
@@ -96,7 +96,7 @@ impl Simulation {
             acceleration: Vector3::new(ZERO_MPS2.into(), ZERO_MPS2.into(), ZERO_MPS2.into()),
             time: ZERO_SECONDS.into(),
 
-            table: DragTable::new(drag_table),
+            drag_table: DragTable::new(drag_table),
             time_step: time_step_seconds.to_seconds().into(),
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
@@ -152,7 +152,7 @@ impl Output for Simulation {
 
 impl Drag for Simulation {
     fn acceleration_from_drag(&self) -> Vector3<f64> {
-        let cdi = self.table.lerp(self.mach()) * self.i;
+        let cdi = self.drag_table.lerp(self.mach()) * self.i;
         let cd = (self.rho * self.area() * cdi) / (2.0 * self.mass);
         let vv = self.velocity - self.wind_velocity;
         -cd * vv.norm() * vv + self.g
