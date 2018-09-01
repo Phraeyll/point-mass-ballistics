@@ -42,7 +42,7 @@ impl DragTable {
     }
     pub fn new(drag_table_kind: DragTableKind) -> Self {
         let mut drag_table = DragTable(BTreeMap::new());
-        let v = match drag_table_kind {
+        let v: Vec<(f64, f64)> = match drag_table_kind {
             G1 => g1::init(),
             G2 => g2::init(),
             G5 => g5::init(),
