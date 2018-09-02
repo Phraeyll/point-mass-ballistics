@@ -31,6 +31,7 @@ pub struct PointMassModel {
     pub time_step: f64,              // Timestep for simulation (s)
     pub launch_angle: f64,           // Initial launch angle (degrees)
     pub scope_height: Length,        // Scope Height (inches)
+    pub zero_distance: Length,
 
     // Environmental Conditions
     pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
@@ -83,6 +84,7 @@ impl PointMassModel {
         initial_velocity: f64,
         launch_angle: f64,
         scope_height: f64,
+        zero_distance: f64,
         drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
@@ -99,6 +101,7 @@ impl PointMassModel {
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let time_step_seconds = Time::Seconds(time_step);
         let scope_height_inches = Length::Inches(scope_height);
+        let zero_distance_yards = Length::Yards(zero_distance);
 
         Self {
             weight: weight_grains,
@@ -122,6 +125,7 @@ impl PointMassModel {
             time_step: time_step_seconds.to_seconds().into(),
             launch_angle,
             scope_height: scope_height_inches,
+            zero_distance: zero_distance_yards,
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
             temperature: temperature_f,
