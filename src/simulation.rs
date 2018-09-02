@@ -69,7 +69,6 @@ trait DragSimulation {
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
     fn drag_force(&self) -> Vector3<f64>;
 }
-
 pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
