@@ -75,10 +75,7 @@ pub trait Output {
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
-    fn relative_velocity(&self) -> f64;
-    fn relative_distance(&self) -> f64;
-    fn relative_drop(&self) -> f64;
-    fn relative_windage(&self) -> f64;
+    fn relative_position(&self) -> (f64, f64, f64);
 }
 
 impl PointMassModel {
@@ -155,12 +152,13 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         self.envelope.velocity =
             self.envelope.velocity + self.envelope.acceleration * self.model.time_step;
         self.envelope.time += self.model.time_step;
+        let (distance, drop, windage) = self.relative_position();
         Some((
             self.time(),
             self.velocity(),
-            self.relative_distance(),
-            self.relative_drop(),
-            self.relative_windage(),
+            distance,
+            drop,
+            windage,
         ))
     }
 }
@@ -222,35 +220,18 @@ impl<'a> Output for IterPointMassModel<'a> {
     fn windage(&self) -> f64 {
         f64::from(Length::Meters(self.envelope.position.z).to_inches())
     }
-    fn relative_velocity(&self) -> f64 {
-        let angle = -self.model.initial_angle.to_radians();
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let velocity = rotation * self.envelope.velocity;
-        f64::from(Velocity::Mps(velocity.norm()).to_fps())
-    }
-    fn relative_distance(&self) -> f64 {
-        let angle = -self.model.initial_angle.to_radians();
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let position = rotation * self.envelope.position;
-        f64::from(Length::Meters(position.x).to_yards())
-    }
-    fn relative_drop(&self) -> f64 {
+    fn relative_position(&self) -> (f64, f64, f64) {
         let angle = -self.model.initial_angle.to_radians();
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let height = Vector3::new(0.0, f64::from(self.model.scope_height.to_meters()), 0.0);
         let position = rotation * self.envelope.position - height;
         let drop = f64::from(Length::Meters(position.y));
-        f64::from(Length::Meters(drop).to_inches())
-    }
-    fn relative_windage(&self) -> f64 {
-        let angle = -self.model.initial_angle.to_radians();
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let position = rotation * self.envelope.position;
-        f64::from(Length::Meters(position.z).to_inches())
+        (
+            f64::from(Length::Meters(position.x).to_yards()),
+            f64::from(Length::Meters(drop).to_inches()),
+            f64::from(Length::Meters(position.z).to_inches()),
+        )
     }
 }
 
