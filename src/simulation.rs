@@ -1,4 +1,4 @@
-use na::Vector3;
+use na::{Vector3, Rotation3};
 
 pub use dragtables::DragTableKind;
 
@@ -27,8 +27,10 @@ pub struct PointMassModel {
     pub time: f64,                  // Position in time (s)
 
     // Variables for simulation
-    pub drag_table: DragTable, // Drag Function DragTable
-    pub time_step: f64,   // Timestep for simulation (s)
+    pub drag_table: DragTable,       // Drag Function DragTable
+    pub time_step: f64,              // Timestep for simulation (s)
+    pub launch_angle: f64,           // Initial launch angle (degrees)
+    pub scope_height: Length,        // Scope Height (inches)
 
     // Environmental Conditions
     pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
@@ -52,7 +54,6 @@ pub trait Projectile {
     fn radius(&self) -> f64; // Radius (meters)
     fn sd(&self) -> f64; // Sectional Density
     fn i(&self) -> f64; // Form Factor
-
 }
 pub trait DragSimulation {
     fn rho(&self) -> f64;  // Density of air (kg/m^3)
@@ -66,6 +67,11 @@ pub trait Output {
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
+    fn angle(&self) -> f64;
+    fn relative_velocity(&self) -> f64;
+    fn relative_distance(&self) -> f64;
+    fn relative_drop(&self) -> f64;
+    fn relative_windage(&self) -> f64;
 }
 
 
@@ -76,6 +82,7 @@ impl PointMassModel {
         bc: f64,
         initial_velocity: f64,
         launch_angle: f64,
+        scope_height: f64,
         drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
@@ -91,6 +98,7 @@ impl PointMassModel {
         let pressure_inhg = Pressure::Inhg(pressure);
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let time_step_seconds = Time::Seconds(time_step);
+        let scope_height_inches = Length::Inches(scope_height);
 
         Self {
             weight: weight_grains,
@@ -112,6 +120,8 @@ impl PointMassModel {
 
             drag_table: DragTable::new(drag_table),
             time_step: time_step_seconds.to_seconds().into(),
+            launch_angle,
+            scope_height: scope_height_inches,
 
             wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle)),
             temperature: temperature_f,
@@ -161,6 +171,34 @@ impl Output for PointMassModel {
     fn windage(&self) -> f64 {
         f64::from(Length::Meters(self.position.z).to_inches())
     }
+    fn angle(&self) -> f64 {
+        self.launch_angle.to_radians()
+    }
+    fn relative_velocity(&self) -> f64 {
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, -self.angle());
+        let velocity = rotation * self.velocity;
+        f64::from(Velocity::Mps(velocity.norm()).to_fps())
+    }
+    fn relative_distance(&self) -> f64 {
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, -self.angle());
+        let position = rotation * self.position;
+        f64::from(Length::Meters(position.x).to_yards())
+    }
+    fn relative_drop(&self) -> f64 {
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, -self.angle());
+        let position = rotation * self.position;
+        let drop = f64::from(Length::Meters(position.y)) - f64::from(self.scope_height.to_meters());
+        f64::from(Length::Meters(drop).to_inches())
+    }
+    fn relative_windage(&self) -> f64 {
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, -self.angle());
+        let position = rotation * self.position;
+        f64::from(Length::Meters(position.z).to_inches())
+    }
 }
 
 impl DragSimulation for PointMassModel {
@@ -194,7 +232,7 @@ impl Iterator for PointMassModel {
             + self.acceleration * (self.time_step.powf(2.0) / 2.0);
         self.velocity = self.velocity + self.acceleration * self.time_step;
         self.time += self.time_step;
-        Some(self.distance())
+        Some(self.relative_distance())
     }
 }
 
