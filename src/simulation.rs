@@ -31,7 +31,7 @@ pub struct PointMassModel {
     pub time_step: f64,              // Timestep for simulation (s)
     pub launch_angle: f64,           // Initial launch angle (degrees)
     pub scope_height: Length,        // Scope Height (inches)
-    pub zero_distance: Length,
+    pub zero_distance: Length,       // Zero distance (yards)
 
     // Environmental Conditions
     pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
