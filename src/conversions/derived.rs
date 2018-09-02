@@ -29,7 +29,7 @@ pub const FPS2_TO_MPH2: f64 = 1.0 / MPH2_TO_FPS2;
 pub const FPS2_TO_MPS2: f64 = FPS_TO_MPS;
 pub const MPS2_TO_FPS2: f64 = 1.0 / FPS2_TO_MPS2;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Pressure {
     Pascals(f64),
     Inhg(f64),
@@ -57,7 +57,7 @@ impl Pressure {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Density {
     Kgpm3(f64),
     Lbpf3(f64),
@@ -85,7 +85,7 @@ impl self::Density {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Velocity {
     Mps(f64),
     Mph(f64),
@@ -124,7 +124,7 @@ impl self::Velocity {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Acceleration {
     Mps2(f64),
     Mph2(f64),

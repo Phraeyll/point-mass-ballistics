@@ -15,7 +15,7 @@ pub const K_TO_F: f64 = -F_TO_K;
 pub const F_TO_C: f64 = -32.0;
 pub const C_TO_F: f64 = -F_TO_C;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Temperature {
     C(f64),
     K(f64),

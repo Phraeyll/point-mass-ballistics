@@ -9,7 +9,7 @@ pub const KGS_TO_GRAINS: f64 = 1.0 / GRAINS_TO_KGS;
 pub const LBS_TO_KGS: f64 = 0.45359237;
 pub const KGS_TO_LBS: f64 = 1.0 / LBS_TO_KGS;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum WeightMass {
     Grains(f64),
     Lbs(f64),

@@ -9,7 +9,7 @@ pub const HOURS_TO_SECONDS: f64 = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
 pub const SECONDS_TO_HOURS: f64 = 1.0 / HOURS_TO_SECONDS;
 pub const SECONDS_TO_MINUTES: f64 = 1.0 / MINUTES_TO_SECONDS;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Time {
     Hours(f64),
     Minutes(f64),

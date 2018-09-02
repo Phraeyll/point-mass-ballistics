@@ -30,7 +30,7 @@ pub const METERS_TO_YARDS: f64 = 1.0 / YARDS_TO_METERS;
 pub const INCHES_TO_METERS: f64 = INCHES_TO_FEET * FEET_TO_METERS;
 pub const METERS_TO_INCHES: f64 = 1.0 / INCHES_TO_METERS;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Length {
     Meters(f64),
     Miles(f64),

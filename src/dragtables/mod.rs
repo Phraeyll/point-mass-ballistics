@@ -25,6 +25,7 @@ mod g7;
 mod g8;
 mod gi;
 
+#[derive(Debug)]
 pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
 impl DragTable {
