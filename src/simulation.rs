@@ -31,6 +31,19 @@ pub trait Output {
     fn relative_position(&self) -> (f64, f64, f64);
 }
 
+#[derive(PartialEq, Eq, Copy, Clone)]
+enum State {
+    Up,
+    Down,
+}
+impl State {
+    fn switch(&mut self) {
+        *self = match *self {
+            State::Up => State::Down,
+            State::Down => State::Up,
+        };
+    }
+}
 #[derive(Debug)]
 pub struct PointMassModel {
     // Projectile properties
@@ -74,8 +87,8 @@ pub struct IterPointMassModel<'a> {
     envelope: Envelope,
 }
 pub struct Ballistic {
-    angle: f64,
-    height: f64,
+    angle: f64,                 // Line of Sight Angle (radians)
+    height: f64,                // Scope height (meters)
     time: f64,                  // Position in time (s)
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
@@ -127,7 +140,7 @@ impl PointMassModel {
         }
     }
     pub fn iter<'a>(&'a self) -> IterPointMassModel {
-        let initial_angle_radians = self.initial_angle.to_radians();
+        let angle = self.los_angle.to_radians() + self.initial_angle.to_radians();
         let initial_velocity_fps = self.initial_velocity;
         IterPointMassModel {
             model: self,
@@ -135,44 +148,54 @@ impl PointMassModel {
                 position: Vector3::new(0.0, 0.0, 0.0),
                 velocity: construct_velocity(
                     initial_velocity_fps,
-                    Projectile(initial_angle_radians),
+                    Projectile(angle),
                 ),
                 acceleration: Vector3::new(0.0, 0.0, 0.0),
                 time: 0.0,
             },
         }
     }
-    pub fn zero(&mut self, zero_distance: f64, angle: f64, prev: f64) {
+    pub fn zero(&mut self, zero_distance: f64) {
+        fn switch_directions(state: &mut State, angle: &mut f64) {
+            state.switch();
+            *angle = -(*angle / 2.0);
+        }
+        let old_los = self.los_angle;
+        self.los_angle = 0.0;
         let zero_distance_yards = Length::Yards(zero_distance);
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
-        let mut drop = 0.0;
-        for b in self.iter() {
-            if b.position.x > zero_distance_meters {
-                drop = b.position.y;
+        let mut drop = -1.0;
+        let mut state = State::Up;
+        let mut angle = 16.0f64.to_radians();
+        loop {
+            self.initial_angle += angle;
+
+            if self.initial_angle > 45.0f64.to_radians() {
+                panic!("Can never 'zero' at this range")
+            }
+            for b in self.iter() {
+                if b.position.x > zero_distance_meters {
+                    drop = b.position.y;
+                    break;
+                }
+            }
+            if relative_eq!(drop, 0.0) {
                 break;
             }
-        }
-        if relative_eq!(drop, 0.0) {
-            return;
-        } else {
-            if drop.is_sign_negative() {
-                if prev.is_sign_positive() {
-                    self.initial_angle += angle / 2.0;
-                    self.zero(zero_distance, angle / 2.0, drop);
-                } else {
-                    self.initial_angle += angle;
-                    self.zero(zero_distance, angle, drop);
+            match state {
+                State::Up => {
+                    if drop.is_sign_positive() {
+                        switch_directions(&mut state, &mut angle);
+                    }
                 }
-            } else {
-                if prev.is_sign_negative() {
-                    self.initial_angle -= angle / 2.0;
-                    self.zero(zero_distance, angle / 2.0, drop);
-                } else {
-                    self.initial_angle -= angle;
-                    self.zero(zero_distance, angle, drop);
+                State::Down => {
+                    if drop.is_sign_negative() {
+                        switch_directions(&mut state, &mut angle);
+                    }
                 }
             }
         }
+        self.los_angle = old_los;
     }
 }
 
@@ -258,10 +281,9 @@ impl Output for Ballistic {
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let height = Vector3::new(0.0, f64::from(self.height), 0.0);
         let position = rotation * self.position - height;
-        let drop = f64::from(Length::Meters(position.y));
         (
             f64::from(Length::Meters(position.x).to_yards()),
-            f64::from(Length::Meters(drop).to_inches()),
+            f64::from(Length::Meters(position.y).to_inches()),
             f64::from(Length::Meters(position.z).to_inches()),
         )
     }
