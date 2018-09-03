@@ -300,7 +300,7 @@ impl Output for Ballistic {
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let height = Vector3::new(0.0, f64::from(self.height), 0.0);
-        let position = rotation * (self.position - height);
+        let position = rotation * self.position - height;
         (
             f64::from(Length::Meters(position.x).to_yards()),
             f64::from(Length::Meters(position.y).to_inches()),
