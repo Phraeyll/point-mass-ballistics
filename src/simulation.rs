@@ -3,13 +3,12 @@ use na::{Rotation3, Vector3};
 pub use dragtables::DragTableKind;
 
 use self::constructors::*;
-use conversions::consts::*;
 use conversions::*;
 use dragtables::*;
 
 use std::f64::consts::{E, PI};
 
-const GRAVITY: Acceleration = Acceleration::Mps2(-9.80665); // Local gravity in m/s
+const GRAVITY: f64 = -9.80665; // Local gravity in m/s
 const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
@@ -30,9 +29,10 @@ pub struct PointMassModel {
 
     // Variables for simulation
     pub time_step: f64,             // Timestep for simulation (s)
-    pub initial_angle: f64,         // Initial launch angle (degrees)
+    initial_angle: f64,             // Initial launch angle (radians)
     pub initial_velocity: Velocity, // Initial velocity (ft/s)
     pub scope_height: Length,       // Scope Height (inches)
+    pub los_angle: f64,             // Line of Sight angle (degrees)
     pub zero_distance: Length,      // Zero distance (yards)
     pub drag_table: DragTable,      // Drag Function DragTable
 
@@ -47,24 +47,30 @@ pub struct PointMassModel {
 }
 struct Envelope {
     // Envelope of motion
-    pub position: Vector3<f64>,     // Position (m)
-    pub velocity: Vector3<f64>,     // Velocity (m/s)
-    pub acceleration: Vector3<f64>, // Acceleration (m/s^2)
-    pub time: f64,                  // Position in time (s)
+    time: f64,                  // Position in time (s)
+    position: Vector3<f64>,     // Position (m)
+    velocity: Vector3<f64>,     // Velocity (m/s)
+    acceleration: Vector3<f64>, // Acceleration (m/s^2)
 }
 pub struct IterPointMassModel<'a> {
     model: &'a PointMassModel,
     envelope: Envelope,
 }
+pub struct Ballistic {
+    angle: f64,
+    height: f64,
+    time: f64,                  // Position in time (s)
+    position: Vector3<f64>,     // Position (m)
+    velocity: Vector3<f64>,     // Velocity (m/s)
+    acceleration: Vector3<f64>, // Acceleration (m/s^2)
+}
 
-trait Projectile {
+trait DragSimulation {
     fn area(&self) -> f64; // Area (meters)
     fn mass(&self) -> f64; // Mass (kgs)
     fn radius(&self) -> f64; // Radius (meters)
     fn sd(&self) -> f64; // Sectional Density
     fn i(&self) -> f64; // Form Factor
-}
-trait DragSimulation {
     fn rho(&self) -> f64; // Density of air (kg/m^3)
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
     fn drag_force(&self) -> Vector3<f64>;
@@ -72,6 +78,7 @@ trait DragSimulation {
 pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
+    fn acceleration(&self) -> f64;
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
@@ -84,8 +91,8 @@ impl PointMassModel {
         caliber: f64,
         bc: f64,
         initial_velocity: f64,
-        initial_angle: f64,
         scope_height: f64,
+        los_angle: f64,
         zero_distance: f64,
         drag_table: DragTableKind,
         time_step: f64,
@@ -114,12 +121,13 @@ impl PointMassModel {
             temperature: temperature_f,
             pressure: pressure_inhg,
             humidity,
-            g: Vector3::new(ZERO_MPS2.into(), GRAVITY.into(), ZERO_MPS2.into()),
+            g: Vector3::new(0.0, GRAVITY, 0.0),
 
             time_step: time_step_seconds.to_seconds().into(),
-            initial_angle,
+            initial_angle: 0.0,
             initial_velocity: initial_velocity_fps,
             scope_height: scope_height_inches,
+            los_angle,
             zero_distance: zero_distance_yards,
             drag_table: DragTable::new(drag_table),
         }
@@ -130,40 +138,56 @@ impl PointMassModel {
         IterPointMassModel {
             model: self,
             envelope: Envelope {
-                position: Vector3::new(ZERO_METERS.into(), ZERO_METERS.into(), ZERO_METERS.into()),
+                position: Vector3::new(0.0, 0.0, 0.0),
                 velocity: construct_velocity(
                     initial_velocity_fps,
                     Projectile(initial_angle_radians),
                 ),
-                acceleration: Vector3::new(ZERO_MPS2.into(), ZERO_MPS2.into(), ZERO_MPS2.into()),
-                time: ZERO_SECONDS.into(),
+                acceleration: Vector3::new(0.0, 0.0, 0.0),
+                time: 0.0,
             },
         }
     }
 }
 
 impl<'a> Iterator for IterPointMassModel<'a> {
-    type Item = (f64, f64, f64, f64, f64);
+    type Item = Ballistic;
     fn next(&mut self) -> Option<Self::Item> {
-        self.envelope.acceleration = self.drag_force() / self.model.mass() + self.model.g;
+        self.envelope.acceleration = self.drag_force() / self.mass() + self.model.g;
         self.envelope.position = self.envelope.position
             + self.envelope.velocity * self.model.time_step
             + self.envelope.acceleration * (self.model.time_step.powf(2.0) / 2.0);
         self.envelope.velocity =
             self.envelope.velocity + self.envelope.acceleration * self.model.time_step;
         self.envelope.time += self.model.time_step;
-        let (distance, drop, windage) = self.relative_position();
-        Some((
-            self.time(),
-            self.velocity(),
-            distance,
-            drop,
-            windage,
-        ))
+
+        Some(Ballistic {
+            angle: self.model.los_angle.to_radians(),
+            height: self.model.scope_height.to_meters().into(),
+            time: self.envelope.time,
+            position: self.envelope.position,
+            velocity: self.envelope.velocity,
+            acceleration: self.envelope.acceleration,
+        })
     }
 }
 
 impl<'a> DragSimulation for IterPointMassModel<'a> {
+    fn area(&self) -> f64 {
+        PI * self.radius().powf(2.0)
+    }
+    fn mass(&self) -> f64 {
+        self.model.weight.to_kgs().into()
+    }
+    fn radius(&self) -> f64 {
+        f64::from(self.model.caliber.to_meters()) / 2.0
+    }
+    fn sd(&self) -> f64 {
+        f64::from(self.model.weight.to_lbs()) / f64::from(self.model.caliber.to_inches()).powf(2.0)
+    }
+    fn i(&self) -> f64 {
+        self.sd() / self.model.bc
+    }
     fn rho(&self) -> f64 {
         let celsius = f64::from(self.model.temperature.to_celsius());
         let kelvin = f64::from(self.model.temperature.to_kelvin());
@@ -180,52 +204,37 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
         self.envelope.velocity.norm() / c
     }
     fn drag_force(&self) -> Vector3<f64> {
-        let cd = self.model.drag_table.lerp(self.mach()) * self.model.i();
+        let cd = self.model.drag_table.lerp(self.mach()) * self.i();
         let vv = self.envelope.velocity - self.model.wind_velocity;
-        -(self.rho() * self.model.area() * vv * vv.norm() * cd) / 2.0
+        -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
 }
 
-impl Projectile for PointMassModel {
-    fn area(&self) -> f64 {
-        PI * self.radius().powf(2.0)
-    }
-    fn mass(&self) -> f64 {
-        self.weight.to_kgs().into()
-    }
-    fn radius(&self) -> f64 {
-        f64::from(self.caliber.to_meters()) / 2.0
-    }
-    fn sd(&self) -> f64 {
-        f64::from(self.weight.to_lbs()) / f64::from(self.caliber.to_inches()).powf(2.0)
-    }
-    fn i(&self) -> f64 {
-        self.sd() / self.bc
-    }
-}
-
-impl<'a> Output for IterPointMassModel<'a> {
+impl Output for Ballistic {
     fn time(&self) -> f64 {
-        f64::from(Time::Seconds(self.envelope.time).to_seconds())
+        f64::from(Time::Seconds(self.time).to_seconds())
     }
     fn velocity(&self) -> f64 {
-        f64::from(Velocity::Mps(self.envelope.velocity.norm()).to_fps())
+        f64::from(Velocity::Mps(self.velocity.norm()).to_fps())
+    }
+    fn acceleration(&self) -> f64 {
+        f64::from(Acceleration::Mps2(self.acceleration.norm()).to_fps2())
     }
     fn distance(&self) -> f64 {
-        f64::from(Length::Meters(self.envelope.position.x).to_yards())
+        f64::from(Length::Meters(self.position.x).to_yards())
     }
     fn drop(&self) -> f64 {
-        f64::from(Length::Meters(self.envelope.position.y).to_inches())
+        f64::from(Length::Meters(self.position.y).to_inches())
     }
     fn windage(&self) -> f64 {
-        f64::from(Length::Meters(self.envelope.position.z).to_inches())
+        f64::from(Length::Meters(self.position.z).to_inches())
     }
     fn relative_position(&self) -> (f64, f64, f64) {
-        let angle = -self.model.initial_angle.to_radians();
+        let angle = -self.angle;
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let height = Vector3::new(0.0, f64::from(self.model.scope_height.to_meters()), 0.0);
-        let position = rotation * self.envelope.position - height;
+        let height = Vector3::new(0.0, f64::from(self.height), 0.0);
+        let position = rotation * self.position - height;
         let drop = f64::from(Length::Meters(position.y));
         (
             f64::from(Length::Meters(position.x).to_yards()),
@@ -238,7 +247,6 @@ impl<'a> Output for IterPointMassModel<'a> {
 mod constructors {
     pub use self::AngleKind::*;
 
-    use conversions::consts::*;
     use conversions::*;
     use na::{Rotation3, Vector3};
 
@@ -260,7 +268,7 @@ mod constructors {
         };
         let velocity_mps = vel.to_mps().into();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let velocity = Vector3::new(velocity_mps, ZERO_MPS.into(), ZERO_MPS.into());
+        let velocity = Vector3::new(velocity_mps, 0.0, 0.0);
         rotation * velocity
     }
 }
