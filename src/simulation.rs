@@ -144,13 +144,12 @@ impl PointMassModel {
             },
         }
     }
-    // I have no idea how this should work - approx doesn't seem to work
     pub fn zero(&mut self, zero_distance: f64, angle: f64, prev: f64) {
         let zero_distance_yards = Length::Yards(zero_distance);
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
         let mut drop = 0.0;
         for b in self.iter() {
-            if b.distance() > zero_distance_meters {
+            if b.position.x > zero_distance_meters {
                 drop = b.position.y;
                 break;
             }
