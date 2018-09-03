@@ -28,12 +28,11 @@ pub struct PointMassModel {
     pub g: Vector3<f64>,             // Gravity (m/s^2)
 
     // Variables for simulation
+    initial_angle: f64,             // Initial launch angle (radians), determined by zero function
     pub time_step: f64,             // Timestep for simulation (s)
-    initial_angle: f64,             // Initial launch angle (radians)
     pub initial_velocity: Velocity, // Initial velocity (ft/s)
     pub scope_height: Length,       // Scope Height (inches)
     pub los_angle: f64,             // Line of Sight angle (degrees)
-    pub zero_distance: Length,      // Zero distance (yards)
     pub drag_table: DragTable,      // Drag Function DragTable
 
     /*
@@ -93,7 +92,6 @@ impl PointMassModel {
         initial_velocity: f64,
         scope_height: f64,
         los_angle: f64,
-        zero_distance: f64,
         drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
@@ -110,7 +108,6 @@ impl PointMassModel {
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let time_step_seconds = Time::Seconds(time_step);
         let scope_height_inches = Length::Inches(scope_height);
-        let zero_distance_yards = Length::Yards(zero_distance);
 
         Self {
             weight: weight_grains,
@@ -128,7 +125,6 @@ impl PointMassModel {
             initial_velocity: initial_velocity_fps,
             scope_height: scope_height_inches,
             los_angle,
-            zero_distance: zero_distance_yards,
             drag_table: DragTable::new(drag_table),
         }
     }
@@ -146,6 +142,39 @@ impl PointMassModel {
                 acceleration: Vector3::new(0.0, 0.0, 0.0),
                 time: 0.0,
             },
+        }
+    }
+    // I have no idea how this should work - approx doesn't seem to work
+    pub fn zero(&mut self, zero_distance: f64, angle: f64, prev: f64) {
+        let zero_distance_yards = Length::Yards(zero_distance);
+        let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
+        let mut drop = 0.0;
+        for b in self.iter() {
+            if b.distance() > zero_distance_meters {
+                drop = b.position.y;
+                break;
+            }
+        }
+        if relative_eq!(drop, 0.0) {
+            return;
+        } else {
+            if drop.is_sign_negative() {
+                if prev.is_sign_positive() {
+                    self.initial_angle += angle / 2.0;
+                    self.zero(zero_distance, angle / 2.0, drop);
+                } else {
+                    self.initial_angle += angle;
+                    self.zero(zero_distance, angle, drop);
+                }
+            } else {
+                if prev.is_sign_negative() {
+                    self.initial_angle -= angle / 2.0;
+                    self.zero(zero_distance, angle / 2.0, drop);
+                } else {
+                    self.initial_angle -= angle;
+                    self.zero(zero_distance, angle, drop);
+                }
+            }
         }
     }
 }
