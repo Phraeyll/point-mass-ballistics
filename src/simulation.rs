@@ -31,19 +31,7 @@ pub trait Output {
     fn relative_position(&self) -> (f64, f64, f64);
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
-enum State {
-    Up,
-    Down,
-}
-impl State {
-    fn switch(&mut self) {
-        *self = match *self {
-            State::Up => State::Down,
-            State::Down => State::Up,
-        };
-    }
-}
+
 #[derive(Debug)]
 pub struct PointMassModel {
     // Projectile properties
@@ -156,17 +144,31 @@ impl PointMassModel {
         }
     }
     pub fn zero(&mut self, zero_distance: f64) {
-        fn switch_directions(state: &mut State, angle: &mut f64) {
-            state.switch();
+        enum Direction {
+            Up,
+            Down,
+        }
+        impl Direction {
+            fn switch(&mut self) {
+                *self = match *self {
+                    Direction::Up => Direction::Down,
+                    Direction::Down => Direction::Up,
+                };
+            }
+        }
+        fn switch_direction(direction: &mut Direction, angle: &mut f64) {
+            direction.switch();
             *angle = -(*angle / 2.0);
         }
+
         let old_los = self.los_angle;
         self.los_angle = 0.0;
+
         let zero_distance_yards = Length::Yards(zero_distance);
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
+        let mut direction = Direction::Up;
+        let mut angle = 45.0f64.to_radians();
         let mut drop = -1.0;
-        let mut state = State::Up;
-        let mut angle = 16.0f64.to_radians();
         loop {
             self.initial_angle += angle;
 
@@ -182,15 +184,15 @@ impl PointMassModel {
             if relative_eq!(drop, 0.0) {
                 break;
             }
-            match state {
-                State::Up => {
+            match direction {
+                Direction::Up => {
                     if drop.is_sign_positive() {
-                        switch_directions(&mut state, &mut angle);
+                        switch_direction(&mut direction, &mut angle);
                     }
                 }
-                State::Down => {
+                Direction::Down => {
                     if drop.is_sign_negative() {
-                        switch_directions(&mut state, &mut angle);
+                        switch_direction(&mut direction, &mut angle);
                     }
                 }
             }
