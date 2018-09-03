@@ -31,7 +31,6 @@ pub trait Output {
     fn relative_position(&self) -> (f64, f64, f64);
 }
 
-
 #[derive(Debug)]
 pub struct PointMassModel {
     // Projectile properties
@@ -48,6 +47,7 @@ pub struct PointMassModel {
 
     // Variables for simulation
     initial_angle: f64, // Initial launch angle (radians), determined by zero function
+    first_zero: Vector3<f64>, // First zero found after zeroing
     pub time_step: f64, // Timestep for simulation (s)
     pub initial_velocity: Velocity, // Initial velocity (ft/s)
     pub scope_height: Length, // Scope Height (inches)
@@ -121,6 +121,7 @@ impl PointMassModel {
 
             time_step: time_step_seconds.to_seconds().into(),
             initial_angle: 0.0,
+            first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
             initial_velocity: initial_velocity_fps,
             scope_height: scope_height_inches,
             los_angle,
@@ -134,10 +135,7 @@ impl PointMassModel {
             model: self,
             envelope: Envelope {
                 position: Vector3::new(0.0, 0.0, 0.0),
-                velocity: construct_velocity(
-                    initial_velocity_fps,
-                    Projectile(angle),
-                ),
+                velocity: construct_velocity(initial_velocity_fps, Projectile(angle)),
                 acceleration: Vector3::new(0.0, 0.0, 0.0),
                 time: 0.0,
             },
@@ -164,6 +162,7 @@ impl PointMassModel {
         let old_los = self.los_angle;
         self.los_angle = 0.0;
 
+        let scope_height = f64::from(self.scope_height.to_meters());
         let zero_distance_yards = Length::Yards(zero_distance);
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
         let mut direction = Direction::Up;
@@ -181,23 +180,40 @@ impl PointMassModel {
                     break;
                 }
             }
-            if relative_eq!(drop, 0.0) {
+            if relative_eq!(drop, scope_height) {
                 break;
             }
             match direction {
                 Direction::Up => {
-                    if drop.is_sign_positive() {
+                    if drop > scope_height {
                         switch_direction(&mut direction, &mut angle);
                     }
                 }
                 Direction::Down => {
-                    if drop.is_sign_negative() {
+                    if drop < scope_height {
                         switch_direction(&mut direction, &mut angle);
                     }
                 }
             }
         }
+
+        // Now find 'first' zero using the bore angle found
+        let mut first_zero = Vector3::new(0.0, scope_height, 0.0);
+        for b in self.iter() {
+            if b.position.y > scope_height {
+                first_zero = b.position;
+                break;
+            }
+        }
+        self.first_zero = first_zero;
         self.los_angle = old_los;
+    }
+    pub fn first_zero(&self) -> (f64, f64, f64) {
+        let (x, y, z) = (self.first_zero.x, self.first_zero.y, self.first_zero.z);
+        let distance = f64::from(Length::Meters(x).to_yards());
+        let drop = f64::from(Length::Meters(y).to_inches());
+        let windage = f64::from(Length::Meters(z).to_inches());
+        (distance, drop, windage)
     }
 }
 
@@ -277,12 +293,14 @@ impl Output for Ballistic {
     fn windage(&self) -> f64 {
         f64::from(Length::Meters(self.position.z).to_inches())
     }
+    // This seems to be the wrong way to determine relative height to line of sight.
+    // Not sure how to take into account a rotated line of sight for uphill/downhill paths
     fn relative_position(&self) -> (f64, f64, f64) {
         let angle = -self.angle;
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let height = Vector3::new(0.0, f64::from(self.height), 0.0);
-        let position = rotation * self.position - height;
+        let position = rotation * (self.position - height);
         (
             f64::from(Length::Meters(position.x).to_yards()),
             f64::from(Length::Meters(position.y).to_inches()),
