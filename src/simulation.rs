@@ -13,6 +13,24 @@ const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
 
+trait DragSimulation {
+    fn area(&self) -> f64; // Area (meters)
+    fn mass(&self) -> f64; // Mass (kgs)
+    fn i(&self) -> f64; // Form Factor
+    fn rho(&self) -> f64; // Density of air (kg/m^3)
+    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
+    fn drag_force(&self) -> Vector3<f64>;
+}
+pub trait Output {
+    fn time(&self) -> f64;
+    fn velocity(&self) -> f64;
+    fn acceleration(&self) -> f64;
+    fn distance(&self) -> f64;
+    fn drop(&self) -> f64;
+    fn windage(&self) -> f64;
+    fn relative_position(&self) -> (f64, f64, f64);
+}
+
 #[derive(Debug)]
 pub struct PointMassModel {
     // Projectile properties
@@ -28,12 +46,12 @@ pub struct PointMassModel {
     pub g: Vector3<f64>,             // Gravity (m/s^2)
 
     // Variables for simulation
-    initial_angle: f64,             // Initial launch angle (radians), determined by zero function
-    pub time_step: f64,             // Timestep for simulation (s)
+    initial_angle: f64, // Initial launch angle (radians), determined by zero function
+    pub time_step: f64, // Timestep for simulation (s)
     pub initial_velocity: Velocity, // Initial velocity (ft/s)
-    pub scope_height: Length,       // Scope Height (inches)
-    pub los_angle: f64,             // Line of Sight angle (degrees)
-    pub drag_table: DragTable,      // Drag Function DragTable
+    pub scope_height: Length, // Scope Height (inches)
+    pub los_angle: f64, // Line of Sight angle (degrees)
+    pub drag_table: DragTable, // Drag Function DragTable
 
     /*
     Other factors, not calculated yet
@@ -62,26 +80,6 @@ pub struct Ballistic {
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
-}
-
-trait DragSimulation {
-    fn area(&self) -> f64; // Area (meters)
-    fn mass(&self) -> f64; // Mass (kgs)
-    fn radius(&self) -> f64; // Radius (meters)
-    fn sd(&self) -> f64; // Sectional Density
-    fn i(&self) -> f64; // Form Factor
-    fn rho(&self) -> f64; // Density of air (kg/m^3)
-    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
-    fn drag_force(&self) -> Vector3<f64>;
-}
-pub trait Output {
-    fn time(&self) -> f64;
-    fn velocity(&self) -> f64;
-    fn acceleration(&self) -> f64;
-    fn distance(&self) -> f64;
-    fn drop(&self) -> f64;
-    fn windage(&self) -> f64;
-    fn relative_position(&self) -> (f64, f64, f64);
 }
 
 impl PointMassModel {
@@ -202,19 +200,16 @@ impl<'a> Iterator for IterPointMassModel<'a> {
 
 impl<'a> DragSimulation for IterPointMassModel<'a> {
     fn area(&self) -> f64 {
-        PI * self.radius().powf(2.0)
+        let radius = f64::from(self.model.caliber.to_meters()) / 2.0;
+        PI * radius.powf(2.0)
     }
     fn mass(&self) -> f64 {
         self.model.weight.to_kgs().into()
     }
-    fn radius(&self) -> f64 {
-        f64::from(self.model.caliber.to_meters()) / 2.0
-    }
-    fn sd(&self) -> f64 {
-        f64::from(self.model.weight.to_lbs()) / f64::from(self.model.caliber.to_inches()).powf(2.0)
-    }
     fn i(&self) -> f64 {
-        self.sd() / self.model.bc
+        let sd = f64::from(self.model.weight.to_lbs())
+            / f64::from(self.model.caliber.to_inches()).powf(2.0);
+        sd / self.model.bc
     }
     fn rho(&self) -> f64 {
         let celsius = f64::from(self.model.temperature.to_celsius());
