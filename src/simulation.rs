@@ -51,13 +51,13 @@ pub struct PointMassModel {
     pub g: Vector3<f64>,             // Gravity (m/s^2)
 
     // Variables for simulation
-    initial_angle: f64,              // Initial angle (radians), is also set in zero function
-    first_zero: Vector3<f64>,        // First zero found after zero function
-    pub time_step: f64,              // Timestep for simulation (s)
-    pub initial_velocity: Velocity,  // Initial velocity (ft/s)
-    pub scope_height: Length,        // Scope Height (inches)
-    pub los_angle: f64,              // Line of Sight angle (degrees)
-    pub drag_table: DragTable,       // Drag Function DragTable
+    initial_angle: f64, // Initial angle (radians), is also set in zero function
+    first_zero: Vector3<f64>, // First zero found after zero function
+    pub time_step: f64, // Timestep for simulation (s)
+    pub initial_velocity: Velocity, // Initial velocity (ft/s)
+    pub scope_height: Length, // Scope Height (inches)
+    pub los_angle: f64, // Line of Sight angle (degrees)
+    pub drag_table: DragTable, // Drag Function DragTable
 
     /*
     Other factors, not calculated yet
@@ -79,8 +79,8 @@ struct Envelope {
 
 // Abstract iter struct for running simulation through iter method
 pub struct IterPointMassModel<'a> {
-    model: &'a PointMassModel,   // Reference to model used for calculations
-    envelope: Envelope,          // Mutates through iteration, essentially the output as well
+    model: &'a PointMassModel, // Reference to model used for calculations
+    envelope: Envelope,        // Mutates through iteration, essentially the output as well
 }
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
