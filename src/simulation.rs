@@ -181,9 +181,9 @@ impl PointMassModel {
         }
         impl Direction {
             fn switch(&mut self) {
-                *self = match *self {
-                    Direction::Up => Direction::Down,
-                    Direction::Down => Direction::Up,
+                *self = match self {
+                    &mut Direction::Up => Direction::Down,
+                    &mut Direction::Down => Direction::Up,
                 };
             }
         }
