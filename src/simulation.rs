@@ -32,7 +32,6 @@ pub trait Output {
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
-    fn relative_position(&self) -> (f64, f64, f64);
 }
 
 // All variable required for running point mass model of trajectory simulation
@@ -92,6 +91,23 @@ pub struct Ballistic {
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
+}
+
+impl Ballistic {
+    // Supposed to show relative position of projectile against line of sight, which changes with
+    // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
+    // position to level ground, and substracting scope height to determine distance
+    // I think this method is actually correct, but it needs more comparison against
+    // other ballistic solvers, ideally other point mass models.  For certains projectiles,
+    // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
+    fn relative_position(&self) -> Vector3<f64> {
+        let angle = -self.angle;
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, angle);
+        let height = Vector3::new(0.0, f64::from(self.height), 0.0);
+        let position = rotation * self.position - height;
+        position
+    }
 }
 
 impl PointMassModel {
@@ -267,12 +283,12 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         // Acceleration from drag force and gravity (F = ma)
         self.envelope.acceleration = self.drag_force() / self.mass() + self.model.g;
 
-        // Adjust position first, based on current position and acceleration
+        // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.envelope.position = self.envelope.position
             + self.envelope.velocity * self.model.time_step
             + self.envelope.acceleration * (self.model.time_step.powf(2.0) / 2.0);
 
-        // Adjust velocity after new position is found, difference in position relative to time
+        // Adjust velocity from change in acceleration
         self.envelope.velocity =
             self.envelope.velocity + self.envelope.acceleration * self.model.time_step;
 
@@ -359,34 +375,15 @@ impl Output for Ballistic {
         f64::from(Acceleration::Mps2(self.acceleration.norm()).to_fps2())
     }
 
-    // Absolution positions, not relative to line of sight or scope height, imperial units
+    // Positions relative to line of sight or scope height, imperial units
     fn distance(&self) -> f64 {
-        f64::from(Length::Meters(self.position.x).to_yards())
+        f64::from(Length::Meters(self.relative_position().x).to_yards())
     }
     fn drop(&self) -> f64 {
-        f64::from(Length::Meters(self.position.y).to_inches())
+        f64::from(Length::Meters(self.relative_position().y).to_inches())
     }
     fn windage(&self) -> f64 {
-        f64::from(Length::Meters(self.position.z).to_inches())
-    }
-
-    // Supposed to show relative position of projectile against line of sight, which changes with
-    // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
-    // position to level ground, and substracting scope height to determine distance
-    // I think this method is actually correct, but it needs more comparison against
-    // other ballistic solvers, ideally other point mass models.  For certains projectiles,
-    // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
-    fn relative_position(&self) -> (f64, f64, f64) {
-        let angle = -self.angle;
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let height = Vector3::new(0.0, f64::from(self.height), 0.0);
-        let position = rotation * self.position - height;
-        (
-            f64::from(Length::Meters(position.x).to_yards()),
-            f64::from(Length::Meters(position.y).to_inches()),
-            f64::from(Length::Meters(position.z).to_inches()),
-        )
+        f64::from(Length::Meters(self.relative_position().z).to_inches())
     }
 }
 
