@@ -265,6 +265,7 @@ impl PointMassModel {
         }
         self.first_zero = first_zero;
 
+        // Restore old los angle
         self.los_angle = old_los;
     }
     // Access first zero found
