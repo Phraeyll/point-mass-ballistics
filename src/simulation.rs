@@ -21,6 +21,7 @@ trait DragSimulation {
     fn i(&self) -> f64; // Form Factor
     fn rho(&self) -> f64; // Density of air (kg/m^3)
     fn mach(&self) -> f64; // Velocity rel ative to speed of sound
+    fn wind_velocity(&self) -> Vector3<f64>;
     fn drag_force(&self) -> Vector3<f64>;
 }
 
@@ -38,26 +39,28 @@ pub trait Output {
 #[derive(Debug)]
 pub struct PointMassModel {
     // Projectile properties
-    pub weight: WeightMass, // Weight (grains)
-    pub caliber: Length,    // Caliber (inches)
-    pub bc: f64,            // Ballistic Coefficient
+    pub scope_height: Length,  // Scope Height (inches)
+    pub weight: WeightMass,    // Weight (grains)
+    pub caliber: Length,       // Caliber (inches)
+    pub bc: f64,               // Ballistic Coefficient
+    pub drag_table: DragTable, // Drag Function DragTable
+    pub time_step: f64,        // Timestep for simulation (s)
 
     // Environmental Conditions
-    pub wind_velocity: Vector3<f64>, // Wind Velocity (m/s)
-    pub temperature: Temperature,    // Temperature (F)
-    pub pressure: Pressure,          // Pressure (InHg)
-    pub humidity: f64,               // Humidity (0-1)
-    pub g: Vector3<f64>,             // Gravity (m/s^2)
+    pub temperature: Temperature, // Temperature (F)
+    pub pressure: Pressure,       // Pressure (InHg)
+    pub humidity: f64,            // Humidity (0-1)
+    pub gravity: Vector3<f64>,    // Gravity (m/s^2)
+    pub wind_velocity: Velocity,  // Wind Velocity (miles/hour)
+    pub wind_yaw: f64,            // Wind Angle (degrees)
 
     // Variables for simulation
-    initial_angle: f64, // Initial angle (radians), is also set in zero function
-    first_zero: Vector3<f64>, // First zero found after zero function
-    pub time_step: f64, // Timestep for simulation (s)
-    pub initial_velocity: Velocity, // Initial velocity (ft/s)
-    pub scope_height: Length, // Scope Height (inches)
-    pub los_angle: f64, // Line of Sight angle (degrees)
-    pub drag_table: DragTable, // Drag Function DragTable
+    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
+    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
 
+    pub shooter_pitch: f64, // Line of Sight angle (degrees)
+
+    pub first_zero: Vector3<f64>, // First zero found after zero function
     /*
     Other factors, not calculated yet
     pub ptmp: f64,                   // Powder Temperature (Modified Velocity?)
@@ -118,20 +121,20 @@ impl PointMassModel {
         weight: f64,
         caliber: f64,
         bc: f64,
-        initial_velocity: f64,
+        muzzle_velocity: f64,
         scope_height: f64,
-        los_angle: f64,
+        shooter_pitch: f64,
         drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
-        wind_angle: f64,
+        wind_yaw: f64,
         temperature: f64,
         pressure: f64,
         humidity: f64,
     ) -> Self {
         let weight_grains = WeightMass::Grains(weight);
         let diameter_inches = Length::Inches(caliber);
-        let initial_velocity_fps = Velocity::Fps(initial_velocity);
+        let muzzle_velocity_fps = Velocity::Fps(muzzle_velocity);
         let temperature_f = Temperature::F(temperature);
         let pressure_inhg = Pressure::Inhg(pressure);
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
@@ -143,30 +146,32 @@ impl PointMassModel {
             caliber: diameter_inches,
             bc,
 
-            wind_velocity: construct_velocity(wind_velocity_mph, Wind(wind_angle.to_radians())),
+            wind_velocity: wind_velocity_mph,
+            wind_yaw: wind_yaw,
             temperature: temperature_f,
             pressure: pressure_inhg,
             humidity,
-            g: Vector3::new(0.0, GRAVITY, 0.0),
+            gravity: Vector3::new(0.0, GRAVITY, 0.0),
 
             time_step: time_step_seconds.to_seconds().into(),
-            initial_angle: 0.0,
+            muzzle_pitch: 0.0,
             first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
-            initial_velocity: initial_velocity_fps,
+            muzzle_velocity: muzzle_velocity_fps,
             scope_height: scope_height_inches,
-            los_angle,
+            shooter_pitch,
             drag_table: DragTable::new(drag_table),
         }
     }
     // Iterate over simulation, initializing with specified velocity
     pub fn iter<'a>(&'a self) -> IterPointMassModel {
-        let angle = self.los_angle.to_radians() + self.initial_angle.to_radians();
-        let initial_velocity_fps = self.initial_velocity;
         IterPointMassModel {
             model: self,
             envelope: Envelope {
                 position: Vector3::new(0.0, 0.0, 0.0),
-                velocity: construct_velocity(initial_velocity_fps, Projectile(angle)),
+                velocity: velocity_vector(
+                    self.muzzle_velocity,
+                    Projectile(self.muzzle_pitch.to_radians() + self.shooter_pitch.to_radians()),
+                ),
                 acceleration: Vector3::new(0.0, 0.0, 0.0),
                 time: 0.0,
             },
@@ -199,8 +204,8 @@ impl PointMassModel {
         // Will need to save other values later when accounting for cant and roll of scope
         // Wanted to reuse same iter method for simulation and zeroing
         // May need to find a better method for this, rather than mutating these here
-        let old_los = self.los_angle;
-        self.los_angle = 0.0;
+        let old_shooter_pitch = self.shooter_pitch;
+        self.shooter_pitch = 0.0;
 
         // Run the simulation to find the drop at a specified range.
         let zero = f64::from(self.scope_height.to_meters());
@@ -214,10 +219,10 @@ impl PointMassModel {
         // Assume drop is negative from 0 degrees (must be the case due to gravity)
         let mut drop = -1.0;
         loop {
-            self.initial_angle += angle;
+            self.muzzle_pitch += angle;
 
             // Quit if algorithm goes above 45 degrees - will never be possible at this point
-            if self.initial_angle > MAX_ANGLE {
+            if self.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
 
@@ -266,7 +271,7 @@ impl PointMassModel {
         self.first_zero = first_zero;
 
         // Restore old los angle
-        self.los_angle = old_los;
+        self.shooter_pitch = old_shooter_pitch;
     }
     // Access first zero found
     pub fn first_zero(&self) -> (f64, f64, f64) {
@@ -282,7 +287,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
     type Item = Ballistic;
     fn next(&mut self) -> Option<Self::Item> {
         // Acceleration from drag force and gravity (F = ma)
-        self.envelope.acceleration = self.drag_force() / self.mass() + self.model.g;
+        self.envelope.acceleration = self.drag_force() / self.mass() + self.model.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.envelope.position = self.envelope.position
@@ -299,7 +304,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
         Some(Ballistic {
-            angle: self.model.los_angle.to_radians(),
+            angle: self.model.shooter_pitch.to_radians(),
             height: self.model.scope_height.to_meters().into(),
             time: self.envelope.time,
             position: self.envelope.position,
@@ -350,6 +355,12 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
         let c = (1.4 * (pa / self.rho())).sqrt();
         self.envelope.velocity.norm() / c
     }
+    fn wind_velocity(&self) -> Vector3<f64> {
+        velocity_vector(
+            self.model.wind_velocity,
+            Wind(self.model.wind_yaw.to_radians()),
+        )
+    }
     // Primary function - determines force of drag for given projectile, at given velocity
     // with given air density, using ballistic tables to modify coefficient of drag based on
     // standard reference projectiles (Eg., G1 or G7)
@@ -358,7 +369,7 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     // through this function.
     fn drag_force(&self) -> Vector3<f64> {
         let cd = self.model.drag_table.lerp(self.mach()) * self.i();
-        let vv = self.envelope.velocity - self.model.wind_velocity;
+        let vv = self.envelope.velocity - self.wind_velocity();
         -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
 }
@@ -401,7 +412,7 @@ mod constructors {
         Wind(f64),
     }
 
-    pub fn construct_velocity(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
+    pub fn velocity_vector(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
         let (axis, angle) = match vk {
             Projectile(deg) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
