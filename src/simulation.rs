@@ -229,7 +229,7 @@ impl PointMassModel {
             // Find drop at distance, need way to break if we never reach position.x
             let mut sim = self.iter();
             let drop = loop {
-                if let Some(Ballistic {position, ..}) = sim.next() {
+                if let Some(Ballistic { position, .. }) = sim.next() {
                     if position.x > zero_distance_meters {
                         break position.y;
                     }
