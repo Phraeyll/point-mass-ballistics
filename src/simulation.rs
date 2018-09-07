@@ -181,14 +181,20 @@ impl PointMassModel {
     pub fn zero(&mut self, zero_distance: f64) {
         // Enums used to represent angling up or down, and functions to change directions
         enum Direction {
-            Up,
-            Down,
+            Up(f64),
+            Down(f64),
         }
         impl Direction {
-            fn switch(&mut self) {
-                *self = match self {
-                    &mut Direction::Up => Direction::Down,
-                    &mut Direction::Down => Direction::Up,
+            fn switch(&mut self, above: bool) {
+                *self = match (&self, above) {
+                    // If we crossed zero going up, change angle by 1/2
+                    (Direction::Up(ref angle), true) => Direction::Down(*angle / 2.0),
+                    // If drop is still below zero, keep going up at same angle
+                    (Direction::Up(ref angle), false) => Direction::Up(*angle),
+                    // If we crossed zero going down, change angle by 1/2
+                    (Direction::Down(ref angle), false) => Direction::Up(*angle / 2.0),
+                    // If drop is still above zero, keep going down at same angle
+                    (Direction::Down(ref angle), true) => Direction::Down(*angle),
                 };
             }
         }
@@ -208,20 +214,21 @@ impl PointMassModel {
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
 
         // Start with maximum angle to allow for zeroing at longer distances
-        let mut angle = MAX_ANGLE;
         // Start approach going up (must be the case due to gravity)
-        let mut direction = Direction::Up;
+        let mut direction = Direction::Up(MAX_ANGLE);
         // Assume drop is negative from 0 degrees (must be the case due to gravity)
         let mut drop = -1.0;
         loop {
-            self.muzzle_pitch += angle;
-
+            // Since we have to match anyways, switch to negative here if going down
+            self.muzzle_pitch += match direction {
+                Direction::Up(angle) => angle,
+                Direction::Down(angle) => -angle,
+            };
             // Quit if algorithm goes above 45 degrees - will never be possible at this point
             if self.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
-
-            // Find drop at distance
+            // Find drop at distance, need way to break if we never reach position.x
             for b in self.iter() {
                 if b.position.x > zero_distance_meters {
                     drop = b.position.y;
@@ -232,18 +239,8 @@ impl PointMassModel {
             if relative_eq!(drop, zero) {
                 break;
             }
-            let switch = match direction {
-                Direction::Up => drop > zero,
-                Direction::Down => drop < zero,
-            };
-            // If we crossed zero going up,   change angle by 1/2 and change direction
-            // If we crossed zero going down, change angle by 1/2 and change direction
-            if switch {
-                direction.switch();
-                angle = -(angle / 2.0);
-            }
-            // While going up,   if drop is below zero, keep going up   at same angle
-            // While going down, if drop is above zero, keep going down at same angle
+            // Maybe change direction and angle
+            direction.switch(drop > zero);
         }
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
