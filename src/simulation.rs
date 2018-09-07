@@ -192,11 +192,6 @@ impl PointMassModel {
                 };
             }
         }
-        fn switch_direction(direction: &mut Direction, angle: &mut f64) {
-            direction.switch();
-            *angle = -(*angle / 2.0);
-        }
-
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
@@ -237,25 +232,19 @@ impl PointMassModel {
             if relative_eq!(drop, zero) {
                 break;
             }
-
-            // While going up, if drop is below zero, keep going up at same angle
-            // While going down, if drop is above zero, keep going down at same angle
-            match direction {
-                Direction::Up => {
-                    if drop > zero {
-                        // If we crossed zero going up, change angle by 1/2 and direction
-                        switch_direction(&mut direction, &mut angle);
-                    }
-                }
-                Direction::Down => {
-                    if drop < zero {
-                        // If we crossed zero going down, change angle by 1/2 and change direction
-                        switch_direction(&mut direction, &mut angle);
-                    }
-                }
+            let switch = match direction {
+                Direction::Up => drop > zero,
+                Direction::Down => drop < zero,
+            };
+            // If we crossed zero going up,   change angle by 1/2 and change direction
+            // If we crossed zero going down, change angle by 1/2 and change direction
+            if switch {
+                direction.switch();
+                angle = -(angle / 2.0);
             }
+            // While going up,   if drop is below zero, keep going up at same angle
+            // While going down, if drop is above zero, keep going down at same angle
         }
-
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
         // it starts with such a large angle.  The first zero is projectile rising to zero,
