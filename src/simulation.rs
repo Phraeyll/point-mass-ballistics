@@ -216,8 +216,6 @@ impl PointMassModel {
         // Start with maximum angle to allow for zeroing at longer distances
         // Start approach going up (must be the case due to gravity)
         let mut direction = Direction::Up(MAX_ANGLE);
-        // Assume drop is negative from 0 degrees (must be the case due to gravity)
-        let mut drop = -1.0;
         loop {
             // Since we have to match anyways, switch to negative here if going down
             self.muzzle_pitch += match direction {
@@ -229,12 +227,14 @@ impl PointMassModel {
                 panic!("Can never 'zero' at this range")
             }
             // Find drop at distance, need way to break if we never reach position.x
-            for b in self.iter() {
-                if b.position.x > zero_distance_meters {
-                    drop = b.position.y;
-                    break;
+            let mut sim = self.iter();
+            let drop = loop {
+                if let Some(b) = sim.next() {
+                    if b.position.x > zero_distance_meters {
+                        break b.position.y;
+                    }
                 }
-            }
+            };
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, zero) {
                 break;
