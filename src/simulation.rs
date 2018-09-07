@@ -242,7 +242,7 @@ impl PointMassModel {
                 direction.switch();
                 angle = -(angle / 2.0);
             }
-            // While going up,   if drop is below zero, keep going up at same angle
+            // While going up,   if drop is below zero, keep going up   at same angle
             // While going down, if drop is above zero, keep going down at same angle
         }
         // Now find 'first' zero using the bore angle found for second zero
