@@ -1,21 +1,8 @@
 use of::OrderedFloat;
 
-pub use self::DragTableKind::*;
+pub use self::BallisticCoefficient::*;
 
 use std::collections::BTreeMap;
-
-custom_derive! {
-    #[derive(EnumFromStr)]
-    pub enum DragTableKind {
-        G1,
-        G2,
-        G5,
-        G6,
-        G7,
-        G8,
-        GI,
-    }
-}
 
 // Drag table functions which return vector of tuples representing drag tables
 mod g1;
@@ -25,6 +12,30 @@ mod g6;
 mod g7;
 mod g8;
 mod gi;
+
+pub enum BallisticCoefficient {
+    G1(f64),
+    G2(f64),
+    G5(f64),
+    G6(f64),
+    G7(f64),
+    G8(f64),
+    GI(f64),
+}
+
+impl BallisticCoefficient {
+    pub fn create(self) -> (f64, DragTable) {
+        match self {
+            G1(bc) => (bc, DragTable::new(g1::init())),
+            G2(bc) => (bc, DragTable::new(g2::init())),
+            G5(bc) => (bc, DragTable::new(g5::init())),
+            G6(bc) => (bc, DragTable::new(g6::init())),
+            G7(bc) => (bc, DragTable::new(g7::init())),
+            G8(bc) => (bc, DragTable::new(g8::init())),
+            GI(bc) => (bc, DragTable::new(gi::init())),
+        }
+    }
+}
 
 // Wrapper around drag tables map
 #[derive(Debug)]
@@ -48,17 +59,8 @@ impl DragTable {
         y.0 + (mach - x.0) * (y.1 - y.0) / (x.1 - x.0)
     }
     // Initialize table from enum passed in from caller
-    pub fn new(drag_table_kind: DragTableKind) -> Self {
+    pub fn new(v: Vec<(f64, f64)>) -> Self {
         let mut drag_table = DragTable(BTreeMap::new());
-        let v: Vec<(f64, f64)> = match drag_table_kind {
-            G1 => g1::init(),
-            G2 => g2::init(),
-            G5 => g5::init(),
-            G6 => g6::init(),
-            G7 => g7::init(),
-            G8 => g8::init(),
-            GI => gi::init(),
-        };
         drag_table.mut_iter_insert(v);
         drag_table
     }

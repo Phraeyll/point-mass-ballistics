@@ -1,8 +1,4 @@
 #[macro_use]
-extern crate custom_derive;
-#[macro_use]
-extern crate enum_derive;
-#[macro_use]
 extern crate approx;
 
 extern crate nalgebra as na;

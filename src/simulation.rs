@@ -1,6 +1,6 @@
 use na::{Rotation3, Vector3};
 
-pub use dragtables::DragTableKind;
+pub use dragtables::BallisticCoefficient;
 
 use self::constructors::*;
 use conversions::*;
@@ -120,11 +120,10 @@ impl PointMassModel {
     pub fn new(
         weight: f64,
         caliber: f64,
-        bc: f64,
+        dbc: BallisticCoefficient,
         muzzle_velocity: f64,
         scope_height: f64,
         shooter_pitch: f64,
-        drag_table: DragTableKind,
         time_step: f64,
         wind_velocity: f64,
         wind_yaw: f64,
@@ -140,6 +139,7 @@ impl PointMassModel {
         let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let time_step_seconds = Time::Seconds(time_step);
         let scope_height_inches = Length::Inches(scope_height);
+        let (bc, drag_table) = dbc.create();
 
         Self {
             weight: weight_grains,
@@ -159,7 +159,7 @@ impl PointMassModel {
             muzzle_velocity: muzzle_velocity_fps,
             scope_height: scope_height_inches,
             shooter_pitch,
-            drag_table: DragTable::new(drag_table),
+            drag_table,
         }
     }
     // Iterate over simulation, initializing with specified velocity
@@ -184,17 +184,30 @@ impl PointMassModel {
             Up(f64),
             Down(f64),
         }
+        enum Zero {
+            Above,
+            Below,
+        }
+        impl Zero {
+            fn from(above: bool) -> Zero {
+                if above {
+                    Zero::Above
+                } else {
+                    Zero::Below
+                }
+            }
+        }
         impl Direction {
-            fn switch(&mut self, above: bool) {
-                *self = match (&self, above) {
+            fn switch(&mut self, zero: Zero) {
+                *self = match (&self, zero) {
                     // If we crossed zero going up, change angle by 1/2
-                    (Direction::Up(ref angle), true) => Direction::Down(*angle / 2.0),
+                    (Direction::Up(ref angle), Zero::Above) => Direction::Down(*angle / 2.0),
                     // If drop is still below zero, keep going up at same angle
-                    (Direction::Up(ref angle), false) => Direction::Up(*angle),
+                    (Direction::Up(ref angle), Zero::Below) => Direction::Up(*angle),
                     // If we crossed zero going down, change angle by 1/2
-                    (Direction::Down(ref angle), false) => Direction::Up(*angle / 2.0),
+                    (Direction::Down(ref angle), Zero::Below) => Direction::Up(*angle / 2.0),
                     // If drop is still above zero, keep going down at same angle
-                    (Direction::Down(ref angle), true) => Direction::Down(*angle),
+                    (Direction::Down(ref angle), Zero::Above) => Direction::Down(*angle),
                 };
             }
         }
@@ -240,7 +253,7 @@ impl PointMassModel {
                 break;
             }
             // Maybe change direction and angle
-            direction.switch(drop > zero);
+            direction.switch(Zero::from(drop > zero));
         }
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
