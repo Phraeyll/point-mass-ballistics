@@ -179,12 +179,6 @@ impl PointMassModel {
     }
     // Find muzzle angle to achieve 0 drop at specified distance
     pub fn zero(&mut self, zero_distance: f64) {
-        // Enums used to represent angling up or down
-        // #[derive(Copy, Clone)]
-        // enum Direction {
-        //     Up(f64),
-        //     Down(f64),
-        // }
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
@@ -234,15 +228,16 @@ impl PointMassModel {
         // it starts with such a large angle.  The first zero is projectile rising to zero,
         // crossing line of sight while leaving the bore.  Will be used later for point blank range
         // calculations.
-        let mut first_zero = Vector3::new(0.0, zero, 0.0);
-        for b in self.iter() {
-            if b.position.y > zero {
-                first_zero = b.position;
-                break;
+        self.first_zero = {
+            let mut sim = self.iter();
+            loop {
+                if let Some(Ballistic { position, .. }) = sim.next() {
+                    if position.y > zero {
+                        break position;
+                    }
+                }
             }
-        }
-        self.first_zero = first_zero;
-
+        };
         // Restore old los angle
         self.shooter_pitch = old_shooter_pitch;
     }
