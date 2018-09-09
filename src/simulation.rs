@@ -179,7 +179,7 @@ impl PointMassModel {
     }
     // Find muzzle angle to achieve 0 drop at specified distance
     pub fn zero(&mut self, zero_distance: f64) {
-        // Enums used to represent angling up or down, and functions to change directions
+        // Enums used to represent angling up or down
         #[derive(Copy, Clone)]
         enum Direction {
             Up(f64),
