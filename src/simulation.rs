@@ -228,9 +228,9 @@ impl PointMassModel {
             }
             match (direction, drop > zero) {
                 // If we crossed zero going up, change angle by 1/2
-                (Direction::Up(ref angle), true) => direction = Direction::Down(angle / 2.0),
+                (Direction::Up(angle), true) => direction = Direction::Down(angle / 2.0),
                 // If we crossed zero going down, change angle by 1/2
-                (Direction::Down(ref angle), false) => direction = Direction::Up(angle / 2.0),
+                (Direction::Down(angle), false) => direction = Direction::Up(angle / 2.0),
                 // If going down and drop is above zero, keep going down at same angle
                 // If going up and drop is below zero, keep going up at same angle
                 (_, _) => (),
