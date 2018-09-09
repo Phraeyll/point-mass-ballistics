@@ -180,36 +180,10 @@ impl PointMassModel {
     // Find muzzle angle to achieve 0 drop at specified distance
     pub fn zero(&mut self, zero_distance: f64) {
         // Enums used to represent angling up or down, and functions to change directions
+        #[derive(Copy, Clone)]
         enum Direction {
             Up(f64),
             Down(f64),
-        }
-        enum Zero {
-            Above,
-            Below,
-        }
-        impl Zero {
-            fn from(above: bool) -> Zero {
-                if above {
-                    Zero::Above
-                } else {
-                    Zero::Below
-                }
-            }
-        }
-        impl Direction {
-            fn switch(&mut self, zero: Zero) {
-                *self = match (&self, zero) {
-                    // If we crossed zero going up, change angle by 1/2
-                    (Direction::Up(ref angle), Zero::Above) => Direction::Down(*angle / 2.0),
-                    // If drop is still below zero, keep going up at same angle
-                    (Direction::Up(ref angle), Zero::Below) => Direction::Up(*angle),
-                    // If we crossed zero going down, change angle by 1/2
-                    (Direction::Down(ref angle), Zero::Below) => Direction::Up(*angle / 2.0),
-                    // If drop is still above zero, keep going down at same angle
-                    (Direction::Down(ref angle), Zero::Above) => Direction::Down(*angle),
-                };
-            }
         }
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
@@ -252,8 +226,15 @@ impl PointMassModel {
             if relative_eq!(drop, zero) {
                 break;
             }
-            // Maybe change direction and angle
-            direction.switch(Zero::from(drop > zero));
+            match (direction, drop > zero) {
+                // If we crossed zero going up, change angle by 1/2
+                (Direction::Up(ref angle), true) => direction = Direction::Down(angle / 2.0),
+                // If we crossed zero going down, change angle by 1/2
+                (Direction::Down(ref angle), false) => direction = Direction::Up(angle / 2.0),
+                // If going down and drop is above zero, keep going down at same angle
+                // If going up and drop is below zero, keep going up at same angle
+                (_, _) => (),
+            }
         }
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
