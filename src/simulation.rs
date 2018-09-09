@@ -308,7 +308,7 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
         // Total current pressure
         let pa = f64::from(self.model.pressure.to_pascals());
 
-        // Pressure of water vapor
+        // Pressure of water vapor, Arden Buck equation
         let pv = self.model.humidity
             * 611.21
             * E.powf((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius)));
