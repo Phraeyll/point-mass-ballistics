@@ -180,11 +180,11 @@ impl PointMassModel {
     // Find muzzle angle to achieve 0 drop at specified distance
     pub fn zero(&mut self, zero_distance: f64) {
         // Enums used to represent angling up or down
-        #[derive(Copy, Clone)]
-        enum Direction {
-            Up(f64),
-            Down(f64),
-        }
+        // #[derive(Copy, Clone)]
+        // enum Direction {
+        //     Up(f64),
+        //     Down(f64),
+        // }
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
@@ -202,14 +202,10 @@ impl PointMassModel {
 
         // Start with maximum angle to allow for zeroing at longer distances
         // Start approach going up (must be the case due to gravity)
-        let mut direction = Direction::Up(MAX_ANGLE);
+        let mut angle = MAX_ANGLE;
+        let mut direction = true;
         loop {
-            // Since we have to match anyways, switch to negative here if going down
-            self.muzzle_pitch += match direction {
-                Direction::Up(angle) => angle,
-                Direction::Down(angle) => -angle,
-            };
-            // Quit if algorithm goes above 45 degrees - will never be possible at this point
+            self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
@@ -226,14 +222,11 @@ impl PointMassModel {
             if relative_eq!(drop, zero) {
                 break;
             }
-            match (direction, drop > zero) {
-                // If we crossed zero going up, change angle by 1/2
-                (Direction::Up(angle), true) => direction = Direction::Down(angle / 2.0),
-                // If we crossed zero going down, change angle by 1/2
-                (Direction::Down(angle), false) => direction = Direction::Up(angle / 2.0),
-                // If going down and drop is above zero, keep going down at same angle
-                // If going up and drop is below zero, keep going up at same angle
-                (_, _) => (),
+            // If both states are true, or both states false, change direction and angle
+            // up, above || down, below
+            if !(direction ^ (drop > zero)) {
+                angle = -angle / 2.0;
+                direction = !direction;
             }
         }
         // Now find 'first' zero using the bore angle found for second zero
