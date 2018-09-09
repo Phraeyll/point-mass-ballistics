@@ -42,13 +42,17 @@ impl BallisticCoefficient {
 pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
 // Create wrapped btreemap representation of drag tables from vector representation
-// May consider parsing from a file, but I think it would be better to bundle inside the binary
-// Rather than reducing performance due to IO access
+// May consider parsing from a file, but I think it would be better to bundle tables inside
+// the binary, rather than reducing performance due to IO access
+// Consider adding another enum variant for custom table construction
 impl DragTable {
-    fn mut_iter_insert(&mut self, mach_cd_values: Vec<(f64, f64)>) {
+    // Initialize table from enum passed in from caller
+    pub fn new(mach_cd_values: Vec<(f64, f64)>) -> Self {
+        let mut drag_table = DragTable(BTreeMap::new());
         for (x, y) in mach_cd_values.into_iter() {
-            self.0.insert(OrderedFloat(x), y);
+            drag_table.0.insert(OrderedFloat(x), y);
         }
+        drag_table
     }
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, mach: f64) -> f64 {
@@ -57,11 +61,5 @@ impl DragTable {
         let (x1, y1) = self.0.range(key..).next().unwrap();
         let (x, y) = ((x0.0, x1.0), (*y0, *y1));
         y.0 + (mach - x.0) * (y.1 - y.0) / (x.1 - x.0)
-    }
-    // Initialize table from enum passed in from caller
-    pub fn new(v: Vec<(f64, f64)>) -> Self {
-        let mut drag_table = DragTable(BTreeMap::new());
-        drag_table.mut_iter_insert(v);
-        drag_table
     }
 }
