@@ -189,9 +189,7 @@ impl PointMassModel {
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
 
         // Start with maximum angle to allow for zeroing at longer distances
-        // Start approach going up (must be the case due to gravity)
         let mut angle = MAX_ANGLE;
-        let mut direction = true;
         //let counter = 0;
         loop {
             self.muzzle_pitch += angle;
@@ -215,9 +213,8 @@ impl PointMassModel {
             // If in the following states (xor), change direction and angle sign
             // true, false || false, true
             // up,   above || down,  below
-            if direction ^ (drop < zero) {
+            if angle.is_sign_positive() ^ (drop < zero) {
                 angle = -angle;
-                direction = !direction;
             }
             // Reduce angle before next iteration, trying to converge on zero point
             angle = angle / 2.0;
