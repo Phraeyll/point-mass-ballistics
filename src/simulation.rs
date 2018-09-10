@@ -143,7 +143,7 @@ impl PointMassModel {
             drag_table,
             time_step: time_step_seconds.to_seconds().into(),
 
-            temperature:  Temperature::F(temperature),
+            temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
             gravity: Vector3::new(0.0, GRAVITY, 0.0),
@@ -152,7 +152,7 @@ impl PointMassModel {
 
             muzzle_velocity: Velocity::Fps(muzzle_velocity),
             muzzle_pitch: 0.0,
-            
+
             shooter_pitch,
 
             first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
