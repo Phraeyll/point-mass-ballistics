@@ -37,15 +37,23 @@ pub trait Output {
 
 // All variable required for running point mass model of trajectory simulation
 #[derive(Debug)]
-pub struct PointMassModel {
+pub struct PointMassModel<'c> {
     // Projectile properties
-    pub scope_height: Length,  // Scope Height (inches)
-    pub weight: WeightMass,    // Weight (grains)
-    pub caliber: Length,       // Caliber (inches)
-    pub bc: f64,               // Ballistic Coefficient
-    pub drag_table: DragTable, // Drag Function DragTable
-    pub time_step: Time,       // Timestep for simulation (s)
+    pub scope_height: Length,       // Scope Height (inches)
+    pub weight: WeightMass,         // Weight (grains)
+    pub caliber: Length,            // Caliber (inches)
+    pub bc: f64,                    // Ballistic Coefficient
+    pub drag_table: DragTable,      // Drag Function DragTable
+    pub time_step: Time,            // Timestep for simulation (s)
+    pub conditions: &'c Conditions, // Conditions that vary depending on simulation type
 
+    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
+    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
+    pub first_zero: Vector3<f64>,  // First zero found after zero function
+}
+
+#[derive(Debug, Clone)]
+pub struct Conditions {
     // Environmental Conditions
     pub temperature: Temperature, // Temperature (F)
     pub pressure: Pressure,       // Pressure (InHg)
@@ -54,13 +62,9 @@ pub struct PointMassModel {
     pub wind_velocity: Velocity,  // Wind Velocity (miles/hour)
     pub wind_yaw: f64,            // Wind Angle (degrees)
 
-    // Variables for simulation
-    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
-    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
-
     pub shooter_pitch: f64, // Line of Sight angle (degrees)
 
-    pub first_zero: Vector3<f64>, // First zero found after zero function
+    // Variables for simulation
     /*
     Other factors, not calculated yet
     pub ptmp: f64,                   // Powder Temperature (Modified Velocity?)
@@ -72,12 +76,12 @@ pub struct PointMassModel {
 
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
-pub struct IterPointMassModel<'a> {
-    model: &'a PointMassModel,  // Reference to model used for calculations
-    time: f64,                  // Position in time (s)
-    position: Vector3<f64>,     // Position (m)
-    velocity: Vector3<f64>,     // Velocity (m/s)
-    acceleration: Vector3<f64>, // Acceleration (m/s^2)
+pub struct IterPointMassModel<'c> {
+    model: &'c PointMassModel<'c>, // Reference to model used for calculations
+    time: f64,                     // Position in time (s)
+    position: Vector3<f64>,        // Position (m)
+    velocity: Vector3<f64>,        // Velocity (m/s)
+    acceleration: Vector3<f64>,    // Acceleration (m/s^2)
 }
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
@@ -108,7 +112,28 @@ impl Envelope {
     }
 }
 
-impl PointMassModel {
+impl Conditions {
+    pub fn new(
+        wind_velocity: f64,
+        wind_yaw: f64,
+        temperature: f64,
+        pressure: f64,
+        humidity: f64,
+        shooter_pitch: f64,
+    ) -> Self {
+        Self {
+            temperature: Temperature::F(temperature),
+            pressure: Pressure::Inhg(pressure),
+            humidity,
+            gravity: Vector3::new(0.0, GRAVITY, 0.0),
+            wind_velocity: Velocity::Mph(wind_velocity),
+            wind_yaw: wind_yaw,
+            shooter_pitch,
+        }
+    }
+}
+
+impl<'c> PointMassModel<'c> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
     // Wind velocity is exception - stored in m/s - need better consistency
@@ -116,18 +141,12 @@ impl PointMassModel {
         weight: f64,
         caliber: f64,
         dbc: BallisticCoefficient,
-        muzzle_velocity: f64,
         scope_height: f64,
-        shooter_pitch: f64,
         time_step: f64,
-        wind_velocity: f64,
-        wind_yaw: f64,
-        temperature: f64,
-        pressure: f64,
-        humidity: f64,
+        muzzle_velocity: f64,
+        conditions: &'c Conditions,
     ) -> Self {
         let (bc, drag_table) = dbc.create();
-
         Self {
             scope_height: Length::Inches(scope_height),
             weight: WeightMass::Grains(weight),
@@ -135,19 +154,9 @@ impl PointMassModel {
             bc,
             drag_table,
             time_step: Time::Seconds(time_step),
-
-            temperature: Temperature::F(temperature),
-            pressure: Pressure::Inhg(pressure),
-            humidity,
-            gravity: Vector3::new(0.0, GRAVITY, 0.0),
-            wind_velocity: Velocity::Mph(wind_velocity),
-            wind_yaw: wind_yaw,
-
+            conditions,
             muzzle_velocity: Velocity::Fps(muzzle_velocity),
             muzzle_pitch: 0.0,
-
-            shooter_pitch,
-
             first_zero: Vector3::new(0.0, 0.0, 0.0),
         }
     }
@@ -158,23 +167,23 @@ impl PointMassModel {
             position: Vector3::new(0.0, 0.0, 0.0),
             velocity: velocity_vector(
                 self.muzzle_velocity,
-                Projectile(self.muzzle_pitch.to_radians() + self.shooter_pitch.to_radians()),
+                Projectile(
+                    self.muzzle_pitch.to_radians() + self.conditions.shooter_pitch.to_radians(),
+                ),
             ),
             acceleration: Vector3::new(0.0, 0.0, 0.0),
             time: 0.0,
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance
-    pub fn zero(&mut self, zero_distance: f64) {
+    pub fn zero(
+        &mut self,
+        zero_distance: f64,
+        zero_conditions: &'c Conditions,
+        restore_conditions: &'c Conditions,
+    ) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
-
-        // Save line of sight, use 0 for finding 0
-        // Will need to save other values later when accounting for cant and roll of scope
-        // Wanted to reuse same iter method for simulation and zeroing
-        // May need to find a better method for this, rather than mutating these here
-        let old_shooter_pitch = self.shooter_pitch;
-        self.shooter_pitch = 0.0;
 
         // Run the simulation to find the drop at a specified range.
         let zero = f64::from(self.scope_height.to_meters());
@@ -183,7 +192,10 @@ impl PointMassModel {
 
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
+        // Use different conditions during zeroing calculation, restore later
+        // Need better method - what if we panic or break early?
         //let counter = 0;
+        self.conditions = zero_conditions;
         loop {
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
@@ -213,6 +225,7 @@ impl PointMassModel {
             angle = angle / 2.0;
         }
         //println!("{}", counter);
+
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
         // it starts with such a large angle.  The first zero is projectile rising to zero,
@@ -228,8 +241,8 @@ impl PointMassModel {
                 }
             }
         };
-        // Restore old los angle
-        self.shooter_pitch = old_shooter_pitch;
+        // Restore old conditions for other simulations
+        self.conditions = restore_conditions;
     }
     // Access first zero found
     pub fn first_zero(&self) -> (f64, f64, f64) {
@@ -246,7 +259,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.acceleration = self.drag_force() / self.mass() + self.model.gravity;
+        self.acceleration = self.drag_force() / self.mass() + self.model.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.position = self.position
@@ -262,7 +275,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
         Some(Envelope {
-            angle: self.model.shooter_pitch.to_radians(),
+            angle: self.model.conditions.shooter_pitch.to_radians(),
             height: self.model.scope_height.to_meters().into(),
             time: self.time,
             position: self.position,
@@ -292,14 +305,14 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> f64 {
-        let celsius = f64::from(self.model.temperature.to_celsius());
-        let kelvin = f64::from(self.model.temperature.to_kelvin());
+        let celsius = f64::from(self.model.conditions.temperature.to_celsius());
+        let kelvin = f64::from(self.model.conditions.temperature.to_kelvin());
 
         // Total current pressure
-        let pa = f64::from(self.model.pressure.to_pascals());
+        let pa = f64::from(self.model.conditions.pressure.to_pascals());
 
         // Pressure of water vapor, Arden Buck equation
-        let pv = self.model.humidity
+        let pv = self.model.conditions.humidity
             * 611.21
             * E.powf((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius)));
         // Pressure of dry air
@@ -309,14 +322,14 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> f64 {
-        let pa = f64::from(self.model.pressure.to_pascals());
+        let pa = f64::from(self.model.conditions.pressure.to_pascals());
         let c = (1.4 * (pa / self.rho())).sqrt();
         self.velocity.norm() / c
     }
     fn wind_velocity(&self) -> Vector3<f64> {
         velocity_vector(
-            self.model.wind_velocity,
-            Wind(self.model.wind_yaw.to_radians()),
+            self.model.conditions.wind_velocity,
+            Wind(self.model.conditions.wind_yaw.to_radians()),
         )
     }
     // Primary function - determines force of drag for given projectile, at given velocity
