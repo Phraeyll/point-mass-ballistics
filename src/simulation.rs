@@ -73,7 +73,7 @@ pub struct PointMassModel {
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
 pub struct IterPointMassModel<'a> {
-    model: &'a PointMassModel, // Reference to model used for calculations
+    model: &'a PointMassModel,  // Reference to model used for calculations
     time: f64,                  // Position in time (s)
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
