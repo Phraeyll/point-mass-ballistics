@@ -44,7 +44,7 @@ pub struct PointMassModel {
     pub caliber: Length,       // Caliber (inches)
     pub bc: f64,               // Ballistic Coefficient
     pub drag_table: DragTable, // Drag Function DragTable
-    pub time_step: f64,        // Timestep for simulation (s)
+    pub time_step: Time,       // Timestep for simulation (s)
 
     // Environmental Conditions
     pub temperature: Temperature, // Temperature (F)
@@ -131,17 +131,15 @@ impl PointMassModel {
         pressure: f64,
         humidity: f64,
     ) -> Self {
-        let time_step_seconds = Time::Seconds(time_step);
-        let scope_height_inches = Length::Inches(scope_height);
         let (bc, drag_table) = dbc.create();
 
         Self {
-            scope_height: scope_height_inches,
+            scope_height: Length::Inches(scope_height),
             weight: WeightMass::Grains(weight),
             caliber: Length::Inches(caliber),
             bc,
             drag_table,
-            time_step: time_step_seconds.to_seconds().into(),
+            time_step: Time::Seconds(time_step),
 
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
@@ -155,7 +153,7 @@ impl PointMassModel {
 
             shooter_pitch,
 
-            first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
+            first_zero: Vector3::new(0.0, 0.0, 0.0),
         }
     }
     // Iterate over simulation, initializing with specified velocity
@@ -250,20 +248,20 @@ impl PointMassModel {
 impl<'a> Iterator for IterPointMassModel<'a> {
     type Item = Ballistic;
     fn next(&mut self) -> Option<Self::Item> {
+        let time_step = f64::from(self.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
         self.envelope.acceleration = self.drag_force() / self.mass() + self.model.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.envelope.position = self.envelope.position
-            + self.envelope.velocity * self.model.time_step
-            + self.envelope.acceleration * (self.model.time_step.powf(2.0) / 2.0);
+            + self.envelope.velocity * time_step
+            + self.envelope.acceleration * (time_step.powf(2.0) / 2.0);
 
         // Adjust velocity from change in acceleration
-        self.envelope.velocity =
-            self.envelope.velocity + self.envelope.acceleration * self.model.time_step;
+        self.envelope.velocity = self.envelope.velocity + self.envelope.acceleration * time_step;
 
         // Increment position in time
-        self.envelope.time += self.model.time_step;
+        self.envelope.time += time_step;
 
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
