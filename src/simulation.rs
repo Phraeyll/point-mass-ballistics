@@ -256,10 +256,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.acceleration =
-            self.drag_force()
-            / self.mass()
-            + self.model.conditions.gravity;
+        self.acceleration = self.drag_force() / self.mass() + self.model.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.position = self.position
@@ -313,7 +310,8 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
 
         // Pressure of water vapor, Arden Buck equation
         let pv = self.model.conditions.humidity
-            * 611.21 * ((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius))).exp();
+            * 611.21
+            * ((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius))).exp();
         // Pressure of dry air
         let pd = pa - pv;
 
