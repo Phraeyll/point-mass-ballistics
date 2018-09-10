@@ -70,24 +70,19 @@ pub struct PointMassModel {
     */
 }
 
-// Envelope of motion, changes over time through iter method
-struct Envelope {
-    // Envelope of motion
+// Abstract iter struct for running simulation through iter method
+// Essentially envelope of motion and ref to input variables
+pub struct IterPointMassModel<'a> {
+    model: &'a PointMassModel, // Reference to model used for calculations
     time: f64,                  // Position in time (s)
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
 }
 
-// Abstract iter struct for running simulation through iter method
-pub struct IterPointMassModel<'a> {
-    model: &'a PointMassModel, // Reference to model used for calculations
-    envelope: Envelope,        // Mutates through iteration, essentially the output as well
-}
-
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
-pub struct Ballistic {
+pub struct Envelope {
     angle: f64,                 // Line of Sight Angle (radians)
     height: f64,                // Scope height (meters)
     time: f64,                  // Position in time (s)
@@ -96,7 +91,7 @@ pub struct Ballistic {
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
 }
 
-impl Ballistic {
+impl Envelope {
     // Supposed to show relative position of projectile against line of sight, which changes with
     // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
     // position to level ground, and substracting scope height to determine distance
@@ -160,15 +155,13 @@ impl PointMassModel {
     pub fn iter<'a>(&'a self) -> IterPointMassModel {
         IterPointMassModel {
             model: self,
-            envelope: Envelope {
-                position: Vector3::new(0.0, 0.0, 0.0),
-                velocity: velocity_vector(
-                    self.muzzle_velocity,
-                    Projectile(self.muzzle_pitch.to_radians() + self.shooter_pitch.to_radians()),
-                ),
-                acceleration: Vector3::new(0.0, 0.0, 0.0),
-                time: 0.0,
-            },
+            position: Vector3::new(0.0, 0.0, 0.0),
+            velocity: velocity_vector(
+                self.muzzle_velocity,
+                Projectile(self.muzzle_pitch.to_radians() + self.shooter_pitch.to_radians()),
+            ),
+            acceleration: Vector3::new(0.0, 0.0, 0.0),
+            time: 0.0,
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance
@@ -200,7 +193,7 @@ impl PointMassModel {
             // Find drop at distance, need way to break if we never reach position.x
             let mut sim = self.iter();
             let drop = loop {
-                if let Some(Ballistic { position, .. }) = sim.next() {
+                if let Some(Envelope { position, .. }) = sim.next() {
                     if position.x > zero_distance_meters {
                         break position.y;
                     }
@@ -228,7 +221,7 @@ impl PointMassModel {
         self.first_zero = {
             let mut sim = self.iter();
             loop {
-                if let Some(Ballistic { position, .. }) = sim.next() {
+                if let Some(Envelope { position, .. }) = sim.next() {
                     if position.y > zero {
                         break position;
                     }
@@ -249,32 +242,32 @@ impl PointMassModel {
 }
 
 impl<'a> Iterator for IterPointMassModel<'a> {
-    type Item = Ballistic;
+    type Item = Envelope;
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.envelope.acceleration = self.drag_force() / self.mass() + self.model.gravity;
+        self.acceleration = self.drag_force() / self.mass() + self.model.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
-        self.envelope.position = self.envelope.position
-            + self.envelope.velocity * time_step
-            + self.envelope.acceleration * (time_step.powf(2.0) / 2.0);
+        self.position = self.position
+            + self.velocity * time_step
+            + self.acceleration * (time_step.powf(2.0) / 2.0);
 
         // Adjust velocity from change in acceleration
-        self.envelope.velocity = self.envelope.velocity + self.envelope.acceleration * time_step;
+        self.velocity = self.velocity + self.acceleration * time_step;
 
         // Increment position in time
-        self.envelope.time += time_step;
+        self.time += time_step;
 
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
-        Some(Ballistic {
+        Some(Envelope {
             angle: self.model.shooter_pitch.to_radians(),
             height: self.model.scope_height.to_meters().into(),
-            time: self.envelope.time,
-            position: self.envelope.position,
-            velocity: self.envelope.velocity,
-            acceleration: self.envelope.acceleration,
+            time: self.time,
+            position: self.position,
+            velocity: self.velocity,
+            acceleration: self.acceleration,
         })
     }
 }
@@ -318,7 +311,7 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     fn mach(&self) -> f64 {
         let pa = f64::from(self.model.pressure.to_pascals());
         let c = (1.4 * (pa / self.rho())).sqrt();
-        self.envelope.velocity.norm() / c
+        self.velocity.norm() / c
     }
     fn wind_velocity(&self) -> Vector3<f64> {
         velocity_vector(
@@ -334,14 +327,14 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     // through this function.
     fn drag_force(&self) -> Vector3<f64> {
         let cd = self.model.drag_table.lerp(self.mach()) * self.i();
-        let vv = self.envelope.velocity - self.wind_velocity();
+        let vv = self.velocity - self.wind_velocity();
         -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
 }
 
 // Accessor methods for getting common desired units of output
 // Hard coded units for now - need to use better library for this eventually
-impl Output for Ballistic {
+impl Output for Envelope {
     fn time(&self) -> f64 {
         f64::from(Time::Seconds(self.time).to_seconds())
     }
