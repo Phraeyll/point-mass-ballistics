@@ -68,7 +68,6 @@ pub struct PointMassModel {
     pub dir:  Direction,             // Direction Facing (Coriolis/Eotvos Effect)
     pub spin: f64,                   // Spin drift (Gyroscopic Drift)
     */
-    counter: i64,                    // Temporary counter to benchmark zero convergence
 }
 
 // Envelope of motion, changes over time through iter method
@@ -155,8 +154,6 @@ impl PointMassModel {
             shooter_pitch,
 
             first_zero: Vector3::new(0.0, 0.0, 0.0),
-
-            counter: 0,
         }
     }
     // Iterate over simulation, initializing with specified velocity
@@ -195,12 +192,13 @@ impl PointMassModel {
         // Start approach going up (must be the case due to gravity)
         let mut angle = MAX_ANGLE;
         let mut direction = true;
+        //let counter = 0;
         loop {
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
-            self.counter += 1;
+            //counter += 1;
             // Find drop at distance, need way to break if we never reach position.x
             let mut sim = self.iter();
             let drop = loop {
@@ -224,7 +222,7 @@ impl PointMassModel {
             // Reduce angle before next iteration, trying to converge on zero point
             angle = angle / 2.0;
         }
-        //println!("{}", self.counter);
+        //println!("{}", counter);
         // Now find 'first' zero using the bore angle found for second zero
         // Algorithm above must find the second zero (projectile falling into zero) since
         // it starts with such a large angle.  The first zero is projectile rising to zero,
