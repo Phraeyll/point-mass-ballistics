@@ -55,10 +55,9 @@ impl DragTable {
         drag_table
     }
     // Linear interpolation of point 'mach' and associated CD
-    pub fn lerp(&self, mach: f64) -> f64 {
-        let key = OrderedFloat(mach);
-        let (OrderedFloat(x0), y0) = self.0.range(..key).next_back().unwrap();
-        let (OrderedFloat(x1), y1) = self.0.range(key..).next().unwrap();
-        y0 + (mach - x0) * (y1 - y0) / (x1 - x0)
+    pub fn lerp(&self, x: f64) -> f64 {
+        let (OrderedFloat(x0), y0) = self.0.range(..OrderedFloat(x)).next_back().unwrap();
+        let (OrderedFloat(x1), y1) = self.0.range(OrderedFloat(x)..).next().unwrap();
+        y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     }
 }
