@@ -46,25 +46,22 @@ pub struct PointMassModel<'c> {
     pub drag_table: DragTable,      // Drag Function DragTable
     pub time_step: Time,            // Timestep for simulation (s)
     pub conditions: &'c Conditions, // Conditions that vary depending on simulation type
-
-    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
-    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
-    pub first_zero: Vector3<f64>,  // First zero found after zero function
+    pub muzzle_velocity: Velocity,  // Initial velocity (ft/s)
+    pub muzzle_pitch: f64,          // Initial angle (radians), is also set in zero function
+    pub first_zero: Vector3<f64>,   // First zero found after zero function
 }
 
+// Environmental Conditions and other varialbe for simulation
 #[derive(Debug, Clone)]
 pub struct Conditions {
-    // Environmental Conditions
     pub temperature: Temperature, // Temperature (F)
     pub pressure: Pressure,       // Pressure (InHg)
     pub humidity: f64,            // Humidity (0-1)
     pub gravity: Vector3<f64>,    // Gravity (m/s^2)
     pub wind_velocity: Velocity,  // Wind Velocity (miles/hour)
     pub wind_yaw: f64,            // Wind Angle (degrees)
+    pub shooter_pitch: f64,       // Line of Sight angle (degrees)
 
-    pub shooter_pitch: f64, // Line of Sight angle (degrees)
-
-    // Variables for simulation
     /*
     Other factors, not calculated yet
     pub ptmp: f64,                   // Powder Temperature (Modified Velocity?)
