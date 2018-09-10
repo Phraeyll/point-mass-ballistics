@@ -210,9 +210,10 @@ impl PointMassModel {
             if relative_eq!(drop, zero) {
                 break;
             }
-            // If both states are true, or both states false, change direction and angle
-            // up, above || down, below
-            if !(direction ^ (drop > zero)) {
+            // If in the following states (xor), change direction and angle
+            // true, false || false, true
+            // up,   above || down,  below
+            if direction ^ (drop < zero) {
                 angle = -angle / 2.0;
                 direction = !direction;
             }
