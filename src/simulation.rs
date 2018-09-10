@@ -35,24 +35,105 @@ pub trait Output {
     fn windage(&self) -> f64;
 }
 
-// All variable required for running point mass model of trajectory simulation
-#[derive(Debug)]
-pub struct PointMassModel<'c> {
-    // Projectile properties
-    pub scope_height: Length,       // Scope Height (inches)
-    pub weight: WeightMass,         // Weight (grains)
-    pub caliber: Length,            // Caliber (inches)
-    pub bc: f64,                    // Ballistic Coefficient
-    pub drag_table: DragTable,      // Drag Function DragTable
-    pub time_step: Time,            // Timestep for simulation (s)
-    pub conditions: &'c Conditions, // Conditions that vary depending on simulation type
-    pub muzzle_velocity: Velocity,  // Initial velocity (ft/s)
-    pub muzzle_pitch: f64,          // Initial angle (radians), is also set in zero function
-    pub first_zero: Vector3<f64>,   // First zero found after zero function
+// Distance => (drop, windage, velocity, time)
+pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64)>);
+
+pub struct Simulator {
+    projectile: Projectile,
+    model: Model,
+    zero_conditions: Conditions,
+    drop_table_conditions: Conditions,
+    //dial_conditions: Conditions,
+}
+
+impl Simulator {
+    pub fn new(
+        projectile: Projectile,
+        model: Model,
+        zero_conditions: Conditions,
+        drop_table_conditions: Conditions,
+    ) -> Self {
+        Self {
+            projectile,
+            model,
+            zero_conditions,
+            drop_table_conditions,
+        }
+    }
+    fn zero_model(&mut self) -> PointMassModel {
+        PointMassModel::new(&self.projectile, &self.zero_conditions, &mut self.model)
+    }
+    fn drop_table_model<'b>(&'b mut self, zero_distance: f64) -> PointMassModel<'b> {
+        self.zero_model().zero(zero_distance);
+        PointMassModel::new(
+            &self.projectile,
+            &self.drop_table_conditions,
+            &mut self.model,
+        )
+    }
+    pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
+        let point_mass_model = self.drop_table_model(zero_distance);
+        let mut drop_table = DropTable(Vec::new());
+        let mut current_step: f64 = 0.0;
+        for e in point_mass_model.iter() {
+            if e.distance() > current_step {
+                drop_table.0.push(
+                    (e.distance(), e.drop(), e.windage(), e.velocity(), e.time()),
+                );
+                current_step += step;
+            }
+            if e.distance() > range {
+                break;
+            }
+        }
+        drop_table
+    }
+}
+
+pub struct Model {
+    pub bc: f64,                   // Ballistic Coefficient
+    pub drag_table: DragTable,     // Drag Function DragTable
+    pub time_step: Time,           // Timestep for simulation (s)
+    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
+    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
+    pub scope_height: Length,      // Scope Height (inches)
+}
+
+impl Model {
+    pub fn new(
+        dbc: BallisticCoefficient,
+        time_step: f64,
+        muzzle_velocity: f64,
+        scope_height: f64,
+    ) -> Self {
+        let (bc, drag_table) = dbc.create();
+        Self {
+            bc,
+            drag_table,
+            time_step: Time::Seconds(time_step),
+            muzzle_velocity: Velocity::Fps(muzzle_velocity),
+            muzzle_pitch: 0.0,
+            scope_height: Length::Inches(scope_height),
+        }
+    }
+}
+
+pub struct Projectile {
+    pub weight: WeightMass, // Weight (grains)
+    pub caliber: Length,    // Caliber (inches)
+}
+
+impl Projectile {
+    pub fn new(weight: f64, caliber: f64) -> Self {
+        Self {
+            weight: WeightMass::Grains(weight),
+            caliber: Length::Inches(caliber),
+        }
+    }
 }
 
 // Environmental Conditions and other varialbe for simulation
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Conditions {
     pub temperature: Temperature, // Temperature (F)
     pub pressure: Pressure,       // Pressure (InHg)
@@ -71,14 +152,22 @@ pub struct Conditions {
     */
 }
 
+// All variable required for running point mass model of trajectory simulation
+pub struct PointMassModel<'b> {
+    // Projectile properties
+    pub projectile: &'b Projectile,
+    pub conditions: &'b Conditions, // Conditions that vary depending on simulation type
+    pub model: &'b mut Model,       // Other variables used in point mass model
+}
+
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
-pub struct IterPointMassModel<'c> {
-    model: &'c PointMassModel<'c>, // Reference to model used for calculations
-    time: f64,                     // Position in time (s)
-    position: Vector3<f64>,        // Position (m)
-    velocity: Vector3<f64>,        // Velocity (m/s)
-    acceleration: Vector3<f64>,    // Acceleration (m/s^2)
+pub struct IterPointMassModel<'a> {
+    simulation: &'a PointMassModel<'a>, // Reference to model used for calculations
+    time: f64,                          // Position in time (s)
+    position: Vector3<f64>,             // Position (m)
+    velocity: Vector3<f64>,             // Velocity (m/s)
+    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
@@ -130,42 +219,31 @@ impl Conditions {
     }
 }
 
-impl<'c> PointMassModel<'c> {
+impl<'b> PointMassModel<'b> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
     // Wind velocity is exception - stored in m/s - need better consistency
     pub fn new(
-        weight: f64,
-        caliber: f64,
-        dbc: BallisticCoefficient,
-        scope_height: f64,
-        time_step: f64,
-        muzzle_velocity: f64,
-        conditions: &'c Conditions,
+        projectile: &'b Projectile,
+        conditions: &'b Conditions,
+        model: &'b mut Model,
     ) -> Self {
-        let (bc, drag_table) = dbc.create();
         Self {
-            scope_height: Length::Inches(scope_height),
-            weight: WeightMass::Grains(weight),
-            caliber: Length::Inches(caliber),
-            bc,
-            drag_table,
-            time_step: Time::Seconds(time_step),
+            projectile,
             conditions,
-            muzzle_velocity: Velocity::Fps(muzzle_velocity),
-            muzzle_pitch: 0.0,
-            first_zero: Vector3::new(0.0, 0.0, 0.0),
+            model,
         }
     }
     // Iterate over simulation, initializing with specified velocity
     pub fn iter<'a>(&'a self) -> IterPointMassModel {
         IterPointMassModel {
-            model: self,
+            simulation: self,
             position: Vector3::new(0.0, 0.0, 0.0),
             velocity: velocity_vector(
-                self.muzzle_velocity,
-                Projectile(
-                    self.muzzle_pitch.to_radians() + self.conditions.shooter_pitch.to_radians(),
+                self.model.muzzle_velocity,
+                AngleKind::Projectile(
+                    self.model.muzzle_pitch.to_radians()
+                        + self.conditions.shooter_pitch.to_radians(),
                 ),
             ),
             acceleration: Vector3::new(0.0, 0.0, 0.0),
@@ -173,17 +251,12 @@ impl<'c> PointMassModel<'c> {
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance
-    pub fn zero(
-        &mut self,
-        zero_distance: f64,
-        zero_conditions: &'c Conditions,
-        restore_conditions: &'c Conditions,
-    ) {
+    pub fn zero(&mut self, zero_distance: f64) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
         // Run the simulation to find the drop at a specified range.
-        let zero = f64::from(self.scope_height.to_meters());
+        let zero = f64::from(self.model.scope_height.to_meters());
         let zero_distance_yards = Length::Yards(zero_distance);
         let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
 
@@ -192,10 +265,9 @@ impl<'c> PointMassModel<'c> {
         // Use different conditions during zeroing calculation, restore later
         // Need better method - what if we panic or break early?
         //let counter = 0;
-        self.conditions = zero_conditions;
         loop {
-            self.muzzle_pitch += angle;
-            if self.muzzle_pitch > MAX_ANGLE {
+            self.model.muzzle_pitch += angle;
+            if self.model.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
             //counter += 1;
@@ -228,35 +300,36 @@ impl<'c> PointMassModel<'c> {
         // it starts with such a large angle.  The first zero is projectile rising to zero,
         // crossing line of sight while leaving the bore.  Will be used later for point blank range
         // calculations.
-        self.first_zero = {
-            let mut sim = self.iter();
-            loop {
-                if let Some(Envelope { position, .. }) = sim.next() {
-                    if position.y > zero {
-                        break position;
-                    }
+
+        // Restore old conditions for other simulations
+    }
+    pub fn first_zero(&self) -> Vector3<f64> {
+        let zero = f64::from(self.model.scope_height.to_meters());
+        let mut sim = self.iter();
+        loop {
+            if let Some(Envelope { position, .. }) = sim.next() {
+                if position.y > zero {
+                    break position;
                 }
             }
-        };
-        // Restore old conditions for other simulations
-        self.conditions = restore_conditions;
+        }
     }
     // Access first zero found
-    pub fn first_zero(&self) -> (f64, f64, f64) {
-        let (x, y, z) = (self.first_zero.x, self.first_zero.y, self.first_zero.z);
-        let distance = f64::from(Length::Meters(x).to_yards());
-        let drop = f64::from(Length::Meters(y).to_inches());
-        let windage = f64::from(Length::Meters(z).to_inches());
-        (distance, drop, windage)
-    }
+    // pub fn first_zero(&self) -> (f64, f64, f64) {
+    //     let (x, y, z) = (self.first_zero.x, self.first_zero.y, self.first_zero.z);
+    //     let distance = f64::from(Length::Meters(x).to_yards());
+    //     let drop = f64::from(Length::Meters(y).to_inches());
+    //     let windage = f64::from(Length::Meters(z).to_inches());
+    //     (distance, drop, windage)
+    // }
 }
 
 impl<'a> Iterator for IterPointMassModel<'a> {
     type Item = Envelope;
     fn next(&mut self) -> Option<Self::Item> {
-        let time_step = f64::from(self.model.time_step.to_seconds());
+        let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.acceleration = self.drag_force() / self.mass() + self.model.conditions.gravity;
+        self.acceleration = self.drag_force() / self.mass() + self.simulation.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.position = self.position
@@ -272,8 +345,8 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
         Some(Envelope {
-            angle: self.model.conditions.shooter_pitch.to_radians(),
-            height: self.model.scope_height.to_meters().into(),
+            angle: self.simulation.conditions.shooter_pitch.to_radians(),
+            height: self.simulation.model.scope_height.to_meters().into(),
             time: self.time,
             position: self.position,
             velocity: self.velocity,
@@ -287,29 +360,29 @@ impl<'a> Iterator for IterPointMassModel<'a> {
 impl<'a> DragSimulation for IterPointMassModel<'a> {
     // Area of projectil in kgs, used during drag force calculation
     fn area(&self) -> f64 {
-        let radius = f64::from(self.model.caliber.to_meters()) / 2.0;
+        let radius = f64::from(self.simulation.projectile.caliber.to_meters()) / 2.0;
         PI * radius.powf(2.0)
     }
     // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
     fn mass(&self) -> f64 {
-        self.model.weight.to_kgs().into()
+        self.simulation.projectile.weight.to_kgs().into()
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> f64 {
-        let sd = f64::from(self.model.weight.to_lbs())
-            / f64::from(self.model.caliber.to_inches()).powf(2.0);
-        sd / self.model.bc
+        let sd = f64::from(self.simulation.projectile.weight.to_lbs())
+            / f64::from(self.simulation.projectile.caliber.to_inches()).powf(2.0);
+        sd / self.simulation.model.bc
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> f64 {
-        let celsius = f64::from(self.model.conditions.temperature.to_celsius());
-        let kelvin = f64::from(self.model.conditions.temperature.to_kelvin());
+        let celsius = f64::from(self.simulation.conditions.temperature.to_celsius());
+        let kelvin = f64::from(self.simulation.conditions.temperature.to_kelvin());
 
         // Total current pressure
-        let pa = f64::from(self.model.conditions.pressure.to_pascals());
+        let pa = f64::from(self.simulation.conditions.pressure.to_pascals());
 
         // Pressure of water vapor, Arden Buck equation
-        let pv = self.model.conditions.humidity
+        let pv = self.simulation.conditions.humidity
             * 611.21
             * ((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius))).exp();
         // Pressure of dry air
@@ -319,14 +392,14 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> f64 {
-        let pa = f64::from(self.model.conditions.pressure.to_pascals());
+        let pa = f64::from(self.simulation.conditions.pressure.to_pascals());
         let c = (1.4 * (pa / self.rho())).sqrt();
         self.velocity.norm() / c
     }
     fn wind_velocity(&self) -> Vector3<f64> {
         velocity_vector(
-            self.model.conditions.wind_velocity,
-            Wind(self.model.conditions.wind_yaw.to_radians()),
+            self.simulation.conditions.wind_velocity,
+            AngleKind::Wind(self.simulation.conditions.wind_yaw.to_radians()),
         )
     }
     // Primary function - determines force of drag for given projectile, at given velocity
@@ -336,7 +409,7 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
     // As there should be an analytical solution assuming the flight time is correctly determined
     // through this function.
     fn drag_force(&self) -> Vector3<f64> {
-        let cd = self.model.drag_table.lerp(self.mach()) * self.i();
+        let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.i();
         let vv = self.velocity - self.wind_velocity();
         -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
@@ -370,8 +443,6 @@ impl Output for Envelope {
 // Module is probably overkill for this - just single method for building velocity based on angle
 // Will need to extend to euler angles later on when roll/cant of scope is taken into account
 mod constructors {
-    pub use self::AngleKind::*;
-
     use conversions::*;
     use na::{Rotation3, Vector3};
 
@@ -382,11 +453,11 @@ mod constructors {
 
     pub fn velocity_vector(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
         let (axis, angle) = match vk {
-            Projectile(deg) => {
+            AngleKind::Projectile(deg) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
                 (Vector3::z_axis(), deg)
             }
-            Wind(deg) => {
+            AngleKind::Wind(deg) => {
                 // Rotation along y axis is yaw, wind left/right relative to x/z plane
                 (Vector3::y_axis(), deg)
             }
