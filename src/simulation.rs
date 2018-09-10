@@ -131,35 +131,31 @@ impl PointMassModel {
         pressure: f64,
         humidity: f64,
     ) -> Self {
-        let weight_grains = WeightMass::Grains(weight);
-        let diameter_inches = Length::Inches(caliber);
-        let muzzle_velocity_fps = Velocity::Fps(muzzle_velocity);
-        let temperature_f = Temperature::F(temperature);
-        let pressure_inhg = Pressure::Inhg(pressure);
-        let wind_velocity_mph = Velocity::Mph(wind_velocity);
         let time_step_seconds = Time::Seconds(time_step);
         let scope_height_inches = Length::Inches(scope_height);
         let (bc, drag_table) = dbc.create();
 
         Self {
-            weight: weight_grains,
-            caliber: diameter_inches,
+            scope_height: scope_height_inches,
+            weight: WeightMass::Grains(weight),
+            caliber: Length::Inches(caliber),
             bc,
+            drag_table,
+            time_step: time_step_seconds.to_seconds().into(),
 
-            wind_velocity: wind_velocity_mph,
-            wind_yaw: wind_yaw,
-            temperature: temperature_f,
-            pressure: pressure_inhg,
+            temperature:  Temperature::F(temperature),
+            pressure: Pressure::Inhg(pressure),
             humidity,
             gravity: Vector3::new(0.0, GRAVITY, 0.0),
+            wind_velocity: Velocity::Mph(wind_velocity),
+            wind_yaw: wind_yaw,
 
-            time_step: time_step_seconds.to_seconds().into(),
+            muzzle_velocity: Velocity::Fps(muzzle_velocity),
             muzzle_pitch: 0.0,
-            first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
-            muzzle_velocity: muzzle_velocity_fps,
-            scope_height: scope_height_inches,
+            
             shooter_pitch,
-            drag_table,
+
+            first_zero: Vector3::new(0.0, f64::from(scope_height_inches.to_meters()), 0.0),
         }
     }
     // Iterate over simulation, initializing with specified velocity
