@@ -81,7 +81,6 @@ pub struct Conditions {
     pub spin: f64,                   // Spin drift (Gyroscopic Drift)
     */
 }
-
 impl Conditions {
     pub fn new(
         wind_velocity: f64,
@@ -111,8 +110,10 @@ impl Conditions {
     }
     // Pressure of water vapor, Arden Buck equation
     fn pv(&self) -> f64 {
-        self.humidity * 611.21
-        * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius()))).exp()
+        self.humidity
+            * 611.21
+            * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius())))
+                .exp()
     }
     // Pressure of dry air
     fn pd(&self) -> f64 {
@@ -134,12 +135,12 @@ impl Conditions {
 
 // Distance => (drop, windage, velocity, time)
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
+
 pub struct Simulator {
     pub model: Model,
     pub zero_conditions: Conditions,
     pub solve_conditions: Conditions,
 }
-
 impl Simulator {
     pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
         Self {
@@ -161,9 +162,14 @@ impl Simulator {
         let mut current_step: f64 = 0.0;
         for e in point_mass_model.iter() {
             if e.distance() > current_step {
-                drop_table
-                    .0
-                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time(), e.energy()));
+                drop_table.0.push((
+                    e.distance(),
+                    e.drop(),
+                    e.windage(),
+                    e.velocity(),
+                    e.time(),
+                    e.energy(),
+                ));
                 current_step += step;
             }
             if e.distance() > range {
@@ -190,7 +196,6 @@ struct PointMassModel<'mc> {
     model: &'mc mut Model,       // Other variables used in point mass model
     conditions: &'mc Conditions, // Conditions that vary depending on simulation type
 }
-
 impl<'mc> PointMassModel<'mc> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
@@ -336,7 +341,6 @@ pub struct Envelope<'p> {
     velocity: Vector3<f64>,     // Velocity (m/s)
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
 }
-
 impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
     // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
@@ -380,7 +384,8 @@ impl<'p> Output for Envelope<'p> {
     fn energy(&self) -> f64 {
         f64::from(
             Energy::Joules(self.simulation.model.mass() * self.velocity.norm().powf(2.0) / 2.0)
-        .to_ftlbs())
+                .to_ftlbs(),
+        )
     }
     // Positions relative to line of sight or scope height, imperial units
     fn distance(&self) -> f64 {
