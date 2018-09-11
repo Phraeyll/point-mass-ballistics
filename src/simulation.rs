@@ -13,6 +13,7 @@ const GRAVITY: f64 = -9.80665; // Local gravity in m/s
 const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
+const ADIABATIC_INDEX_AIR: f64 = 1.4; // Adiabatic index of air, mostly diatomic gas
 
 pub struct Model {
     pub weight: WeightMass,        // Weight (grains)
@@ -106,7 +107,7 @@ impl Conditions {
     }
     // Speed of sound
     fn c(&self) -> f64 {
-        (1.4 * (self.pa() / self.rho())).sqrt()
+        (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
     fn pv(&self) -> f64 {
@@ -119,7 +120,7 @@ impl Conditions {
     fn pd(&self) -> f64 {
         self.pa() - self.pv()
     }
-    // Total current pressure
+    // Total air pressure
     fn pa(&self) -> f64 {
         f64::from(self.pressure.to_pascals())
     }
