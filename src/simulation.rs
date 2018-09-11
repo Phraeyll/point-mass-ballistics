@@ -34,7 +34,7 @@ impl Simulator {
     fn zero_model(&mut self) -> PointMassModel {
         PointMassModel::new(&mut self.model, &self.zero_conditions)
     }
-    fn solve_model<'b>(&'b mut self, zero_distance: f64) -> PointMassModel<'b> {
+    fn solve_model(&mut self, zero_distance: f64) -> PointMassModel {
         self.zero_model().zero(zero_distance);
         PointMassModel::new(&mut self.model, &self.solve_conditions)
     }
