@@ -14,72 +14,39 @@ const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
 
-// All (most?) functions needed for drag calculation, and calculation itself
-trait DragSimulation {
-    fn area(&self) -> f64; // Area (meters)
-    fn mass(&self) -> f64; // Mass (kgs)
-    fn i(&self) -> f64; // Form Factor
-    fn rho(&self) -> f64; // Density of air (kg/m^3)
-    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
-    fn wind_velocity(&self) -> Vector3<f64>;
-    fn drag_force(&self) -> Vector3<f64>;
-}
-
-// Output accessor methods to get ballistic properties
-pub trait Output {
-    fn time(&self) -> f64;
-    fn velocity(&self) -> f64;
-    fn acceleration(&self) -> f64;
-    fn distance(&self) -> f64;
-    fn drop(&self) -> f64;
-    fn windage(&self) -> f64;
-}
-
 // Distance => (drop, windage, velocity, time)
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64)>);
 
 pub struct Simulator {
-    projectile: Projectile,
-    model: Model,
-    zero_conditions: Conditions,
-    drop_table_conditions: Conditions,
-    //dial_conditions: Conditions,
+    pub model: Model,
+    pub zero_conditions: Conditions,
+    pub solve_conditions: Conditions,
 }
 
 impl Simulator {
-    pub fn new(
-        projectile: Projectile,
-        model: Model,
-        zero_conditions: Conditions,
-        drop_table_conditions: Conditions,
-    ) -> Self {
+    pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
         Self {
-            projectile,
             model,
             zero_conditions,
-            drop_table_conditions,
+            solve_conditions,
         }
     }
     fn zero_model(&mut self) -> PointMassModel {
-        PointMassModel::new(&self.projectile, &self.zero_conditions, &mut self.model)
+        PointMassModel::new(&mut self.model, &self.zero_conditions)
     }
-    fn drop_table_model<'b>(&'b mut self, zero_distance: f64) -> PointMassModel<'b> {
+    fn solve_model<'b>(&'b mut self, zero_distance: f64) -> PointMassModel<'b> {
         self.zero_model().zero(zero_distance);
-        PointMassModel::new(
-            &self.projectile,
-            &self.drop_table_conditions,
-            &mut self.model,
-        )
+        PointMassModel::new(&mut self.model, &self.solve_conditions)
     }
     pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
-        let point_mass_model = self.drop_table_model(zero_distance);
+        let point_mass_model = self.solve_model(zero_distance);
         let mut drop_table = DropTable(Vec::new());
         let mut current_step: f64 = 0.0;
         for e in point_mass_model.iter() {
             if e.distance() > current_step {
-                drop_table.0.push(
-                    (e.distance(), e.drop(), e.windage(), e.velocity(), e.time()),
-                );
+                drop_table
+                    .0
+                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time()));
                 current_step += step;
             }
             if e.distance() > range {
@@ -88,9 +55,22 @@ impl Simulator {
         }
         drop_table
     }
+    // pub fn first_zero(&self) -> Vector3<f64> {
+    //     let zero = f64::from(self.model.scope_height.to_meters());
+    //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
+    //     loop {
+    //         if let Some(Envelope { position, .. }) = sim.next() {
+    //             if position.y > zero {
+    //                 break position;
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 pub struct Model {
+    pub weight: WeightMass,        // Weight (grains)
+    pub caliber: Length,           // Caliber (inches)
     pub bc: f64,                   // Ballistic Coefficient
     pub drag_table: DragTable,     // Drag Function DragTable
     pub time_step: Time,           // Timestep for simulation (s)
@@ -101,6 +81,8 @@ pub struct Model {
 
 impl Model {
     pub fn new(
+        weight: f64,
+        caliber: f64,
         dbc: BallisticCoefficient,
         time_step: f64,
         muzzle_velocity: f64,
@@ -108,6 +90,8 @@ impl Model {
     ) -> Self {
         let (bc, drag_table) = dbc.create();
         Self {
+            weight: WeightMass::Grains(weight),
+            caliber: Length::Inches(caliber),
             bc,
             drag_table,
             time_step: Time::Seconds(time_step),
@@ -118,22 +102,7 @@ impl Model {
     }
 }
 
-pub struct Projectile {
-    pub weight: WeightMass, // Weight (grains)
-    pub caliber: Length,    // Caliber (inches)
-}
-
-impl Projectile {
-    pub fn new(weight: f64, caliber: f64) -> Self {
-        Self {
-            weight: WeightMass::Grains(weight),
-            caliber: Length::Inches(caliber),
-        }
-    }
-}
-
 // Environmental Conditions and other varialbe for simulation
-#[derive(Debug)]
 pub struct Conditions {
     pub temperature: Temperature, // Temperature (F)
     pub pressure: Pressure,       // Pressure (InHg)
@@ -152,22 +121,25 @@ pub struct Conditions {
     */
 }
 
-// All variable required for running point mass model of trajectory simulation
-pub struct PointMassModel<'b> {
-    // Projectile properties
-    pub projectile: &'b Projectile,
-    pub conditions: &'b Conditions, // Conditions that vary depending on simulation type
-    pub model: &'b mut Model,       // Other variables used in point mass model
-}
-
-// Abstract iter struct for running simulation through iter method
-// Essentially envelope of motion and ref to input variables
-pub struct IterPointMassModel<'a> {
-    simulation: &'a PointMassModel<'a>, // Reference to model used for calculations
-    time: f64,                          // Position in time (s)
-    position: Vector3<f64>,             // Position (m)
-    velocity: Vector3<f64>,             // Velocity (m/s)
-    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
+impl Conditions {
+    pub fn new(
+        wind_velocity: f64,
+        wind_yaw: f64,
+        temperature: f64,
+        pressure: f64,
+        humidity: f64,
+        shooter_pitch: f64,
+    ) -> Self {
+        Self {
+            temperature: Temperature::F(temperature),
+            pressure: Pressure::Inhg(pressure),
+            humidity,
+            gravity: Vector3::new(0.0, GRAVITY, 0.0),
+            wind_velocity: Velocity::Mph(wind_velocity),
+            wind_yaw: wind_yaw,
+            shooter_pitch,
+        }
+    }
 }
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
@@ -198,44 +170,21 @@ impl Envelope {
     }
 }
 
-impl Conditions {
-    pub fn new(
-        wind_velocity: f64,
-        wind_yaw: f64,
-        temperature: f64,
-        pressure: f64,
-        humidity: f64,
-        shooter_pitch: f64,
-    ) -> Self {
-        Self {
-            temperature: Temperature::F(temperature),
-            pressure: Pressure::Inhg(pressure),
-            humidity,
-            gravity: Vector3::new(0.0, GRAVITY, 0.0),
-            wind_velocity: Velocity::Mph(wind_velocity),
-            wind_yaw: wind_yaw,
-            shooter_pitch,
-        }
-    }
+// All variable required for running point mass model of trajectory simulation
+struct PointMassModel<'b> {
+    model: &'b mut Model,       // Other variables used in point mass model
+    conditions: &'b Conditions, // Conditions that vary depending on simulation type
 }
 
 impl<'b> PointMassModel<'b> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
     // Wind velocity is exception - stored in m/s - need better consistency
-    pub fn new(
-        projectile: &'b Projectile,
-        conditions: &'b Conditions,
-        model: &'b mut Model,
-    ) -> Self {
-        Self {
-            projectile,
-            conditions,
-            model,
-        }
+    fn new(model: &'b mut Model, conditions: &'b Conditions) -> Self {
+        Self { model, conditions }
     }
     // Iterate over simulation, initializing with specified velocity
-    pub fn iter<'a>(&'a self) -> IterPointMassModel {
+    fn iter<'a>(&'a self) -> IterPointMassModel {
         IterPointMassModel {
             simulation: self,
             position: Vector3::new(0.0, 0.0, 0.0),
@@ -251,7 +200,7 @@ impl<'b> PointMassModel<'b> {
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance
-    pub fn zero(&mut self, zero_distance: f64) {
+    fn zero(&mut self, zero_distance: f64) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
@@ -303,17 +252,6 @@ impl<'b> PointMassModel<'b> {
 
         // Restore old conditions for other simulations
     }
-    pub fn first_zero(&self) -> Vector3<f64> {
-        let zero = f64::from(self.model.scope_height.to_meters());
-        let mut sim = self.iter();
-        loop {
-            if let Some(Envelope { position, .. }) = sim.next() {
-                if position.y > zero {
-                    break position;
-                }
-            }
-        }
-    }
     // Access first zero found
     // pub fn first_zero(&self) -> (f64, f64, f64) {
     //     let (x, y, z) = (self.first_zero.x, self.first_zero.y, self.first_zero.z);
@@ -322,6 +260,16 @@ impl<'b> PointMassModel<'b> {
     //     let windage = f64::from(Length::Meters(z).to_inches());
     //     (distance, drop, windage)
     // }
+}
+
+// Abstract iter struct for running simulation through iter method
+// Essentially envelope of motion and ref to input variables
+struct IterPointMassModel<'a> {
+    simulation: &'a PointMassModel<'a>, // Reference to model used for calculations
+    time: f64,                          // Position in time (s)
+    position: Vector3<f64>,             // Position (m)
+    velocity: Vector3<f64>,             // Velocity (m/s)
+    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 
 impl<'a> Iterator for IterPointMassModel<'a> {
@@ -355,22 +303,33 @@ impl<'a> Iterator for IterPointMassModel<'a> {
     }
 }
 
+// All (most?) functions needed for drag calculation, and calculation itself
+trait DragSimulation {
+    fn area(&self) -> f64; // Area (meters)
+    fn mass(&self) -> f64; // Mass (kgs)
+    fn i(&self) -> f64; // Form Factor
+    fn rho(&self) -> f64; // Density of air (kg/m^3)
+    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
+    fn wind_velocity(&self) -> Vector3<f64>;
+    fn drag_force(&self) -> Vector3<f64>;
+}
+
 // Still not sure on this trait, not actually used anywhere
 // Have ideas about "Modified Point Mass Model" that may be able to make use of traits/generics
 impl<'a> DragSimulation for IterPointMassModel<'a> {
     // Area of projectil in kgs, used during drag force calculation
     fn area(&self) -> f64 {
-        let radius = f64::from(self.simulation.projectile.caliber.to_meters()) / 2.0;
+        let radius = f64::from(self.simulation.model.caliber.to_meters()) / 2.0;
         PI * radius.powf(2.0)
     }
     // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
     fn mass(&self) -> f64 {
-        self.simulation.projectile.weight.to_kgs().into()
+        self.simulation.model.weight.to_kgs().into()
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> f64 {
-        let sd = f64::from(self.simulation.projectile.weight.to_lbs())
-            / f64::from(self.simulation.projectile.caliber.to_inches()).powf(2.0);
+        let sd = f64::from(self.simulation.model.weight.to_lbs())
+            / f64::from(self.simulation.model.caliber.to_inches()).powf(2.0);
         sd / self.simulation.model.bc
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
@@ -413,6 +372,16 @@ impl<'a> DragSimulation for IterPointMassModel<'a> {
         let vv = self.velocity - self.wind_velocity();
         -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
     }
+}
+
+// Output accessor methods to get ballistic properties
+pub trait Output {
+    fn time(&self) -> f64;
+    fn velocity(&self) -> f64;
+    fn acceleration(&self) -> f64;
+    fn distance(&self) -> f64;
+    fn drop(&self) -> f64;
+    fn windage(&self) -> f64;
 }
 
 // Accessor methods for getting common desired units of output
