@@ -144,16 +144,17 @@ impl Conditions {
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
-pub struct Envelope {
-    angle: f64,                 // Line of Sight Angle (radians)
-    height: f64,                // Scope height (meters)
+pub struct Envelope<'p> {
+    // angle: f64,                 // Line of Sight Angle (radians)
+    // height: f64,                // Scope height (meters)
+    simulation: &'p PointMassModel<'p>,
     time: f64,                  // Position in time (s)
     position: Vector3<f64>,     // Position (m)
     velocity: Vector3<f64>,     // Velocity (m/s)
     acceleration: Vector3<f64>, // Acceleration (m/s^2)
 }
 
-impl Envelope {
+impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
     // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
     // position to level ground, and substracting scope height to determine distance
@@ -161,30 +162,31 @@ impl Envelope {
     // other ballistic solvers, ideally other point mass models.  For certains projectiles,
     // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
     fn relative_position(&self) -> Vector3<f64> {
-        let angle = -self.angle;
+        let angle = -self.simulation.conditions.shooter_pitch.to_radians();
+        let height = f64::from(self.simulation.model.scope_height.to_meters());
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let height = Vector3::new(0.0, f64::from(self.height), 0.0);
+        let height = Vector3::new(0.0, height, 0.0);
         let position = rotation * self.position - height;
         position
     }
 }
 
 // All variable required for running point mass model of trajectory simulation
-struct PointMassModel<'b> {
-    model: &'b mut Model,       // Other variables used in point mass model
-    conditions: &'b Conditions, // Conditions that vary depending on simulation type
+struct PointMassModel<'mc> {
+    model: &'mc mut Model,       // Other variables used in point mass model
+    conditions: &'mc Conditions, // Conditions that vary depending on simulation type
 }
 
-impl<'b> PointMassModel<'b> {
+impl<'mc> PointMassModel<'mc> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
     // Wind velocity is exception - stored in m/s - need better consistency
-    fn new(model: &'b mut Model, conditions: &'b Conditions) -> Self {
+    fn new(model: &'mc mut Model, conditions: &'mc Conditions) -> Self {
         Self { model, conditions }
     }
     // Iterate over simulation, initializing with specified velocity
-    fn iter<'a>(&'a self) -> IterPointMassModel {
+    fn iter<'p>(&'p self) -> IterPointMassModel<'p> {
         IterPointMassModel {
             simulation: self,
             position: Vector3::new(0.0, 0.0, 0.0),
@@ -264,16 +266,16 @@ impl<'b> PointMassModel<'b> {
 
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
-struct IterPointMassModel<'a> {
-    simulation: &'a PointMassModel<'a>, // Reference to model used for calculations
+struct IterPointMassModel<'p> {
+    simulation: &'p PointMassModel<'p>, // Reference to model used for calculations
     time: f64,                          // Position in time (s)
     position: Vector3<f64>,             // Position (m)
     velocity: Vector3<f64>,             // Velocity (m/s)
     acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 
-impl<'a> Iterator for IterPointMassModel<'a> {
-    type Item = Envelope;
+impl<'p> Iterator for IterPointMassModel<'p> {
+    type Item = Envelope<'p>;
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
@@ -293,8 +295,7 @@ impl<'a> Iterator for IterPointMassModel<'a> {
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
         Some(Envelope {
-            angle: self.simulation.conditions.shooter_pitch.to_radians(),
-            height: self.simulation.model.scope_height.to_meters().into(),
+            simulation: &self.simulation,
             time: self.time,
             position: self.position,
             velocity: self.velocity,
@@ -316,7 +317,7 @@ trait DragSimulation {
 
 // Still not sure on this trait, not actually used anywhere
 // Have ideas about "Modified Point Mass Model" that may be able to make use of traits/generics
-impl<'a> DragSimulation for IterPointMassModel<'a> {
+impl<'p> DragSimulation for IterPointMassModel<'p> {
     // Area of projectil in kgs, used during drag force calculation
     fn area(&self) -> f64 {
         let radius = f64::from(self.simulation.model.caliber.to_meters()) / 2.0;
@@ -386,7 +387,7 @@ pub trait Output {
 
 // Accessor methods for getting common desired units of output
 // Hard coded units for now - need to use better library for this eventually
-impl Output for Envelope {
+impl<'p> Output for Envelope<'p> {
     fn time(&self) -> f64 {
         f64::from(Time::Seconds(self.time).to_seconds())
     }
