@@ -168,8 +168,8 @@ impl Simulator {
                     e.drop(),
                     e.windage(),
                     e.velocity(),
-                    e.time(),
                     e.energy(),
+                    e.time(),
                 ));
                 current_step += step;
             }
