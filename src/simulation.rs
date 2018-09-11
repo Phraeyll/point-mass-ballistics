@@ -320,7 +320,7 @@ impl<'p> Iterator for IterPointMassModel<'p> {
 
         // Essentially a copy of current envelope of motion, plus los angle and scope height
         // for consumers
-        Some(Envelope {
+        Some(Self::Item {
             simulation: &self.simulation,
             time: self.time,
             position: self.position,
