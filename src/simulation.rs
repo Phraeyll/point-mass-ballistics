@@ -14,60 +14,6 @@ const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
 
-// Distance => (drop, windage, velocity, time)
-pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64)>);
-
-pub struct Simulator {
-    pub model: Model,
-    pub zero_conditions: Conditions,
-    pub solve_conditions: Conditions,
-}
-
-impl Simulator {
-    pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
-        Self {
-            model,
-            zero_conditions,
-            solve_conditions,
-        }
-    }
-    fn zero_model(&mut self) -> PointMassModel {
-        PointMassModel::new(&mut self.model, &self.zero_conditions)
-    }
-    fn solve_model(&mut self, zero_distance: f64) -> PointMassModel {
-        self.zero_model().zero(zero_distance);
-        PointMassModel::new(&mut self.model, &self.solve_conditions)
-    }
-    pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
-        let point_mass_model = self.solve_model(zero_distance);
-        let mut drop_table = DropTable(Vec::new());
-        let mut current_step: f64 = 0.0;
-        for e in point_mass_model.iter() {
-            if e.distance() > current_step {
-                drop_table
-                    .0
-                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time()));
-                current_step += step;
-            }
-            if e.distance() > range {
-                break;
-            }
-        }
-        drop_table
-    }
-    // pub fn first_zero(&self) -> Vector3<f64> {
-    //     let zero = f64::from(self.model.scope_height.to_meters());
-    //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
-    //     loop {
-    //         if let Some(Envelope { position, .. }) = sim.next() {
-    //             if position.y > zero {
-    //                 break position;
-    //             }
-    //         }
-    //     }
-    // }
-}
-
 pub struct Model {
     pub weight: WeightMass,        // Weight (grains)
     pub caliber: Length,           // Caliber (inches)
@@ -78,7 +24,6 @@ pub struct Model {
     pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
     pub scope_height: Length,      // Scope Height (inches)
 }
-
 impl Model {
     pub fn new(
         weight: f64,
@@ -142,34 +87,57 @@ impl Conditions {
     }
 }
 
-// Output struct for wrapping envelope of motion, provides accessor methods for convenience
-// Mostly copied from IterPointMassModels envelope during iteration, some values from model
-pub struct Envelope<'p> {
-    // angle: f64,                 // Line of Sight Angle (radians)
-    // height: f64,                // Scope height (meters)
-    simulation: &'p PointMassModel<'p>,
-    time: f64,                  // Position in time (s)
-    position: Vector3<f64>,     // Position (m)
-    velocity: Vector3<f64>,     // Velocity (m/s)
-    acceleration: Vector3<f64>, // Acceleration (m/s^2)
+// Distance => (drop, windage, velocity, time)
+pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64)>);
+pub struct Simulator {
+    pub model: Model,
+    pub zero_conditions: Conditions,
+    pub solve_conditions: Conditions,
 }
 
-impl<'p> Envelope<'p> {
-    // Supposed to show relative position of projectile against line of sight, which changes with
-    // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
-    // position to level ground, and substracting scope height to determine distance
-    // I think this method is actually correct, but it needs more comparison against
-    // other ballistic solvers, ideally other point mass models.  For certains projectiles,
-    // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
-    fn relative_position(&self) -> Vector3<f64> {
-        let angle = -self.simulation.conditions.shooter_pitch.to_radians();
-        let height = f64::from(self.simulation.model.scope_height.to_meters());
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let height = Vector3::new(0.0, height, 0.0);
-        let position = rotation * self.position - height;
-        position
+impl Simulator {
+    pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
+        Self {
+            model,
+            zero_conditions,
+            solve_conditions,
+        }
     }
+    fn zero_model(&mut self) -> PointMassModel {
+        PointMassModel::new(&mut self.model, &self.zero_conditions)
+    }
+    fn solve_model(&mut self, zero_distance: f64) -> PointMassModel {
+        self.zero_model().zero(zero_distance);
+        PointMassModel::new(&mut self.model, &self.solve_conditions)
+    }
+    pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
+        let point_mass_model = self.solve_model(zero_distance);
+        let mut drop_table = DropTable(Vec::new());
+        let mut current_step: f64 = 0.0;
+        for e in point_mass_model.iter() {
+            if e.distance() > current_step {
+                drop_table
+                    .0
+                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time()));
+                current_step += step;
+            }
+            if e.distance() > range {
+                break;
+            }
+        }
+        drop_table
+    }
+    // pub fn first_zero(&self) -> Vector3<f64> {
+    //     let zero = f64::from(self.model.scope_height.to_meters());
+    //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
+    //     loop {
+    //         if let Some(Envelope { position, .. }) = sim.next() {
+    //             if position.y > zero {
+    //                 break position;
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 // All variable required for running point mass model of trajectory simulation
@@ -244,24 +212,7 @@ impl<'mc> PointMassModel<'mc> {
             // Reduce angle before next iteration, trying to converge on zero point
             angle = angle / 2.0;
         }
-        //println!("{}", counter);
-
-        // Now find 'first' zero using the bore angle found for second zero
-        // Algorithm above must find the second zero (projectile falling into zero) since
-        // it starts with such a large angle.  The first zero is projectile rising to zero,
-        // crossing line of sight while leaving the bore.  Will be used later for point blank range
-        // calculations.
-
-        // Restore old conditions for other simulations
     }
-    // Access first zero found
-    // pub fn first_zero(&self) -> (f64, f64, f64) {
-    //     let (x, y, z) = (self.first_zero.x, self.first_zero.y, self.first_zero.z);
-    //     let distance = f64::from(Length::Meters(x).to_yards());
-    //     let drop = f64::from(Length::Meters(y).to_inches());
-    //     let windage = f64::from(Length::Meters(z).to_inches());
-    //     (distance, drop, windage)
-    // }
 }
 
 // Abstract iter struct for running simulation through iter method
@@ -272,36 +223,6 @@ struct IterPointMassModel<'p> {
     position: Vector3<f64>,             // Position (m)
     velocity: Vector3<f64>,             // Velocity (m/s)
     acceleration: Vector3<f64>,         // Acceleration (m/s^2)
-}
-
-impl<'p> Iterator for IterPointMassModel<'p> {
-    type Item = Envelope<'p>;
-    fn next(&mut self) -> Option<Self::Item> {
-        let time_step = f64::from(self.simulation.model.time_step.to_seconds());
-        // Acceleration from drag force and gravity (F = ma)
-        self.acceleration = self.drag_force() / self.mass() + self.simulation.conditions.gravity;
-
-        // Adjust position first, based on current position, velocity, acceleration, and timestep
-        self.position = self.position
-            + self.velocity * time_step
-            + self.acceleration * (time_step.powf(2.0) / 2.0);
-
-        // Adjust velocity from change in acceleration
-        self.velocity = self.velocity + self.acceleration * time_step;
-
-        // Increment position in time
-        self.time += time_step;
-
-        // Essentially a copy of current envelope of motion, plus los angle and scope height
-        // for consumers
-        Some(Envelope {
-            simulation: &self.simulation,
-            time: self.time,
-            position: self.position,
-            velocity: self.velocity,
-            acceleration: self.acceleration,
-        })
-    }
 }
 
 // All (most?) functions needed for drag calculation, and calculation itself
@@ -375,6 +296,65 @@ impl<'p> DragSimulation for IterPointMassModel<'p> {
     }
 }
 
+impl<'p> Iterator for IterPointMassModel<'p> {
+    type Item = Envelope<'p>;
+    fn next(&mut self) -> Option<Self::Item> {
+        let time_step = f64::from(self.simulation.model.time_step.to_seconds());
+        // Acceleration from drag force and gravity (F = ma)
+        self.acceleration = self.drag_force() / self.mass() + self.simulation.conditions.gravity;
+
+        // Adjust position first, based on current position, velocity, acceleration, and timestep
+        self.position = self.position
+            + self.velocity * time_step
+            + self.acceleration * (time_step.powf(2.0) / 2.0);
+
+        // Adjust velocity from change in acceleration
+        self.velocity = self.velocity + self.acceleration * time_step;
+
+        // Increment position in time
+        self.time += time_step;
+
+        // Essentially a copy of current envelope of motion, plus los angle and scope height
+        // for consumers
+        Some(Envelope {
+            simulation: &self.simulation,
+            time: self.time,
+            position: self.position,
+            velocity: self.velocity,
+            acceleration: self.acceleration,
+        })
+    }
+}
+
+// Output struct for wrapping envelope of motion, provides accessor methods for convenience
+// Mostly copied from IterPointMassModels envelope during iteration, some values from model
+pub struct Envelope<'p> {
+    // angle: f64,                 // Line of Sight Angle (radians)
+    // height: f64,                // Scope height (meters)
+    simulation: &'p PointMassModel<'p>,
+    time: f64,                  // Position in time (s)
+    position: Vector3<f64>,     // Position (m)
+    velocity: Vector3<f64>,     // Velocity (m/s)
+    acceleration: Vector3<f64>, // Acceleration (m/s^2)
+}
+
+impl<'p> Envelope<'p> {
+    // Supposed to show relative position of projectile against line of sight, which changes with
+    // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
+    // position to level ground, and substracting scope height to determine distance
+    // I think this method is actually correct, but it needs more comparison against
+    // other ballistic solvers, ideally other point mass models.  For certains projectiles,
+    // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
+    fn relative_position(&self) -> Vector3<f64> {
+        let angle = -self.simulation.conditions.shooter_pitch.to_radians();
+        let height = f64::from(self.simulation.model.scope_height.to_meters());
+        let axis = Vector3::z_axis();
+        let rotation = Rotation3::from_axis_angle(&axis, angle);
+        let height = Vector3::new(0.0, height, 0.0);
+        let position = rotation * self.position - height;
+        position
+    }
+}
 // Output accessor methods to get ballistic properties
 pub trait Output {
     fn time(&self) -> f64;
