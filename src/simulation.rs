@@ -45,6 +45,22 @@ impl Model {
             scope_height: Length::Inches(scope_height),
         }
     }
+    // Area of projectile in meters, used during drag force calculation
+    fn area(&self) -> f64 {
+        let radius = f64::from(self.caliber.to_meters()) / 2.0;
+        PI * radius.powf(2.0)
+    }
+    // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
+    fn mass(&self) -> f64 {
+        self.weight.to_kgs().into()
+    }
+    fn sd(&self) -> f64 {
+        f64::from(self.weight.to_lbs()) / f64::from(self.caliber.to_inches()).powf(2.0)
+    }
+    // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
+    fn i(&self) -> f64 {
+        self.sd() / self.bc
+    }
 }
 
 // Environmental Conditions and other varialbe for simulation
@@ -85,10 +101,39 @@ impl Conditions {
             shooter_pitch,
         }
     }
+    // Determine air density using Arden Buck equation given temperature and relative humidity
+    fn rho(&self) -> f64 {
+        ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
+    }
+    // Speed of sound
+    fn c(&self) -> f64 {
+        (1.4 * (self.pa() / self.rho())).sqrt()
+    }
+    // Pressure of water vapor, Arden Buck equation
+    fn pv(&self) -> f64 {
+        self.humidity * 611.21
+        * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius()))).exp()
+    }
+    // Pressure of dry air
+    fn pd(&self) -> f64 {
+        self.pa() - self.pv()
+    }
+    // Total current pressure
+    fn pa(&self) -> f64 {
+        f64::from(self.pressure.to_pascals())
+    }
+    // Temperature in celsius
+    fn celsius(&self) -> f64 {
+        f64::from(self.temperature.to_celsius())
+    }
+    // Temperature in kelvin
+    fn kelvin(&self) -> f64 {
+        f64::from(self.temperature.to_kelvin())
+    }
 }
 
 // Distance => (drop, windage, velocity, time)
-pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64)>);
+pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
 pub struct Simulator {
     pub model: Model,
     pub zero_conditions: Conditions,
@@ -118,7 +163,7 @@ impl Simulator {
             if e.distance() > current_step {
                 drop_table
                     .0
-                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time()));
+                    .push((e.distance(), e.drop(), e.windage(), e.velocity(), e.time(), e.energy()));
                 current_step += step;
             }
             if e.distance() > range {
@@ -224,58 +269,10 @@ struct IterPointMassModel<'p> {
     velocity: Vector3<f64>,             // Velocity (m/s)
     acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
-
-// All (most?) functions needed for drag calculation, and calculation itself
-trait DragSimulation {
-    fn area(&self) -> f64; // Area (meters)
-    fn mass(&self) -> f64; // Mass (kgs)
-    fn i(&self) -> f64; // Form Factor
-    fn rho(&self) -> f64; // Density of air (kg/m^3)
-    fn mach(&self) -> f64; // Velocity rel ative to speed of sound
-    fn wind_velocity(&self) -> Vector3<f64>;
-    fn drag_force(&self) -> Vector3<f64>;
-}
-
-// Still not sure on this trait, not actually used anywhere
-// Have ideas about "Modified Point Mass Model" that may be able to make use of traits/generics
-impl<'p> DragSimulation for IterPointMassModel<'p> {
-    // Area of projectil in kgs, used during drag force calculation
-    fn area(&self) -> f64 {
-        let radius = f64::from(self.simulation.model.caliber.to_meters()) / 2.0;
-        PI * radius.powf(2.0)
-    }
-    // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
-    fn mass(&self) -> f64 {
-        self.simulation.model.weight.to_kgs().into()
-    }
-    // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
-    fn i(&self) -> f64 {
-        let sd = f64::from(self.simulation.model.weight.to_lbs())
-            / f64::from(self.simulation.model.caliber.to_inches()).powf(2.0);
-        sd / self.simulation.model.bc
-    }
-    // Determine air density using Arden Buck equation given temperature and relative humidity
-    fn rho(&self) -> f64 {
-        let celsius = f64::from(self.simulation.conditions.temperature.to_celsius());
-        let kelvin = f64::from(self.simulation.conditions.temperature.to_kelvin());
-
-        // Total current pressure
-        let pa = f64::from(self.simulation.conditions.pressure.to_pascals());
-
-        // Pressure of water vapor, Arden Buck equation
-        let pv = self.simulation.conditions.humidity
-            * 611.21
-            * ((18.678 - (celsius / 234.5)) * (celsius / (257.14 + celsius))).exp();
-        // Pressure of dry air
-        let pd = pa - pv;
-
-        ((pd * MOLAR_DRY) + (pv * MOLAR_VAPOR)) / (UNIVERSAL_GAS * kelvin)
-    }
+impl<'p> IterPointMassModel<'p> {
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> f64 {
-        let pa = f64::from(self.simulation.conditions.pressure.to_pascals());
-        let c = (1.4 * (pa / self.rho())).sqrt();
-        self.velocity.norm() / c
+        self.velocity.norm() / self.simulation.conditions.c()
     }
     fn wind_velocity(&self) -> Vector3<f64> {
         velocity_vector(
@@ -290,9 +287,10 @@ impl<'p> DragSimulation for IterPointMassModel<'p> {
     // As there should be an analytical solution assuming the flight time is correctly determined
     // through this function.
     fn drag_force(&self) -> Vector3<f64> {
-        let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.i();
+        let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i();
         let vv = self.velocity - self.wind_velocity();
-        -(self.rho() * self.area() * vv * vv.norm() * cd) / 2.0
+        -(self.simulation.conditions.rho() * self.simulation.model.area() * vv * vv.norm() * cd)
+            / 2.0
     }
 }
 
@@ -301,7 +299,8 @@ impl<'p> Iterator for IterPointMassModel<'p> {
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.acceleration = self.drag_force() / self.mass() + self.simulation.conditions.gravity;
+        self.acceleration =
+            self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         self.position = self.position
@@ -360,6 +359,7 @@ pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
     fn acceleration(&self) -> f64;
+    fn energy(&self) -> f64;
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
@@ -377,7 +377,11 @@ impl<'p> Output for Envelope<'p> {
     fn acceleration(&self) -> f64 {
         f64::from(Acceleration::Mps2(self.acceleration.norm()).to_fps2())
     }
-
+    fn energy(&self) -> f64 {
+        f64::from(
+            Energy::Joules(self.simulation.model.mass() * self.velocity.norm().powf(2.0) / 2.0)
+        .to_ftlbs())
+    }
     // Positions relative to line of sight or scope height, imperial units
     fn distance(&self) -> f64 {
         f64::from(Length::Meters(self.relative_position().x).to_yards())

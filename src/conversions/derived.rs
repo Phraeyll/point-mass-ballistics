@@ -1,9 +1,13 @@
-use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*};
+use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*, Energy::*};
 use super::{length::*, time::*, weight_mass::*};
 
+//Energy
+pub const JOULE_TO_FTLB: f64 = 0.73756;
+pub const FTLB_TO_JOULE: f64 = 1.0 / JOULE_TO_FTLB;
+
 // Pressure
-pub const INHG_TO_PASCALS: f64 = 3386.38;
-pub const PASCALS_TO_INHG: f64 = 1.0 / INHG_TO_PASCALS;
+pub const INHG_TO_PASCAL: f64 = 3386.38;
+pub const PASCAL_TO_INHG: f64 = 1.0 / INHG_TO_PASCAL;
 
 // Density
 pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
@@ -30,6 +34,34 @@ pub const FPS2_TO_MPS2: f64 = FPS_TO_MPS;
 pub const MPS2_TO_FPS2: f64 = 1.0 / FPS2_TO_MPS2;
 
 #[derive(Debug, Copy, Clone)]
+pub enum Energy {
+    Joules(f64),
+    Ftlbs(f64),
+}
+impl From<Energy> for f64 {
+    fn from(u: Energy) -> f64 {
+        match u {
+            Joules(u) => u,
+            Ftlbs(u) => u,
+        }
+    }
+}
+impl Energy {
+    pub fn to_joules(self) -> Self {
+        match self {
+            u @ Joules(_) => u,
+            Ftlbs(u) => Joules(u * FTLB_TO_JOULE),
+        }
+    }
+    pub fn to_ftlbs(self) -> Self {
+        match self {
+            u @ Ftlbs(_) => u,
+            Joules(u) => Ftlbs(u * JOULE_TO_FTLB),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub enum Pressure {
     Pascals(f64),
     Inhg(f64),
@@ -46,13 +78,13 @@ impl Pressure {
     pub fn to_pascals(self) -> Self {
         match self {
             u @ Pascals(_) => u,
-            Inhg(u) => Pascals(u * INHG_TO_PASCALS),
+            Inhg(u) => Pascals(u * INHG_TO_PASCAL),
         }
     }
     pub fn to_inhg(self) -> Self {
         match self {
             u @ Inhg(_) => u,
-            Pascals(u) => Inhg(u * PASCALS_TO_INHG),
+            Pascals(u) => Inhg(u * PASCAL_TO_INHG),
         }
     }
 }
