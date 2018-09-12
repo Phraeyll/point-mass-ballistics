@@ -101,6 +101,12 @@ impl Conditions {
             shooter_pitch,
         }
     }
+    fn wind_velocity(&self) -> Vector3<f64> {
+        velocity_vector(
+            self.wind_velocity,
+            AngleKind::Wind(self.wind_yaw.to_radians()),
+        )
+    }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> f64 {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
@@ -204,22 +210,6 @@ impl<'mc> PointMassModel<'mc> {
     fn new(model: &'mc mut Model, conditions: &'mc Conditions) -> Self {
         Self { model, conditions }
     }
-    // Iterate over simulation, initializing with specified velocity
-    fn iter<'p>(&'p self) -> IterPointMassModel<'p> {
-        IterPointMassModel {
-            simulation: self,
-            position: Vector3::new(0.0, 0.0, 0.0),
-            velocity: velocity_vector(
-                self.model.muzzle_velocity,
-                AngleKind::Projectile(
-                    self.model.muzzle_pitch.to_radians()
-                        + self.conditions.shooter_pitch.to_radians(),
-                ),
-            ),
-            acceleration: Vector3::new(0.0, 0.0, 0.0),
-            time: 0.0,
-        }
-    }
     // Find muzzle angle to achieve 0 drop at specified distance
     fn zero(&mut self, zero_distance: f64) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -264,6 +254,22 @@ impl<'mc> PointMassModel<'mc> {
             angle = angle / 2.0;
         }
     }
+    // Iterate over simulation, initializing with specified velocity
+    fn iter<'p>(&'p self) -> IterPointMassModel<'p> {
+        IterPointMassModel {
+            simulation: self,
+            position: Vector3::new(0.0, 0.0, 0.0),
+            velocity: velocity_vector(
+                self.model.muzzle_velocity,
+                AngleKind::Projectile(
+                    self.model.muzzle_pitch.to_radians()
+                        + self.conditions.shooter_pitch.to_radians(),
+                ),
+            ),
+            acceleration: Vector3::new(0.0, 0.0, 0.0),
+            time: 0.0,
+        }
+    }
 }
 
 // Abstract iter struct for running simulation through iter method
@@ -280,12 +286,6 @@ impl<'p> IterPointMassModel<'p> {
     fn mach(&self) -> f64 {
         self.velocity.norm() / self.simulation.conditions.c()
     }
-    fn wind_velocity(&self) -> Vector3<f64> {
-        velocity_vector(
-            self.simulation.conditions.wind_velocity,
-            AngleKind::Wind(self.simulation.conditions.wind_yaw.to_radians()),
-        )
-    }
     // Primary function - determines force of drag for given projectile, at given velocity
     // with given air density, using ballistic tables to modify coefficient of drag based on
     // standard reference projectiles (Eg., G1 or G7)
@@ -294,7 +294,7 @@ impl<'p> IterPointMassModel<'p> {
     // through this function.
     fn drag_force(&self) -> Vector3<f64> {
         let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i();
-        let vv = self.velocity - self.wind_velocity();
+        let vv = self.velocity - self.simulation.conditions.wind_velocity();
         -(self.simulation.conditions.rho() * self.simulation.model.area() * vv * vv.norm() * cd)
             / 2.0
     }
