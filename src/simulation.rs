@@ -334,8 +334,6 @@ impl<'p> Iterator for IterPointMassModel<'p> {
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
 pub struct Envelope<'p> {
-    // angle: f64,                 // Line of Sight Angle (radians)
-    // height: f64,                // Scope height (meters)
     simulation: &'p PointMassModel<'p>,
     time: f64,                  // Position in time (s)
     position: Vector3<f64>,     // Position (m)
