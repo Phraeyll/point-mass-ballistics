@@ -141,12 +141,13 @@ impl Conditions {
 }
 
 // Distance => (drop, windage, velocity, time)
+// TODO: Smarter table implementation, perhaps a btreemap with accessor functions
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
 
 pub struct Simulator {
-    pub model: Model,
-    pub zero_conditions: Conditions,
-    pub solve_conditions: Conditions,
+    pub model: Model,                  // Model variables, mostly projectile properties
+    pub zero_conditions: Conditions,   // Conditions used to find zero angle (muzzle_pitch)
+    pub solve_conditions: Conditions,  // Conditions used for dialing, drop tables, etc.
 }
 impl Simulator {
     pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
@@ -156,13 +157,16 @@ impl Simulator {
             solve_conditions,
         }
     }
+    // Create simulation with conditions used to find zero angle
     fn zero_model(&mut self) -> PointMassModel {
         PointMassModel::new(&mut self.model, &self.zero_conditions)
     }
+    // Find zero angle, then solve for current conditions
     fn solve_model(&mut self, zero_distance: f64) -> PointMassModel {
         self.zero_model().zero(zero_distance);
         PointMassModel::new(&mut self.model, &self.solve_conditions)
     }
+    // Produce a drop table using specified range and step size
     pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
         let point_mass_model = self.solve_model(zero_distance);
         let mut drop_table = DropTable(Vec::new());
@@ -185,6 +189,7 @@ impl Simulator {
         }
         drop_table
     }
+    // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<f64> {
     //     let zero = f64::from(self.model.scope_height.to_meters());
     //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
@@ -210,7 +215,7 @@ impl<'mc> PointMassModel<'mc> {
     fn new(model: &'mc mut Model, conditions: &'mc Conditions) -> Self {
         Self { model, conditions }
     }
-    // Find muzzle angle to achieve 0 drop at specified distance
+    // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     fn zero(&mut self, zero_distance: f64) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
@@ -224,14 +229,13 @@ impl<'mc> PointMassModel<'mc> {
         let mut angle = MAX_ANGLE;
         // Use different conditions during zeroing calculation, restore later
         // Need better method - what if we panic or break early?
-        //let counter = 0;
         loop {
             self.model.muzzle_pitch += angle;
             if self.model.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
-            //counter += 1;
             // Find drop at distance, need way to break if we never reach position.x
+            // TODO: should use relative positions to account for zeroing conditions
             let mut sim = self.iter();
             let drop = loop {
                 if let Some(Envelope { position, .. }) = sim.next() {
@@ -334,11 +338,11 @@ impl<'p> Iterator for IterPointMassModel<'p> {
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
 pub struct Envelope<'p> {
-    simulation: &'p PointMassModel<'p>,
-    time: f64,                  // Position in time (s)
-    position: Vector3<f64>,     // Position (m)
-    velocity: Vector3<f64>,     // Velocity (m/s)
-    acceleration: Vector3<f64>, // Acceleration (m/s^2)
+    simulation: &'p PointMassModel<'p>, //Simulation this came from, used for various calculations
+    time: f64,                          // Position in time (s)
+    position: Vector3<f64>,             // Position (m)
+    velocity: Vector3<f64>,             // Velocity (m/s)
+    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
