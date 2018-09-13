@@ -227,8 +227,9 @@ impl<'mc> PointMassModel<'mc> {
 
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
-        // Use different conditions during zeroing calculation, restore later
-        // Need better method - what if we panic or break early?
+
+        // Ensure current muzzle pitch is 0 before running simulation
+        self.model.muzzle_pitch = 0.0;
         loop {
             self.model.muzzle_pitch += angle;
             if self.model.muzzle_pitch > MAX_ANGLE {
@@ -313,11 +314,13 @@ impl<'p> Iterator for IterPointMassModel<'p> {
             self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
+        // 'Second Equation of Motion'
         self.position = self.position
             + self.velocity * time_step
-            + self.acceleration * (time_step.powf(2.0) / 2.0);
+            + (self.acceleration * time_step.powf(2.0)) / 2.0;
 
         // Adjust velocity from change in acceleration
+        // 'First Equation of Motion'
         self.velocity = self.velocity + self.acceleration * time_step;
 
         // Increment position in time
