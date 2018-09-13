@@ -311,7 +311,7 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         let acceleration =
             self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
 
-        // Adjust position first, based on current position, velocity, acceleration, and timestep
+        // Adjust position first, before using previous velocity
         // 'Second Equation of Motion'
         self.position = self.position
             + self.velocity * time_step
