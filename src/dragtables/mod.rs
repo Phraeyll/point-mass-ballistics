@@ -48,8 +48,14 @@ impl BallisticCoefficient {
 impl DragTable {
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, x: f64) -> f64 {
-        let (OrderedFloat(x0), y0) = self.0.range(..OrderedFloat(x)).next_back().unwrap();
-        let (OrderedFloat(x1), y1) = self.0.range(OrderedFloat(x)..).next().unwrap();
+        let (x0, y0) = match self.0.range(..OrderedFloat(x)).next_back() {
+            Some((OrderedFloat(key), val)) => (key, val),
+            None => panic!("Velocity out of range!"),
+        };
+        let (x1, y1) = match self.0.range(OrderedFloat(x)..).next() {
+            Some((OrderedFloat(key), val)) => (key, val),
+            None => panic!("Velocity out of range!"),
+        };
         y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     }
 }
