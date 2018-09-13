@@ -271,7 +271,6 @@ impl<'mc> PointMassModel<'mc> {
                         + self.conditions.shooter_pitch.to_radians(),
                 ),
             ),
-            acceleration: Vector3::new(0.0, 0.0, 0.0),
             time: 0.0,
         }
     }
@@ -284,7 +283,6 @@ struct IterPointMassModel<'p> {
     time: f64,                          // Position in time (s)
     position: Vector3<f64>,             // Position (m)
     velocity: Vector3<f64>,             // Velocity (m/s)
-    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 impl<'p> IterPointMassModel<'p> {
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
@@ -310,18 +308,18 @@ impl<'p> Iterator for IterPointMassModel<'p> {
     fn next(&mut self) -> Option<Self::Item> {
         let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        self.acceleration =
+        let acceleration =
             self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
 
         // Adjust position first, based on current position, velocity, acceleration, and timestep
         // 'Second Equation of Motion'
         self.position = self.position
             + self.velocity * time_step
-            + (self.acceleration * time_step.powf(2.0)) / 2.0;
+            + (acceleration * time_step.powf(2.0)) / 2.0;
 
         // Adjust velocity from change in acceleration
         // 'First Equation of Motion'
-        self.velocity = self.velocity + self.acceleration * time_step;
+        self.velocity = self.velocity + acceleration * time_step;
 
         // Increment position in time
         self.time += time_step;
@@ -333,7 +331,6 @@ impl<'p> Iterator for IterPointMassModel<'p> {
             time: self.time,
             position: self.position,
             velocity: self.velocity,
-            acceleration: self.acceleration,
         })
     }
 }
@@ -345,7 +342,6 @@ pub struct Envelope<'p> {
     time: f64,                          // Position in time (s)
     position: Vector3<f64>,             // Position (m)
     velocity: Vector3<f64>,             // Velocity (m/s)
-    acceleration: Vector3<f64>,         // Acceleration (m/s^2)
 }
 impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
@@ -368,7 +364,6 @@ impl<'p> Envelope<'p> {
 pub trait Output {
     fn time(&self) -> f64;
     fn velocity(&self) -> f64;
-    fn acceleration(&self) -> f64;
     fn energy(&self) -> f64;
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
@@ -383,9 +378,6 @@ impl<'p> Output for Envelope<'p> {
     }
     fn velocity(&self) -> f64 {
         f64::from(Velocity::Mps(self.velocity.norm()).to_fps())
-    }
-    fn acceleration(&self) -> f64 {
-        f64::from(Acceleration::Mps2(self.acceleration.norm()).to_fps2())
     }
     fn energy(&self) -> f64 {
         f64::from(
