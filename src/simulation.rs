@@ -9,10 +9,10 @@ use dragtables::*;
 use std::f64::consts::PI;
 
 // Constants used during drag calculation, and gravity during acceleration
-const GRAVITY: f64 = -9.80665; // Local gravity in m/s
+const GRAVITY: f64 = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: f64 = 8.314; // Universal gas constant (J/K*mol)
-const MOLAR_DRY: f64 = 0.0289644; // Molar mass of dry air (kg/mol)
-const MOLAR_VAPOR: f64 = 0.018016; // Molar mass of water vapor (kg/mol)
+const MOLAR_DRY: f64 = 0.028_964_4; // Molar mass of dry air (kg/mol)
+const MOLAR_VAPOR: f64 = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: f64 = 1.4; // Adiabatic index of air, mostly diatomic gas
 
 pub struct Model {
@@ -103,7 +103,7 @@ impl Conditions {
     fn wind_velocity(&self) -> Vector3<f64> {
         velocity_vector(
             self.wind_velocity,
-            AngleKind::Wind(self.wind_yaw.to_radians()),
+            &AngleKind::Wind(self.wind_yaw.to_radians()),
         )
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
@@ -144,9 +144,9 @@ impl Conditions {
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
 
 pub struct Simulator {
-    pub model: Model,                  // Model variables, mostly projectile properties
-    pub zero_conditions: Conditions,   // Conditions used to find zero angle (muzzle_pitch)
-    pub solve_conditions: Conditions,  // Conditions used for dialing, drop tables, etc.
+    pub model: Model,                 // Model variables, mostly projectile properties
+    pub zero_conditions: Conditions,  // Conditions used to find zero angle (muzzle_pitch)
+    pub solve_conditions: Conditions, // Conditions used for dialing, drop tables, etc.
 }
 impl Simulator {
     pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
@@ -255,17 +255,17 @@ impl<'mc> PointMassModel<'mc> {
                 angle = -angle;
             }
             // Reduce angle before next iteration, trying to converge on zero point
-            angle = angle / 2.0;
+            angle /= 2.0;
         }
     }
     // Iterate over simulation, initializing with specified velocity
-    fn iter<'p>(&'p self) -> IterPointMassModel<'p> {
+    fn iter(&self) -> IterPointMassModel {
         IterPointMassModel {
             simulation: self,
             position: Vector3::new(0.0, 0.0, 0.0),
             velocity: velocity_vector(
                 self.model.muzzle_velocity,
-                AngleKind::Projectile(
+                &AngleKind::Projectile(
                     self.model.muzzle_pitch.to_radians()
                         + self.conditions.shooter_pitch.to_radians(),
                 ),
@@ -312,13 +312,11 @@ impl<'p> Iterator for IterPointMassModel<'p> {
 
         // Adjust position first, before using previous velocity
         // 'Second Equation of Motion'
-        self.position = self.position
-            + self.velocity * time_step
-            + (acceleration * time_step.powf(2.0)) / 2.0;
+        self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
 
         // Adjust velocity from change in acceleration
         // 'First Equation of Motion'
-        self.velocity = self.velocity + acceleration * time_step;
+        self.velocity += acceleration * time_step;
 
         // Increment position in time
         self.time += time_step;
@@ -355,8 +353,7 @@ impl<'p> Envelope<'p> {
         let axis = Vector3::z_axis();
         let rotation = Rotation3::from_axis_angle(&axis, angle);
         let height = Vector3::new(0.0, height, 0.0);
-        let position = rotation * self.position - height;
-        position
+        rotation * self.position - height
     }
 }
 // Output accessor methods to get ballistic properties
@@ -407,8 +404,8 @@ mod constructors {
         Wind(f64),
     }
 
-    pub fn velocity_vector(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
-        let (axis, angle) = match vk {
+    pub fn velocity_vector(vel: Velocity, vk: &AngleKind) -> Vector3<f64> {
+        let (axis, angle) = match *vk {
             AngleKind::Projectile(rad) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
                 (Vector3::z_axis(), rad)
