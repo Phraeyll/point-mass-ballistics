@@ -161,13 +161,13 @@ impl Simulator {
         PointMassModel::new(&mut self.model, &self.zero_conditions)
     }
     // Find zero angle, then solve for current conditions
-    fn solve_model(&mut self, zero_distance: f64) -> PointMassModel {
+    fn solve_model(&mut self, zero_distance: Length) -> PointMassModel {
         self.zero_model().zero(zero_distance);
         PointMassModel::new(&mut self.model, &self.solve_conditions)
     }
     // Produce a drop table using specified range and step size
     pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
-        let point_mass_model = self.solve_model(zero_distance);
+        let point_mass_model = self.solve_model(Length::Yards(zero_distance));
         let mut drop_table = DropTable(Vec::new());
         let mut current_step: f64 = 0.0;
         for e in point_mass_model.iter() {
@@ -215,14 +215,12 @@ impl<'mc> PointMassModel<'mc> {
         Self { model, conditions }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    fn zero(&mut self, zero_distance: f64) {
+    fn zero(&mut self, zero_distance: Length) {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
         // Run the simulation to find the drop at a specified range.
-        let zero = f64::from(self.model.scope_height.to_meters());
-        let zero_distance_yards = Length::Yards(zero_distance);
-        let zero_distance_meters = f64::from(zero_distance_yards.to_meters());
+        let zero_distance_meters = f64::from(zero_distance.to_meters());
 
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
@@ -235,24 +233,23 @@ impl<'mc> PointMassModel<'mc> {
                 panic!("Can never 'zero' at this range")
             }
             // Find drop at distance, need way to break if we never reach position.x
-            // TODO: should use relative positions to account for zeroing conditions
             let mut sim = self.iter();
             let drop = loop {
-                if let Some(Envelope { position, .. }) = sim.next() {
-                    if position.x > zero_distance_meters {
-                        break position.y;
+                if let Some(e) = sim.next() {
+                    if e.relative_position().x > zero_distance_meters {
+                        break e.relative_position().y;
                     }
                 }
             };
             // Quit once zero point is found, once drop is equal to zero
-            if relative_eq!(drop, zero) {
+            if relative_eq!(drop, 0.0) {
                 break;
             }
             // If in the following states (xor), change direction and angle sign
             // true, false || false, true
             // up,   above || down,  below
-            if angle.is_sign_positive() ^ (drop < zero) {
-                angle = -angle;
+            if angle.is_sign_positive() ^ (drop < 0.0) {
+                angle *= -1.0;
             }
             // Reduce angle before next iteration, trying to converge on zero point
             angle /= 2.0;
