@@ -410,13 +410,13 @@ mod constructors {
 
     pub fn velocity_vector(vel: Velocity, vk: AngleKind) -> Vector3<f64> {
         let (axis, angle) = match vk {
-            AngleKind::Projectile(deg) => {
+            AngleKind::Projectile(rad) => {
                 // Rotation along z axis is pitch, projectile up/down relative to x/y plane
-                (Vector3::z_axis(), deg)
+                (Vector3::z_axis(), rad)
             }
-            AngleKind::Wind(deg) => {
+            AngleKind::Wind(rad) => {
                 // Rotation along y axis is yaw, wind left/right relative to x/z plane
-                (Vector3::y_axis(), deg)
+                (Vector3::y_axis(), rad)
             }
         };
         let velocity_mps = vel.to_mps().into();
