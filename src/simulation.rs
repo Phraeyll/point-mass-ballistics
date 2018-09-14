@@ -143,13 +143,13 @@ impl Conditions {
 // TODO: Smarter table implementation, perhaps a btreemap with accessor functions
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
 
-pub struct Simulator {
-    pub model: Model,                 // Model variables, mostly projectile properties
-    pub zero_conditions: Conditions,  // Conditions used to find zero angle (muzzle_pitch)
-    pub solve_conditions: Conditions, // Conditions used for dialing, drop tables, etc.
+pub struct Simulator<'mzs> {
+    pub model: &'mzs mut Model,                 // Model variables, mostly projectile properties
+    pub zero_conditions: &'mzs Conditions,  // Conditions used to find zero angle (muzzle_pitch)
+    pub solve_conditions: &'mzs Conditions, // Conditions used for dialing, drop tables, etc.
 }
-impl Simulator {
-    pub fn new(model: Model, zero_conditions: Conditions, solve_conditions: Conditions) -> Self {
+impl<'mzs> Simulator<'mzs> {
+    pub fn new(model: &'mzs mut Model, zero_conditions: &'mzs Conditions, solve_conditions: &'mzs Conditions) -> Self {
         Self {
             model,
             zero_conditions,
@@ -285,12 +285,9 @@ impl<'p> IterPointMassModel<'p> {
     fn mach(&self) -> f64 {
         self.velocity.norm() / self.simulation.conditions.c()
     }
-    // Primary function - determines force of drag for given projectile, at given velocity
+    // Primary function - determines force of drag for given projectile, at given mach speed,
     // with given air density, using ballistic tables to modify coefficient of drag based on
     // standard reference projectiles (Eg., G1 or G7)
-    // May be able to calculate wind at end of simulation, rather than iterate over timesteps
-    // As there should be an analytical solution assuming the flight time is correctly determined
-    // through this function.
     fn drag_force(&self) -> Vector3<f64> {
         let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i();
         let vv = self.velocity - self.simulation.conditions.wind_velocity();
@@ -307,11 +304,11 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         let acceleration =
             self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
 
-        // Adjust position first, before using previous velocity
+        // Adjust position first, to keep previous velocity for First Equation
         // 'Second Equation of Motion'
         self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
 
-        // Adjust velocity from change in acceleration
+        // Adjust velocity next, based on change in acceleration
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
