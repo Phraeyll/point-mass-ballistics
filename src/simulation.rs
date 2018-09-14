@@ -245,7 +245,7 @@ impl<'mc> PointMassModel<'mc> {
             if relative_eq!(drop, 0.0) {
                 break;
             }
-            // If in the following states (xor), change direction and angle sign
+            // If in the following states (xor), change direction by flipping angle sign
             // true, false || false, true
             // up,   above || down,  below
             if angle.is_sign_positive() ^ (drop < 0.0) {
