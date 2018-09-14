@@ -72,6 +72,6 @@ impl DragTable {
             Some((OrderedFloat(key), val)) => (key, val),
             None => panic!("Velocity out of range!"),
         };
-        y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+        y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
     }
 }
