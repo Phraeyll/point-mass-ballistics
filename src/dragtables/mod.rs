@@ -16,6 +16,7 @@ mod gi;
 #[derive(Debug)]
 pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
+// Type of BC used, implies which drag table to use
 #[derive(Copy, Clone)]
 pub enum BallisticCoefficient {
     G1(f64),
@@ -41,6 +42,7 @@ impl BallisticCoefficient {
         }
     }
 }
+
 impl From<BallisticCoefficient> for f64 {
     fn from(u: BallisticCoefficient) -> f64 {
         match u {
