@@ -18,7 +18,7 @@ const ADIABATIC_INDEX_AIR: f64 = 1.4; // Adiabatic index of air, mostly diatomic
 pub struct Model {
     pub weight: WeightMass,        // Weight (grains)
     pub caliber: Length,           // Caliber (inches)
-    pub bc: f64,                   // Ballistic Coefficient
+    pub bc: BallisticCoefficient,  // Ballistic Coefficient
     pub drag_table: DragTable,     // Drag Function DragTable
     pub time_step: Time,           // Timestep for simulation (s)
     pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
@@ -29,17 +29,16 @@ impl Model {
     pub fn new(
         weight: f64,
         caliber: f64,
-        dbc: BallisticCoefficient,
+        bc: BallisticCoefficient,
         time_step: f64,
         muzzle_velocity: f64,
         scope_height: f64,
     ) -> Self {
-        let (bc, drag_table) = dbc.create();
         Self {
             weight: WeightMass::Grains(weight),
             caliber: Length::Inches(caliber),
             bc,
-            drag_table,
+            drag_table: bc.table(),
             time_step: Time::Seconds(time_step),
             muzzle_velocity: Velocity::Fps(muzzle_velocity),
             muzzle_pitch: 0.0,
@@ -60,7 +59,7 @@ impl Model {
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> f64 {
-        self.sd() / self.bc
+        self.sd() / f64::from(self.bc)
     }
 }
 

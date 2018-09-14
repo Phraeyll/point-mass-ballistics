@@ -16,6 +16,7 @@ mod gi;
 #[derive(Debug)]
 pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
+#[derive(Copy, Clone)]
 pub enum BallisticCoefficient {
     G1(f64),
     G2(f64),
@@ -28,15 +29,28 @@ pub enum BallisticCoefficient {
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
-    pub fn create(self) -> (f64, DragTable) {
+    pub fn table(self) -> DragTable {
         match self {
-            G1(bc) => (bc, g1::init()),
-            G2(bc) => (bc, g2::init()),
-            G5(bc) => (bc, g5::init()),
-            G6(bc) => (bc, g6::init()),
-            G7(bc) => (bc, g7::init()),
-            G8(bc) => (bc, g8::init()),
-            GI(bc) => (bc, gi::init()),
+            G1(_) => g1::init(),
+            G2(_) => g2::init(),
+            G5(_) => g5::init(),
+            G6(_) => g6::init(),
+            G7(_) => g7::init(),
+            G8(_) => g8::init(),
+            GI(_) => gi::init(),
+        }
+    }
+}
+impl From<BallisticCoefficient> for f64 {
+    fn from(u: BallisticCoefficient) -> f64 {
+        match u {
+            G1(u) => u,
+            G2(u) => u,
+            G5(u) => u,
+            G6(u) => u,
+            G7(u) => u,
+            G8(u) => u,
+            GI(u) => u,
         }
     }
 }
