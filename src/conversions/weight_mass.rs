@@ -1,12 +1,12 @@
 use self::WeightMass::*;
 
-pub const LBS_TO_GRAINS: f64 = 7000.0;
+pub const LBS_TO_GRAINS: f64 = 7_000.0;
 pub const GRAINS_TO_LBS: f64 = 1.0 / LBS_TO_GRAINS;
 
 pub const GRAINS_TO_KGS: f64 = GRAINS_TO_LBS * LBS_TO_KGS;
 pub const KGS_TO_GRAINS: f64 = 1.0 / GRAINS_TO_KGS;
 
-pub const LBS_TO_KGS: f64 = 0.45359237;
+pub const LBS_TO_KGS: f64 = 0.453_592_37;
 pub const KGS_TO_LBS: f64 = 1.0 / LBS_TO_KGS;
 
 #[derive(Debug, Copy, Clone)]
