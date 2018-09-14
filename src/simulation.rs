@@ -22,7 +22,6 @@ pub struct Model {
     pub drag_table: DragTable,     // Drag Function DragTable
     pub time_step: Time,           // Timestep for simulation (s)
     pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
-    pub muzzle_pitch: f64,         // Initial angle (radians), is also set in zero function
     pub scope_height: Length,      // Scope Height (inches)
 }
 impl Model {
@@ -41,7 +40,6 @@ impl Model {
             drag_table: bc.table(),
             time_step: Time::Seconds(time_step),
             muzzle_velocity: Velocity::Fps(muzzle_velocity),
-            muzzle_pitch: 0.0,
             scope_height: Length::Inches(scope_height),
         }
     }
@@ -144,26 +142,28 @@ impl Conditions {
 pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
 
 pub struct Simulator<'mzs> {
-    pub model: &'mzs mut Model,                 // Model variables, mostly projectile properties
+    pub model: &'mzs Model,                 // Model variables, mostly projectile properties
     pub zero_conditions: &'mzs Conditions,  // Conditions used to find zero angle (muzzle_pitch)
     pub solve_conditions: &'mzs Conditions, // Conditions used for dialing, drop tables, etc.
+    muzzle_pitch: f64,
 }
 impl<'mzs> Simulator<'mzs> {
-    pub fn new(model: &'mzs mut Model, zero_conditions: &'mzs Conditions, solve_conditions: &'mzs Conditions) -> Self {
+    pub fn new(model: &'mzs Model, zero_conditions: &'mzs Conditions, solve_conditions: &'mzs Conditions) -> Self {
         Self {
             model,
             zero_conditions,
             solve_conditions,
+            muzzle_pitch: 0.0,
         }
     }
     // Create simulation with conditions used to find zero angle
     fn zero_model(&mut self) -> PointMassModel {
-        PointMassModel::new(&mut self.model, &self.zero_conditions)
+        PointMassModel::new(&self.model, &self.zero_conditions, self.muzzle_pitch)
     }
     // Find zero angle, then solve for current conditions
     fn solve_model(&mut self, zero_distance: Length) -> PointMassModel {
-        self.zero_model().zero(zero_distance);
-        PointMassModel::new(&mut self.model, &self.solve_conditions)
+        self.muzzle_pitch = self.zero_model().zero(zero_distance);
+        PointMassModel::new(&self.model, &self.solve_conditions, self.muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
     pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
@@ -204,18 +204,19 @@ impl<'mzs> Simulator<'mzs> {
 
 // All variable required for running point mass model of trajectory simulation
 struct PointMassModel<'mc> {
-    model: &'mc mut Model,       // Other variables used in point mass model
+    model: &'mc Model,       // Other variables used in point mass model
     conditions: &'mc Conditions, // Conditions that vary depending on simulation type
+    muzzle_pitch: f64,
 }
 impl<'mc> PointMassModel<'mc> {
     // Create a new trajectory model, assuming all parameters are in traditional imperial units
     // All calculations are done using the SI system, mostly through trait methods on this struct
     // Wind velocity is exception - stored in m/s - need better consistency
-    fn new(model: &'mc mut Model, conditions: &'mc Conditions) -> Self {
-        Self { model, conditions }
+    fn new(model: &'mc Model, conditions: &'mc Conditions, muzzle_pitch: f64) -> Self {
+        Self { model, conditions, muzzle_pitch}
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    fn zero(&mut self, zero_distance: Length) {
+    fn zero(&mut self, zero_distance: Length) -> f64 {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: f64 = PI / 4.0;
 
@@ -226,10 +227,10 @@ impl<'mc> PointMassModel<'mc> {
         let mut angle = MAX_ANGLE;
 
         // Ensure current muzzle pitch is 0 before running simulation
-        self.model.muzzle_pitch = 0.0;
+        self.muzzle_pitch = 0.0;
         loop {
-            self.model.muzzle_pitch += angle;
-            if self.model.muzzle_pitch > MAX_ANGLE {
+            self.muzzle_pitch += angle;
+            if self.muzzle_pitch > MAX_ANGLE {
                 panic!("Can never 'zero' at this range")
             }
             // Find drop at distance, need way to break if we never reach position.x
@@ -243,7 +244,7 @@ impl<'mc> PointMassModel<'mc> {
             };
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
-                break;
+                break self.muzzle_pitch;
             }
             // If in the following states (xor), change direction by flipping angle sign
             // true, false || false, true
@@ -263,7 +264,7 @@ impl<'mc> PointMassModel<'mc> {
             velocity: velocity_vector(
                 self.model.muzzle_velocity,
                 &AngleKind::Projectile(
-                    self.model.muzzle_pitch.to_radians()
+                    self.muzzle_pitch.to_radians()
                         + self.conditions.shooter_pitch.to_radians(),
                 ),
             ),
