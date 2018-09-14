@@ -2,11 +2,11 @@ use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*, Energy::*};
 use super::{length::*, time::*, weight_mass::*};
 
 //Energy
-pub const JOULE_TO_FTLB: f64 = 0.73756;
+pub const JOULE_TO_FTLB: f64 = 0.737_56;
 pub const FTLB_TO_JOULE: f64 = 1.0 / JOULE_TO_FTLB;
 
 // Pressure
-pub const INHG_TO_PASCAL: f64 = 3386.38;
+pub const INHG_TO_PASCAL: f64 = 3_386.38;
 pub const PASCAL_TO_INHG: f64 = 1.0 / INHG_TO_PASCAL;
 
 // Density

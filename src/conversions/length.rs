@@ -1,6 +1,6 @@
 use self::Length::*;
 
-pub const MILES_TO_YARDS: f64 = 1760.0;
+pub const MILES_TO_YARDS: f64 = 1_760.0;
 pub const YARDS_TO_MILES: f64 = 1.0 / MILES_TO_YARDS;
 
 pub const YARDS_TO_FEET: f64 = 3.0;
@@ -9,7 +9,7 @@ pub const FEET_TO_YARDS: f64 = 1.0 / YARDS_TO_FEET;
 pub const FEET_TO_INCHES: f64 = 12.0;
 pub const INCHES_TO_FEET: f64 = 1.0 / FEET_TO_INCHES;
 
-pub const FEET_TO_METERS: f64 = 0.3048;
+pub const FEET_TO_METERS: f64 = 0.304_8;
 pub const METERS_TO_FEET: f64 = 1.0 / FEET_TO_METERS;
 
 pub const MILES_TO_FEET: f64 = MILES_TO_YARDS * YARDS_TO_FEET;
