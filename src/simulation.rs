@@ -142,7 +142,6 @@ pub struct Simulator<'mzs> {
     pub model: &'mzs Model, // Model variables, mostly projectile properties
     pub zero_conditions: &'mzs Conditions, // Conditions used to find zero angle (muzzle_pitch)
     pub solve_conditions: &'mzs Conditions, // Conditions used for dialing, drop tables, etc.
-    muzzle_pitch: f64,      // Muzzle pitch, found during zero function
 }
 impl<'mzs> Simulator<'mzs> {
     pub fn new(
@@ -154,24 +153,24 @@ impl<'mzs> Simulator<'mzs> {
             model,
             zero_conditions,
             solve_conditions,
-            muzzle_pitch: 0.0,
         }
     }
     // Create simulation with conditions used to find zero angle
+    // Ensure current muzzle pitch is 0 before running simulation
     fn zero_model(&mut self) -> PointMassModel {
-        PointMassModel::new(&self.model, &self.zero_conditions, self.muzzle_pitch)
+        PointMassModel::new(&self.model, &self.zero_conditions, 0.0)
     }
     // Find zero angle, then solve for current conditions
-    fn solve_model(&mut self, zero_distance: Length) -> PointMassModel {
-        match self.zero_model().zero(zero_distance) {
-            Ok(muzzle_pitch) => self.muzzle_pitch = muzzle_pitch,
+    fn solution_model(&mut self, zero_distance: Length) -> PointMassModel {
+        let muzzle_pitch = match self.zero_model().zero(zero_distance) {
+            Ok(muzzle_pitch) => muzzle_pitch,
             Err(err) => panic!(err),
-        }
-        PointMassModel::new(&self.model, &self.solve_conditions, self.muzzle_pitch)
+        };
+        PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
     pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
-        let point_mass_model = self.solve_model(Length::Yards(zero_distance));
+        let point_mass_model = self.solution_model(Length::Yards(zero_distance));
         let mut drop_table = DropTable(Vec::new());
         let mut current_step: f64 = 0.0;
         for e in point_mass_model.iter() {
@@ -234,8 +233,6 @@ impl<'mc> PointMassModel<'mc> {
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
 
-        // Ensure current muzzle pitch is 0 before running simulation
-        self.muzzle_pitch = 0.0;
         loop {
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
