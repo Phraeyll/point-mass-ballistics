@@ -11,6 +11,7 @@ mod g6;
 mod g7;
 mod g8;
 mod gi;
+mod gs;
 
 // Wrapper around drag tables map
 #[derive(Debug)]
@@ -26,6 +27,7 @@ pub enum BallisticCoefficient {
     G7(f64),
     G8(f64),
     GI(f64),
+    GS(f64),
 }
 
 // Unwrap BC and create associated drag table
@@ -39,6 +41,7 @@ impl BallisticCoefficient {
             G7(_) => g7::init(),
             G8(_) => g8::init(),
             GI(_) => gi::init(),
+            GS(_) => gs::init(),
         }
     }
 }
@@ -53,6 +56,7 @@ impl From<BallisticCoefficient> for f64 {
             G7(u) => u,
             G8(u) => u,
             GI(u) => u,
+            GS(u) => u,
         }
     }
 }
