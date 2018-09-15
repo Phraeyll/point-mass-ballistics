@@ -170,7 +170,7 @@ impl<'mzs> Simulator<'mzs> {
         PointMassModel::new(&self.model, &self.solve_conditions, self.muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
-    pub fn gimme_drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
+    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
         let point_mass_model = self.solve_model(Length::Yards(zero_distance));
         let mut drop_table = DropTable(Vec::new());
         let mut current_step: f64 = 0.0;
