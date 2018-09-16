@@ -2,17 +2,22 @@
 // Also takes the first item which breaks predicate
 
 pub trait MyIterators {
+    type Item;
     fn take_do_while<P>(self, predicate: P) -> TakeDoWhile<Self, P> where
-    Self: Sized + Iterator, P: FnMut(&Self::Item) -> bool,
+    Self: Sized, P: FnMut(&Self::Item) -> bool,
     {
         TakeDoWhile { iter: self, flag: false, predicate }
     }
 }
 
+impl<I: Iterator> MyIterators for I {
+    type Item = I::Item;
+}
+
 pub struct TakeDoWhile<I, P> {
-    pub iter: I,
-    pub flag: bool,
-    pub predicate: P,
+    iter: I,
+    flag: bool,
+    predicate: P,
 }
 
 impl<I: Iterator, P> Iterator for TakeDoWhile<I, P>

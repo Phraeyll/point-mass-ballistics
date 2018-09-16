@@ -348,7 +348,6 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         })
     }
 }
-impl<'p> MyIterators for IterPointMassModel<'p> {}
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
