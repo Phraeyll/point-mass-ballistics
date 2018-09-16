@@ -1,8 +1,7 @@
 use of::OrderedFloat;
+use macros::FloatMap;
 
 pub use self::BallisticCoefficient::*;
-
-use std::collections::BTreeMap;
 
 mod g1;
 mod g2;
@@ -15,7 +14,6 @@ mod gs;
 
 // Wrapper around drag tables map
 #[derive(Debug)]
-pub struct DragTable(pub BTreeMap<OrderedFloat<f64>, f64>);
 
 // Type of BC used, implies which drag table to use
 #[derive(Copy, Clone)]
@@ -32,7 +30,7 @@ pub enum BallisticCoefficient {
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
-    pub fn table(self) -> DragTable {
+    pub fn table(self) -> FloatMap {
         match self {
             G1(_) => g1::init(),
             G2(_) => g2::init(),
@@ -65,7 +63,7 @@ impl From<BallisticCoefficient> for f64 {
 // May consider parsing from a file, but I think it would be better to bundle tables inside
 // the binary, rather than reducing performance due to IO access
 // Consider adding another enum variant for custom table construction
-impl DragTable {
+impl FloatMap {
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, x: f64) -> f64 {
         let (x0, y0) = match self.0.range(..OrderedFloat(x)).next_back() {

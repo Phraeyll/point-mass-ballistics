@@ -1,10 +1,10 @@
 use of::OrderedFloat;
 
-use super::DragTable;
+use macros::FloatMap;
 
 use std::collections::BTreeMap;
 
-pub fn init() -> DragTable {
+pub fn init() -> FloatMap {
     drag_table!{
         0.00 => 0.2629,
         0.05 => 0.2558,
