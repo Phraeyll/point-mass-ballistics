@@ -4,9 +4,11 @@ pub use dragtables::BallisticCoefficient;
 
 use self::constructors::*;
 use conversions::*;
-use dragtables::*;
+use macros::FloatMap;
+use util::*;
 
 use std::f64::consts::PI;
+use std::iter::FromIterator;
 
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: f64 = -9.806_65; // Local gravity in m/s
@@ -19,7 +21,7 @@ pub struct Model {
     pub weight: WeightMass,        // Weight (grains)
     pub caliber: Length,           // Caliber (inches)
     pub bc: BallisticCoefficient,  // Ballistic Coefficient
-    pub drag_table: DragTable,     // Drag Function DragTable
+    pub drag_table: FloatMap,      // Drag Function DragTable
     pub time_step: Time,           // Timestep for simulation (s)
     pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
     pub scope_height: Length,      // Scope Height (inches)
@@ -134,9 +136,19 @@ impl Conditions {
     }
 }
 
-// Distance => (drop, windage, velocity, time)
+// Distance => (drop, windage, velocity, energy, time)
 // TODO: Smarter table implementation, perhaps a btreemap with accessor functions
-pub struct DropTable(pub Vec<(f64, f64, f64, f64, f64, f64)>);
+type SixTuple = (f64, f64, f64, f64, f64, f64);
+pub struct DropTable(pub Vec<SixTuple>);
+impl FromIterator<SixTuple> for DropTable {
+    fn from_iter<I: IntoIterator<Item = SixTuple>>(iter: I) -> Self {
+        let mut drop_table = DropTable(Vec::new());
+        for i in iter {
+            drop_table.0.push(i);
+        }
+        drop_table
+    }
+}
 
 pub struct Simulator<'mzs> {
     pub model: &'mzs Model, // Model variables, mostly projectile properties
@@ -170,26 +182,25 @@ impl<'mzs> Simulator<'mzs> {
     }
     // Produce a drop table using specified range and step size
     pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
-        let point_mass_model = self.solution_model(Length::Yards(zero_distance));
-        let mut drop_table = DropTable(Vec::new());
         let mut current_step: f64 = 0.0;
-        for e in point_mass_model.iter() {
-            if e.distance() > current_step {
-                drop_table.0.push((
-                    e.distance(),
-                    e.drop(),
-                    e.windage(),
-                    e.velocity(),
-                    e.energy(),
-                    e.time(),
-                ));
-                if e.distance() > range {
-                    break;
+        self.solution_model(Length::Yards(zero_distance))
+            .iter()
+            .take_do_while(|e| e.distance() < range)
+            .filter_map(|e| {
+                if e.distance() > current_step {
+                    current_step += step;
+                    Some((
+                        e.distance(),
+                        e.drop(),
+                        e.windage(),
+                        e.velocity(),
+                        e.energy(),
+                        e.time(),
+                    ))
+                } else {
+                    None
                 }
-                current_step += step;
-            }
-        }
-        drop_table
+            }).collect::<DropTable>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<f64> {
@@ -275,6 +286,15 @@ impl<'mc> PointMassModel<'mc> {
     }
 }
 
+impl<'p> IntoIterator for &'p PointMassModel<'p> {
+    type Item = <IterPointMassModel<'p> as Iterator>::Item;
+    type IntoIter = IterPointMassModel<'p>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
 struct IterPointMassModel<'p> {
@@ -328,6 +348,7 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         })
     }
 }
+impl<'p> MyIterators for IterPointMassModel<'p> {}
 
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
