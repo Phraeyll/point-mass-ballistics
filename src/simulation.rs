@@ -185,7 +185,7 @@ impl<'mzs> Simulator<'mzs> {
         let mut current_step: f64 = 0.0;
         self.solution_model(Length::Yards(zero_distance))
             .iter()
-            .take_do_while(|e| e.distance() < range)
+            .take_until(|e| e.distance() < range)
             .filter_map(|e| {
                 if e.distance() > current_step {
                     current_step += step;
