@@ -3,10 +3,10 @@
 
 pub trait MyIterators {
     type Item;
-    fn take_until<P>(self, predicate: P) -> TakeUntil<Self, P> where
+    fn take_do_while<P>(self, predicate: P) -> TakeDoWhile<Self, P> where
     Self: Sized, P: FnMut(&Self::Item) -> bool,
     {
-        TakeUntil { iter: self, flag: false, predicate }
+        TakeDoWhile { iter: self, flag: false, predicate }
     }
 }
 
@@ -14,13 +14,13 @@ impl<I: Iterator> MyIterators for I {
     type Item = I::Item;
 }
 
-pub struct TakeUntil<I, P> {
+pub struct TakeDoWhile<I, P> {
     iter: I,
     flag: bool,
     predicate: P,
 }
 
-impl<I: Iterator, P> Iterator for TakeUntil<I, P>
+impl<I: Iterator, P> Iterator for TakeDoWhile<I, P>
     where P: FnMut(&I::Item) -> bool
 {
     type Item = I::Item;
