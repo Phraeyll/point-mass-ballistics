@@ -138,11 +138,11 @@ impl Conditions {
 }
 
 // Distance => (drop, windage, velocity, energy, time)
-type TableRow = (f64, f64, f64, f64, f64);
-type TableMap = (f64, TableRow);
-impl FromIterator<TableMap> for FloatMap<TableRow> {
-    fn from_iter<I: IntoIterator<Item = TableMap>>(iter: I) -> Self {
-        let mut drop_table = FloatMap::<TableRow>::default();
+type TableVal = (f64, f64, f64, f64, f64);
+impl<T> FromIterator<(f64, T)> for FloatMap<T>
+{
+    fn from_iter<I: IntoIterator<Item = (f64, T)>>(iter: I) -> Self {
+        let mut drop_table = FloatMap::<T>::default();
         for i in iter {
             drop_table.0.insert(OrderedFloat(i.0), i.1);
         }
@@ -181,7 +181,10 @@ impl<'mzs> Simulator<'mzs> {
         PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
-    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> FloatMap<TableRow> {
+    pub fn drop_table<T>(&mut self, zero_distance: f64, step: f64, range: f64) -> FloatMap<T>
+    where
+        FloatMap<T>: FromIterator<(f64, TableVal)>,
+    {
         let mut current_step: f64 = 0.0;
         self.solution_model(Length::Yards(zero_distance))
             .iter()
@@ -190,13 +193,13 @@ impl<'mzs> Simulator<'mzs> {
                 if e.distance() > current_step {
                     current_step += step;
                     Some((
-                        e.distance(),
-                        (e.drop(), e.windage(), e.velocity(), e.energy(), e.time()),
+                        e.distance(),                                                // Key
+                        (e.drop(), e.windage(), e.velocity(), e.energy(), e.time()), // Value
                     ))
                 } else {
                     None
                 }
-            }).collect::<FloatMap<_>>()
+            }).collect::<FloatMap<T>>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<f64> {

@@ -2,8 +2,14 @@ use of::OrderedFloat;
 
 use std::collections::BTreeMap;
 
-#[derive(Default)]
 pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<f64>, T>);
+impl<T> FloatMap<T> {
+    pub fn default() -> Self {
+        FloatMap(
+            BTreeMap::new()
+        )
+    }
+}
 
 macro_rules! float_map {
     ( $($mach:expr => $cd:expr,)+ ) => ( float_map!($($mach => $cd),+) );
