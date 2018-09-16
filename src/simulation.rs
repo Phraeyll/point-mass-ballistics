@@ -138,11 +138,11 @@ impl Conditions {
 }
 
 // Distance => (drop, windage, velocity, energy, time)
-// TODO: Smarter table implementation, perhaps a btreemap with accessor functions
-type FiveTuple = (f64, f64, f64, f64, f64);
-impl FromIterator<(f64, FiveTuple)> for FloatMap<FiveTuple> {
-    fn from_iter<I: IntoIterator<Item = (f64, FiveTuple)>>(iter: I) -> Self {
-        let mut drop_table = FloatMap::<FiveTuple>::default();
+type TableRow = (f64, f64, f64, f64, f64);
+type TableMap = (f64, TableRow);
+impl FromIterator<TableMap> for FloatMap<TableRow> {
+    fn from_iter<I: IntoIterator<Item = TableMap>>(iter: I) -> Self {
+        let mut drop_table = FloatMap::<TableRow>::default();
         for i in iter {
             drop_table.0.insert(OrderedFloat(i.0), i.1);
         }
@@ -181,7 +181,7 @@ impl<'mzs> Simulator<'mzs> {
         PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
-    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> FloatMap<FiveTuple> {
+    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> FloatMap<TableRow> {
         let mut current_step: f64 = 0.0;
         self.solution_model(Length::Yards(zero_distance))
             .iter()
@@ -196,7 +196,7 @@ impl<'mzs> Simulator<'mzs> {
                 } else {
                     None
                 }
-            }).collect::<FloatMap<FiveTuple>>()
+            }).collect::<FloatMap<_>>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<f64> {
