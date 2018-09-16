@@ -1,4 +1,5 @@
 use na::{Rotation3, Vector3};
+use of::OrderedFloat;
 
 pub use dragtables::BallisticCoefficient;
 
@@ -21,7 +22,7 @@ pub struct Model {
     pub weight: WeightMass,        // Weight (grains)
     pub caliber: Length,           // Caliber (inches)
     pub bc: BallisticCoefficient,  // Ballistic Coefficient
-    pub drag_table: FloatMap,      // Drag Function DragTable
+    pub drag_table: FloatMap<f64>, // Drag Function DragTable
     pub time_step: Time,           // Timestep for simulation (s)
     pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
     pub scope_height: Length,      // Scope Height (inches)
@@ -138,13 +139,12 @@ impl Conditions {
 
 // Distance => (drop, windage, velocity, energy, time)
 // TODO: Smarter table implementation, perhaps a btreemap with accessor functions
-type SixTuple = (f64, f64, f64, f64, f64, f64);
-pub struct DropTable(pub Vec<SixTuple>);
-impl FromIterator<SixTuple> for DropTable {
-    fn from_iter<I: IntoIterator<Item = SixTuple>>(iter: I) -> Self {
-        let mut drop_table = DropTable(Vec::new());
+type FiveTuple = (f64, f64, f64, f64, f64);
+impl FromIterator<(f64, FiveTuple)> for FloatMap<FiveTuple> {
+    fn from_iter<I: IntoIterator<Item = (f64, FiveTuple)>>(iter: I) -> Self {
+        let mut drop_table = FloatMap::<FiveTuple>::default();
         for i in iter {
-            drop_table.0.push(i);
+            drop_table.0.insert(OrderedFloat(i.0), i.1);
         }
         drop_table
     }
@@ -181,7 +181,7 @@ impl<'mzs> Simulator<'mzs> {
         PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
-    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> DropTable {
+    pub fn drop_table(&mut self, zero_distance: f64, step: f64, range: f64) -> FloatMap<FiveTuple> {
         let mut current_step: f64 = 0.0;
         self.solution_model(Length::Yards(zero_distance))
             .iter()
@@ -191,16 +191,12 @@ impl<'mzs> Simulator<'mzs> {
                     current_step += step;
                     Some((
                         e.distance(),
-                        e.drop(),
-                        e.windage(),
-                        e.velocity(),
-                        e.energy(),
-                        e.time(),
+                        (e.drop(), e.windage(), e.velocity(), e.energy(), e.time()),
                     ))
                 } else {
                     None
                 }
-            }).collect::<DropTable>()
+            }).collect::<FloatMap<FiveTuple>>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<f64> {

@@ -30,7 +30,7 @@ pub enum BallisticCoefficient {
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
-    pub fn table(self) -> FloatMap {
+    pub fn table(self) -> FloatMap<f64> {
         match self {
             G1(_) => g1::init(),
             G2(_) => g2::init(),
@@ -63,7 +63,7 @@ impl From<BallisticCoefficient> for f64 {
 // May consider parsing from a file, but I think it would be better to bundle tables inside
 // the binary, rather than reducing performance due to IO access
 // Consider adding another enum variant for custom table construction
-impl FloatMap {
+impl FloatMap<f64> {
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, x: f64) -> f64 {
         let (x0, y0) = match self.0.range(..OrderedFloat(x)).next_back() {

@@ -4,7 +4,7 @@ use macros::FloatMap;
 
 use std::collections::BTreeMap;
 
-pub fn init() -> FloatMap {
+pub fn init() -> FloatMap<f64> {
     drag_table!{
         0.00 => 0.2629,
         0.05 => 0.2558,

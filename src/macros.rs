@@ -2,7 +2,8 @@ use of::OrderedFloat;
 
 use std::collections::BTreeMap;
 
-pub struct FloatMap(pub BTreeMap<OrderedFloat<f64>, f64>);
+#[derive(Default)]
+pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<f64>, T>);
 
 macro_rules! drag_table {
     ( $($mach:expr => $cd:expr,)+ ) => ( drag_table!($($mach => $cd),+) );
