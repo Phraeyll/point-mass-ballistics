@@ -183,10 +183,10 @@ impl<'mzs> Simulator<'mzs> {
                     e.energy(),
                     e.time(),
                 ));
+                if e.distance() > range {
+                    break;
+                }
                 current_step += step;
-            }
-            if e.distance() > range {
-                break;
             }
         }
         drop_table
