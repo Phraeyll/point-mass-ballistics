@@ -283,7 +283,7 @@ impl<'mc> PointMassModel<'mc> {
     fn iter(&self) -> IterPointMassModel {
         IterPointMassModel {
             simulation: self,
-            position: Vector3::new(0.0, 0.0, 0.0),
+            position: Vector3::zeros(),
             velocity: velocity_vector(
                 self.model.muzzle_velocity,
                 &AngleKind::Projectile(self.muzzle_pitch + self.conditions.shooter_pitch),
@@ -329,6 +329,8 @@ impl<'p> IterPointMassModel<'p> {
 impl<'p> Iterator for IterPointMassModel<'p> {
     type Item = Envelope<'p>;
     fn next(&mut self) -> Option<Self::Item> {
+        // Previous values, so we can capture time '0' in output
+        let (time, position, velocity) = (self.time, self.position, self.velocity);
         let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
         let acceleration =
@@ -349,9 +351,9 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         // for consumers
         Some(Self::Item {
             simulation: &self.simulation,
-            time: self.time,
-            position: self.position,
-            velocity: self.velocity,
+            time,
+            position,
+            velocity,
         })
     }
 }
