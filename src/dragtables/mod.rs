@@ -1,5 +1,5 @@
 use macros::FloatMap;
-use of::OrderedFloat;
+use util::Numeric;
 
 pub use self::BallisticCoefficient::*;
 
@@ -15,19 +15,19 @@ mod gs;
 // Type of BC used, implies which drag table to use
 #[derive(Copy, Clone)]
 pub enum BallisticCoefficient {
-    G1(f64),
-    G2(f64),
-    G5(f64),
-    G6(f64),
-    G7(f64),
-    G8(f64),
-    GI(f64),
-    GS(f64),
+    G1(Numeric),
+    G2(Numeric),
+    G5(Numeric),
+    G6(Numeric),
+    G7(Numeric),
+    G8(Numeric),
+    GI(Numeric),
+    GS(Numeric),
 }
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
-    pub fn table(self) -> FloatMap<f64> {
+    pub fn table(self) -> FloatMap<Numeric> {
         match self {
             G1(_) => g1::init(),
             G2(_) => g2::init(),
@@ -41,8 +41,8 @@ impl BallisticCoefficient {
     }
 }
 
-impl From<BallisticCoefficient> for f64 {
-    fn from(u: BallisticCoefficient) -> f64 {
+impl From<BallisticCoefficient> for Numeric {
+    fn from(u: BallisticCoefficient) -> Numeric {
         match u {
             G1(u) => u,
             G2(u) => u,
@@ -53,24 +53,5 @@ impl From<BallisticCoefficient> for f64 {
             GI(u) => u,
             GS(u) => u,
         }
-    }
-}
-
-// Create wrapped btreemap representation of drag tables from vector representation
-// May consider parsing from a file, but I think it would be better to bundle tables inside
-// the binary, rather than reducing performance due to IO access
-// Consider adding another enum variant for custom table construction
-impl FloatMap<f64> {
-    // Linear interpolation of point 'mach' and associated CD
-    pub fn lerp(&self, x: f64) -> f64 {
-        let (x0, y0) = match self.0.range(..OrderedFloat(x)).next_back() {
-            Some((OrderedFloat(key), val)) => (key, val),
-            None => panic!("Velocity out of range!"),
-        };
-        let (x1, y1) = match self.0.range(OrderedFloat(x)..).next() {
-            Some((OrderedFloat(key), val)) => (key, val),
-            None => panic!("Velocity out of range!"),
-        };
-        y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
     }
 }

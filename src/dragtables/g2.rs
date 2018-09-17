@@ -1,10 +1,11 @@
 use of::OrderedFloat;
 
 use macros::FloatMap;
+use util::Numeric;
 
 use std::collections::BTreeMap;
 
-pub fn init() -> FloatMap<f64> {
+pub fn init() -> FloatMap<Numeric> {
     float_map!{
         0.00 => 0.2303,
         0.05 => 0.2298,

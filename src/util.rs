@@ -1,3 +1,6 @@
+// Type alias for calculations
+pub type Numeric = f64;
+
 // Modified from Rust core TakeWhile
 // Also takes the first item which breaks predicate
 
