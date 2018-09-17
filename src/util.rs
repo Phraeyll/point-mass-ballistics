@@ -1,4 +1,5 @@
 // Determine which type to use dynamically, accounts for f32/f64 consts as well.
+
 macro_rules! my_type {
     ( $t:ident ) => {
         use std::$t::consts;
@@ -8,6 +9,12 @@ macro_rules! my_type {
 my_type!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
+// Rationals, and generic numeric types are going to require much more work
+// use num::{Rational, FromPrimitive};
+// pub type Numeric = Rational;
+// use std::f64::consts;
+// pub const PI: Numeric = Rational::from_f64(consts::PI).unwrap();
+// pub const FRAC_PI_4: Numeric = Rational::from_f64(consts::FRAC_PI_4).unwrap();
 
 // Modified from Rust core TakeWhile
 // Also takes the first item which breaks predicate

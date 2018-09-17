@@ -7,3 +7,4 @@ authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 nalgebra = "0.16"
 new-ordered-float = "1.0"
 approx = "0.3"
+# num = "0.2"
