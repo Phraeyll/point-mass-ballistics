@@ -1,4 +1,4 @@
-use self::{Acceleration::*, Density::*, Pressure::*, Velocity::*, Energy::*};
+use self::{Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
 use super::{length::*, time::*, weight_mass::*};
 
 //Energy

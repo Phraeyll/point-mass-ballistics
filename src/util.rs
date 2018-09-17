@@ -3,10 +3,16 @@
 
 pub trait MyIterators {
     type Item;
-    fn take_do_while<P>(self, predicate: P) -> TakeDoWhile<Self, P> where
-    Self: Sized, P: FnMut(&Self::Item) -> bool,
+    fn take_do_while<P>(self, predicate: P) -> TakeDoWhile<Self, P>
+    where
+        Self: Sized,
+        P: FnMut(&Self::Item) -> bool,
     {
-        TakeDoWhile { iter: self, flag: false, predicate }
+        TakeDoWhile {
+            iter: self,
+            flag: false,
+            predicate,
+        }
     }
 }
 
@@ -21,7 +27,8 @@ pub struct TakeDoWhile<I, P> {
 }
 
 impl<I: Iterator, P> Iterator for TakeDoWhile<I, P>
-    where P: FnMut(&I::Item) -> bool
+where
+    P: FnMut(&I::Item) -> bool,
 {
     type Item = I::Item;
 

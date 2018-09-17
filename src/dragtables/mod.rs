@@ -1,5 +1,5 @@
-use of::OrderedFloat;
 use macros::FloatMap;
+use of::OrderedFloat;
 
 pub use self::BallisticCoefficient::*;
 
@@ -11,9 +11,6 @@ mod g7;
 mod g8;
 mod gi;
 mod gs;
-
-// Wrapper around drag tables map
-#[derive(Debug)]
 
 // Type of BC used, implies which drag table to use
 #[derive(Copy, Clone)]

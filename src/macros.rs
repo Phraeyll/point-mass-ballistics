@@ -5,9 +5,7 @@ use std::collections::BTreeMap;
 pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<f64>, T>);
 impl<T> FloatMap<T> {
     pub fn default() -> Self {
-        FloatMap(
-            BTreeMap::new()
-        )
+        FloatMap(BTreeMap::new())
     }
 }
 
