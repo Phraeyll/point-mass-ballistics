@@ -243,9 +243,15 @@ impl<'mc> PointMassModel<'mc> {
         let mut angle = MAX_ANGLE;
 
         loop {
+            let last_muzzle_pitch: f64 = self.muzzle_pitch;
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
                 break Err("Can never 'zero' at this range");
+            }
+            if self.muzzle_pitch == last_muzzle_pitch {
+                break Err(
+                    "Issue with floating points, angle not changing during 'zero'"
+                );
             }
             // Find drop at distance, need way to break if we never reach position.x
             let drop = self
