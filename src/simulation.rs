@@ -139,8 +139,7 @@ impl Conditions {
 
 // Distance => (drop, windage, velocity, energy, time)
 type TableVal = (f64, f64, f64, f64, f64);
-impl<T> FromIterator<(f64, T)> for FloatMap<T>
-{
+impl<T> FromIterator<(f64, T)> for FloatMap<T> {
     fn from_iter<I: IntoIterator<Item = (f64, T)>>(iter: I) -> Self {
         let mut drop_table = FloatMap::<T>::default();
         for i in iter {
@@ -249,14 +248,11 @@ impl<'mc> PointMassModel<'mc> {
                 break Err("Can never 'zero' at this range");
             }
             // Find drop at distance, need way to break if we never reach position.x
-            let mut sim = self.iter();
-            let drop = loop {
-                if let Some(e) = sim.next() {
-                    if e.relative_position().x > zero_distance_meters {
-                        break e.relative_position().y;
-                    }
-                }
-            };
+            let drop = self
+                .iter()
+                .find(|e| e.relative_position().x > zero_distance_meters)
+                .unwrap()
+                .relative_position().y;
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
                 break Ok(self.muzzle_pitch);
@@ -264,7 +260,7 @@ impl<'mc> PointMassModel<'mc> {
             // If in the following states (xor), change direction by flipping angle sign
             // true, false || false, true
             // up,   above || down,  below
-            if angle.is_sign_positive() ^ (drop < 0.0) {
+            if angle.is_sign_positive() ^ drop.is_sign_negative() {
                 angle *= -1.0;
             }
             // Reduce angle before next iteration, trying to converge on zero point
