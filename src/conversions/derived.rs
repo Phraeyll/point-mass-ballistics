@@ -1,45 +1,46 @@
 use self::{Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
 use super::{length::*, time::*, weight_mass::*};
+use util::Numeric;
 
 //Energy
-pub const JOULE_TO_FTLB: f64 = 0.737_56;
-pub const FTLB_TO_JOULE: f64 = 1.0 / JOULE_TO_FTLB;
+pub const JOULE_TO_FTLB: Numeric = 0.737_56;
+pub const FTLB_TO_JOULE: Numeric = 1.0 / JOULE_TO_FTLB;
 
 // Pressure
-pub const INHG_TO_PASCAL: f64 = 3_386.38;
-pub const PASCAL_TO_INHG: f64 = 1.0 / INHG_TO_PASCAL;
+pub const INHG_TO_PASCAL: Numeric = 3_386.38;
+pub const PASCAL_TO_INHG: Numeric = 1.0 / INHG_TO_PASCAL;
 
 // Density
-pub const LBPF3_TO_KGPM3: f64 = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
-pub const KGPM3_TO_LBPF3: f64 = 1.0 / LBPF3_TO_KGPM3;
+pub const LBPF3_TO_KGPM3: Numeric = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+pub const KGPM3_TO_LBPF3: Numeric = 1.0 / LBPF3_TO_KGPM3;
 
 // Velocity
-pub const MPH_TO_MPS: f64 = MPH_TO_FPS * FPS_TO_MPS;
-pub const MPS_TO_MPH: f64 = 1.0 / MPH_TO_MPS;
+pub const MPH_TO_MPS: Numeric = MPH_TO_FPS * FPS_TO_MPS;
+pub const MPS_TO_MPH: Numeric = 1.0 / MPH_TO_MPS;
 
-pub const MPH_TO_FPS: f64 = MILES_TO_FEET / HOURS_TO_SECONDS;
-pub const FPS_TO_MPH: f64 = 1.0 / MPH_TO_FPS;
+pub const MPH_TO_FPS: Numeric = MILES_TO_FEET / HOURS_TO_SECONDS;
+pub const FPS_TO_MPH: Numeric = 1.0 / MPH_TO_FPS;
 
-pub const FPS_TO_MPS: f64 = FEET_TO_METERS;
-pub const MPS_TO_FPS: f64 = 1.0 / FPS_TO_MPS;
+pub const FPS_TO_MPS: Numeric = FEET_TO_METERS;
+pub const MPS_TO_FPS: Numeric = 1.0 / FPS_TO_MPS;
 
 // Acceleration ??
-pub const MPH2_TO_MPS2: f64 = MPH2_TO_FPS2 * FPS2_TO_MPS2;
-pub const MPS2_TO_MPH2: f64 = 1.0 / MPH2_TO_MPS2;
+pub const MPH2_TO_MPS2: Numeric = MPH2_TO_FPS2 * FPS2_TO_MPS2;
+pub const MPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_MPS2;
 
-pub const MPH2_TO_FPS2: f64 = MPH_TO_FPS / HOURS_TO_SECONDS;
-pub const FPS2_TO_MPH2: f64 = 1.0 / MPH2_TO_FPS2;
+pub const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / HOURS_TO_SECONDS;
+pub const FPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_FPS2;
 
-pub const FPS2_TO_MPS2: f64 = FPS_TO_MPS;
-pub const MPS2_TO_FPS2: f64 = 1.0 / FPS2_TO_MPS2;
+pub const FPS2_TO_MPS2: Numeric = FPS_TO_MPS;
+pub const MPS2_TO_FPS2: Numeric = 1.0 / FPS2_TO_MPS2;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Energy {
-    Joules(f64),
-    Ftlbs(f64),
+    Joules(Numeric),
+    Ftlbs(Numeric),
 }
-impl From<Energy> for f64 {
-    fn from(u: Energy) -> f64 {
+impl From<Energy> for Numeric {
+    fn from(u: Energy) -> Numeric {
         match u {
             Joules(u) => u,
             Ftlbs(u) => u,
@@ -63,11 +64,11 @@ impl Energy {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Pressure {
-    Pascals(f64),
-    Inhg(f64),
+    Pascals(Numeric),
+    Inhg(Numeric),
 }
-impl From<Pressure> for f64 {
-    fn from(u: Pressure) -> f64 {
+impl From<Pressure> for Numeric {
+    fn from(u: Pressure) -> Numeric {
         match u {
             Pascals(u) => u,
             Inhg(u) => u,
@@ -91,11 +92,11 @@ impl Pressure {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Density {
-    Kgpm3(f64),
-    Lbpf3(f64),
+    Kgpm3(Numeric),
+    Lbpf3(Numeric),
 }
-impl From<Density> for f64 {
-    fn from(u: Density) -> f64 {
+impl From<Density> for Numeric {
+    fn from(u: Density) -> Numeric {
         match u {
             Kgpm3(u) => u,
             Lbpf3(u) => u,
@@ -119,12 +120,12 @@ impl self::Density {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Velocity {
-    Mps(f64),
-    Mph(f64),
-    Fps(f64),
+    Mps(Numeric),
+    Mph(Numeric),
+    Fps(Numeric),
 }
-impl From<Velocity> for f64 {
-    fn from(u: Velocity) -> f64 {
+impl From<Velocity> for Numeric {
+    fn from(u: Velocity) -> Numeric {
         match u {
             Mps(u) => u,
             Mph(u) => u,
@@ -158,12 +159,12 @@ impl self::Velocity {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Acceleration {
-    Mps2(f64),
-    Mph2(f64),
-    Fps2(f64),
+    Mps2(Numeric),
+    Mph2(Numeric),
+    Fps2(Numeric),
 }
-impl From<Acceleration> for f64 {
-    fn from(u: Acceleration) -> f64 {
+impl From<Acceleration> for Numeric {
+    fn from(u: Acceleration) -> Numeric {
         match u {
             Mps2(u) => u,
             Mph2(u) => u,

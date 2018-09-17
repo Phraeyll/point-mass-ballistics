@@ -7,7 +7,7 @@ use conversions::*;
 use macros::FloatMap;
 use util::*;
 
-use std::f64::consts::PI;
+use std::f64::consts::{PI, FRAC_PI_4};
 use std::iter::FromIterator;
 
 // Constants used during drag calculation, and gravity during acceleration
@@ -240,7 +240,7 @@ impl<'mc> PointMassModel<'mc> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-        const MAX_ANGLE: Numeric = PI / 4.0;
+        const MAX_ANGLE: Numeric = FRAC_PI_4;
 
         // Run the simulation to find the drop at a specified range.
         let zero_distance_meters = Numeric::from(zero_distance.to_meters());

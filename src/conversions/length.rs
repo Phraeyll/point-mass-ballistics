@@ -1,45 +1,46 @@
 use self::Length::*;
+use util::Numeric;
 
-pub const MILES_TO_YARDS: f64 = 1_760.0;
-pub const YARDS_TO_MILES: f64 = 1.0 / MILES_TO_YARDS;
+pub const MILES_TO_YARDS: Numeric = 1_760.0;
+pub const YARDS_TO_MILES: Numeric = 1.0 / MILES_TO_YARDS;
 
-pub const YARDS_TO_FEET: f64 = 3.0;
-pub const FEET_TO_YARDS: f64 = 1.0 / YARDS_TO_FEET;
+pub const YARDS_TO_FEET: Numeric = 3.0;
+pub const FEET_TO_YARDS: Numeric = 1.0 / YARDS_TO_FEET;
 
-pub const FEET_TO_INCHES: f64 = 12.0;
-pub const INCHES_TO_FEET: f64 = 1.0 / FEET_TO_INCHES;
+pub const FEET_TO_INCHES: Numeric = 12.0;
+pub const INCHES_TO_FEET: Numeric = 1.0 / FEET_TO_INCHES;
 
-pub const FEET_TO_METERS: f64 = 0.304_8;
-pub const METERS_TO_FEET: f64 = 1.0 / FEET_TO_METERS;
+pub const FEET_TO_METERS: Numeric = 0.304_8;
+pub const METERS_TO_FEET: Numeric = 1.0 / FEET_TO_METERS;
 
-pub const MILES_TO_FEET: f64 = MILES_TO_YARDS * YARDS_TO_FEET;
-pub const FEET_TO_MILES: f64 = 1.0 / MILES_TO_FEET;
+pub const MILES_TO_FEET: Numeric = MILES_TO_YARDS * YARDS_TO_FEET;
+pub const FEET_TO_MILES: Numeric = 1.0 / MILES_TO_FEET;
 
-pub const YARDS_TO_INCHES: f64 = YARDS_TO_FEET * FEET_TO_INCHES;
-pub const INCHES_TO_YARDS: f64 = 1.0 / YARDS_TO_INCHES;
+pub const YARDS_TO_INCHES: Numeric = YARDS_TO_FEET * FEET_TO_INCHES;
+pub const INCHES_TO_YARDS: Numeric = 1.0 / YARDS_TO_INCHES;
 
-pub const MILES_TO_INCHES: f64 = MILES_TO_YARDS * YARDS_TO_INCHES;
-pub const INCHES_TO_MILES: f64 = 1.0 / MILES_TO_INCHES;
+pub const MILES_TO_INCHES: Numeric = MILES_TO_YARDS * YARDS_TO_INCHES;
+pub const INCHES_TO_MILES: Numeric = 1.0 / MILES_TO_INCHES;
 
-pub const MILES_TO_METERS: f64 = MILES_TO_FEET * FEET_TO_METERS;
-pub const METERS_TO_MILES: f64 = 1.0 / MILES_TO_METERS;
+pub const MILES_TO_METERS: Numeric = MILES_TO_FEET * FEET_TO_METERS;
+pub const METERS_TO_MILES: Numeric = 1.0 / MILES_TO_METERS;
 
-pub const YARDS_TO_METERS: f64 = YARDS_TO_FEET * FEET_TO_METERS;
-pub const METERS_TO_YARDS: f64 = 1.0 / YARDS_TO_METERS;
+pub const YARDS_TO_METERS: Numeric = YARDS_TO_FEET * FEET_TO_METERS;
+pub const METERS_TO_YARDS: Numeric = 1.0 / YARDS_TO_METERS;
 
-pub const INCHES_TO_METERS: f64 = INCHES_TO_FEET * FEET_TO_METERS;
-pub const METERS_TO_INCHES: f64 = 1.0 / INCHES_TO_METERS;
+pub const INCHES_TO_METERS: Numeric = INCHES_TO_FEET * FEET_TO_METERS;
+pub const METERS_TO_INCHES: Numeric = 1.0 / INCHES_TO_METERS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Length {
-    Meters(f64),
-    Miles(f64),
-    Yards(f64),
-    Feet(f64),
-    Inches(f64),
+    Meters(Numeric),
+    Miles(Numeric),
+    Yards(Numeric),
+    Feet(Numeric),
+    Inches(Numeric),
 }
-impl From<Length> for f64 {
-    fn from(u: Length) -> f64 {
+impl From<Length> for Numeric {
+    fn from(u: Length) -> Numeric {
         match u {
             Meters(u) => u,
             Miles(u) => u,

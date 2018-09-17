@@ -1,22 +1,23 @@
 use self::WeightMass::*;
+use util::Numeric;
 
-pub const LBS_TO_GRAINS: f64 = 7_000.0;
-pub const GRAINS_TO_LBS: f64 = 1.0 / LBS_TO_GRAINS;
+pub const LBS_TO_GRAINS: Numeric = 7_000.0;
+pub const GRAINS_TO_LBS: Numeric = 1.0 / LBS_TO_GRAINS;
 
-pub const GRAINS_TO_KGS: f64 = GRAINS_TO_LBS * LBS_TO_KGS;
-pub const KGS_TO_GRAINS: f64 = 1.0 / GRAINS_TO_KGS;
+pub const GRAINS_TO_KGS: Numeric = GRAINS_TO_LBS * LBS_TO_KGS;
+pub const KGS_TO_GRAINS: Numeric = 1.0 / GRAINS_TO_KGS;
 
-pub const LBS_TO_KGS: f64 = 0.453_592_37;
-pub const KGS_TO_LBS: f64 = 1.0 / LBS_TO_KGS;
+pub const LBS_TO_KGS: Numeric = 0.453_592_37;
+pub const KGS_TO_LBS: Numeric = 1.0 / LBS_TO_KGS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum WeightMass {
-    Grains(f64),
-    Lbs(f64),
-    Kgs(f64),
+    Grains(Numeric),
+    Lbs(Numeric),
+    Kgs(Numeric),
 }
-impl From<WeightMass> for f64 {
-    fn from(u: WeightMass) -> f64 {
+impl From<WeightMass> for Numeric {
+    fn from(u: WeightMass) -> Numeric {
         match u {
             Grains(u) => u,
             Lbs(u) => u,

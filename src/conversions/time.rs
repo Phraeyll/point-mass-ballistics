@@ -1,22 +1,23 @@
 use self::Time::*;
+use util::Numeric;
 
-pub const HOURS_TO_MINUTES: f64 = 60.0;
-pub const MINUTES_TO_HOURS: f64 = 1.0 / HOURS_TO_MINUTES;
+pub const HOURS_TO_MINUTES: Numeric = 60.0;
+pub const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
 
-pub const MINUTES_TO_SECONDS: f64 = 60.0;
-pub const HOURS_TO_SECONDS: f64 = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
+pub const MINUTES_TO_SECONDS: Numeric = 60.0;
+pub const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
 
-pub const SECONDS_TO_HOURS: f64 = 1.0 / HOURS_TO_SECONDS;
-pub const SECONDS_TO_MINUTES: f64 = 1.0 / MINUTES_TO_SECONDS;
+pub const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
+pub const SECONDS_TO_MINUTES: Numeric = 1.0 / MINUTES_TO_SECONDS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Time {
-    Hours(f64),
-    Minutes(f64),
-    Seconds(f64),
+    Hours(Numeric),
+    Minutes(Numeric),
+    Seconds(Numeric),
 }
-impl From<Time> for f64 {
-    fn from(u: Time) -> f64 {
+impl From<Time> for Numeric {
+    fn from(u: Time) -> Numeric {
         match u {
             Hours(u) => u,
             Minutes(u) => u,

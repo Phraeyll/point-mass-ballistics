@@ -1,28 +1,29 @@
 use self::Temperature::*;
+use util::Numeric;
 
-pub const F_TO_CK: f64 = 5.0 / 9.0;
-pub const CK_TO_F: f64 = 1.0 / F_TO_CK;
-
-// Additive
-pub const C_TO_K: f64 = 273.15;
-pub const K_TO_C: f64 = -C_TO_K;
+pub const F_TO_CK: Numeric = 5.0 / 9.0;
+pub const CK_TO_F: Numeric = 1.0 / F_TO_CK;
 
 // Additive
-pub const F_TO_K: f64 = 459.67;
-pub const K_TO_F: f64 = -F_TO_K;
+pub const C_TO_K: Numeric = 273.15;
+pub const K_TO_C: Numeric = -C_TO_K;
 
 // Additive
-pub const F_TO_C: f64 = -32.0;
-pub const C_TO_F: f64 = -F_TO_C;
+pub const F_TO_K: Numeric = 459.67;
+pub const K_TO_F: Numeric = -F_TO_K;
+
+// Additive
+pub const F_TO_C: Numeric = -32.0;
+pub const C_TO_F: Numeric = -F_TO_C;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Temperature {
-    C(f64),
-    K(f64),
-    F(f64),
+    C(Numeric),
+    K(Numeric),
+    F(Numeric),
 }
-impl From<Temperature> for f64 {
-    fn from(u: Temperature) -> f64 {
+impl From<Temperature> for Numeric {
+    fn from(u: Temperature) -> Numeric {
         match u {
             C(u) => u,
             K(u) => u,
