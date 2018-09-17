@@ -417,9 +417,7 @@ impl<'p> Output for Envelope<'p> {
         f64::from(Length::Meters(self.relative_position().z).to_inches())
     }
     fn moa(&self) -> f64 {
-        let r = self.relative_position().y;
-        let h = self.relative_position().x;
-        (r / h).atan().to_degrees() * 60.0
+        self.relative_position().angle(&Vector3::x_axis()).to_degrees() * 60.0
     }
 }
 
