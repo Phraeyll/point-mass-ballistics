@@ -331,24 +331,18 @@ impl<'p> Iterator for IterPointMassModel<'p> {
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values, so we can capture time '0' in output
         let (time, position, velocity) = (self.time, self.position, self.velocity);
+        // Unwrap time
         let time_step = f64::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
         let acceleration =
             self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
-
-        // Adjust position first, to keep previous velocity for First Equation
-        // 'Second Equation of Motion'
-        self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
-
-        // Adjust velocity next, based on change in acceleration
-        // 'First Equation of Motion'
-        self.velocity += acceleration * time_step;
-
         // Increment position in time
         self.time += time_step;
-
-        // Essentially a copy of current envelope of motion, plus los angle and scope height
-        // for consumers
+        // 'Second Equation of Motion'
+        self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
+        // 'First Equation of Motion'
+        self.velocity += acceleration * time_step;
+        // Currently envelope of motion (need better name) and ref to which simulation was used
         Some(Self::Item {
             simulation: &self.simulation,
             time,
