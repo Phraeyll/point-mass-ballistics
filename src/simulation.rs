@@ -419,8 +419,7 @@ impl<'p> Output for Envelope<'p> {
     fn moa(&self) -> f64 {
         let r = self.relative_position().y;
         let h = self.relative_position().x;
-        let s = (h.powf(2.0) + r.powf(2.0)).sqrt();
-        (r / s).asin().to_degrees() * 60.0
+        (r / h).atan().to_degrees() * 60.0
     }
 }
 
