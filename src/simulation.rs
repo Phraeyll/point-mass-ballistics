@@ -252,7 +252,8 @@ impl<'mc> PointMassModel<'mc> {
                 .iter()
                 .find(|e| e.relative_position().x > zero_distance_meters)
                 .unwrap()
-                .relative_position().y;
+                .relative_position()
+                .y;
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
                 break Ok(self.muzzle_pitch);
