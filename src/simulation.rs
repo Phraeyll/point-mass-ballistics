@@ -137,8 +137,8 @@ impl Conditions {
     }
 }
 
-// Distance => (drop, windage, velocity, energy, time)
-type TableVal = (f64, f64, f64, f64, f64);
+// Distance => (drop, windage, velocity, energy, moa, time)
+type TableVal = (f64, f64, f64, f64, f64, f64);
 impl<T> FromIterator<(f64, T)> for FloatMap<T> {
     fn from_iter<I: IntoIterator<Item = (f64, T)>>(iter: I) -> Self {
         let mut drop_table = FloatMap::<T>::default();
@@ -192,8 +192,15 @@ impl<'mzs> Simulator<'mzs> {
                 if e.distance() > current_step {
                     current_step += step;
                     Some((
-                        e.distance(),                                                // Key
-                        (e.drop(), e.windage(), e.velocity(), e.energy(), e.time()), // Value
+                        e.distance(), // Key
+                        (
+                            e.drop(),
+                            e.windage(),
+                            e.velocity(),
+                            e.energy(),
+                            e.moa(),
+                            e.time(),
+                        ), // Value
                     ))
                 } else {
                     None
@@ -249,9 +256,7 @@ impl<'mc> PointMassModel<'mc> {
                 break Err("Can never 'zero' at this range");
             }
             if self.muzzle_pitch == last_muzzle_pitch {
-                break Err(
-                    "Issue with floating points, angle not changing during 'zero'"
-                );
+                break Err("Issue with floating points, angle not changing during 'zero'");
             }
             // Find drop at distance, need way to break if we never reach position.x
             let drop = self
@@ -383,6 +388,7 @@ pub trait Output {
     fn distance(&self) -> f64;
     fn drop(&self) -> f64;
     fn windage(&self) -> f64;
+    fn moa(&self) -> f64;
 }
 
 // Accessor methods for getting common desired units of output
@@ -409,6 +415,12 @@ impl<'p> Output for Envelope<'p> {
     }
     fn windage(&self) -> f64 {
         f64::from(Length::Meters(self.relative_position().z).to_inches())
+    }
+    fn moa(&self) -> f64 {
+        let r = self.relative_position().y;
+        let h = self.relative_position().x;
+        let s = (h.powf(2.0) + r.powf(2.0)).sqrt();
+        (r / s).asin().to_degrees() * 60.0
     }
 }
 
