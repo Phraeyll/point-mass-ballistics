@@ -7,7 +7,6 @@ use conversions::*;
 use macros::FloatMap;
 use util::*;
 
-use std::f64::consts::{PI, FRAC_PI_4};
 use std::iter::FromIterator;
 
 // Constants used during drag calculation, and gravity during acceleration
