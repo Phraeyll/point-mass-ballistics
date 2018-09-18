@@ -342,6 +342,7 @@ impl<'p> IterPointMassModel<'p> {
     }
 }
 
+// Iterate through simulation, outputting projectiles position in time and space, as well as current velocity
 impl<'p> Iterator for IterPointMassModel<'p> {
     type Item = Envelope<'p>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -367,7 +368,6 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         })
     }
 }
-
 impl<'p> IntoIterator for &'p PointMassModel<'p> {
     type Item = <IterPointMassModel<'p> as Iterator>::Item;
     type IntoIter = IterPointMassModel<'p>;
@@ -388,7 +388,7 @@ pub struct Envelope<'p> {
 impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
     // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
-    // position to level ground, and substracting scope height to determine distance
+    // position to level ground, and substracts scope height to determine relative position
     // I think this method is actually correct, but it needs more comparison against
     // other ballistic solvers, ideally other point mass models.  For certains projectiles,
     // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
