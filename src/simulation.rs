@@ -202,7 +202,7 @@ impl<'mzs> Simulator<'mzs> {
             .iter()
             .take_do_while(|e| e.distance() < range)
             .filter_map(|e| {
-                if e.distance() > current_step {
+                if e.distance() >= current_step {
                     current_step += step;
                     Some((
                         e.distance(), // Key
