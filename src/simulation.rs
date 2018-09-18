@@ -17,13 +17,13 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 
 pub struct Model {
-    pub weight: WeightMass,        // Weight (grains)
-    pub caliber: Length,           // Caliber (inches)
-    pub bc: BallisticCoefficient,  // Ballistic Coefficient
+    pub weight: WeightMass,            // Weight (grains)
+    pub caliber: Length,               // Caliber (inches)
+    pub bc: BallisticCoefficient,      // Ballistic Coefficient
     pub drag_table: FloatMap<Numeric>, // Drag Function DragTable
-    pub time_step: Time,           // Timestep for simulation (s)
-    pub muzzle_velocity: Velocity, // Initial velocity (ft/s)
-    pub scope_height: Length,      // Scope Height (inches)
+    pub time_step: Time,               // Timestep for simulation (s)
+    pub muzzle_velocity: Velocity,     // Initial velocity (ft/s)
+    pub scope_height: Length,          // Scope Height (inches)
 }
 impl Model {
     pub fn new(
@@ -64,13 +64,13 @@ impl Model {
 
 // Environmental Conditions and other varialbe for simulation
 pub struct Conditions {
-    pub temperature: Temperature, // Temperature (F)
-    pub pressure: Pressure,       // Pressure (InHg)
-    pub humidity: Numeric,            // Humidity (0-1)
-    pub gravity: Vector3<Numeric>,    // Gravity (m/s^2)
-    pub wind_velocity: Velocity,  // Wind Velocity (miles/hour)
-    pub wind_yaw: Numeric,            // Wind Angle (degrees)
-    pub shooter_pitch: Numeric,       // Line of Sight angle (degrees)
+    pub temperature: Temperature,  // Temperature (F)
+    pub pressure: Pressure,        // Pressure (InHg)
+    pub humidity: Numeric,         // Humidity (0-1)
+    pub gravity: Vector3<Numeric>, // Gravity (m/s^2)
+    pub wind_velocity: Velocity,   // Wind Velocity (miles/hour)
+    pub wind_yaw: Numeric,         // Wind Angle (degrees)
+    pub shooter_pitch: Numeric,    // Line of Sight angle (degrees)
 
     /*
     Other factors, not calculated yet
@@ -178,7 +178,12 @@ impl<'mzs> Simulator<'mzs> {
         PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
     }
     // Produce a drop table using specified range and step size
-    pub fn drop_table<T>(&mut self, zero_distance: Numeric, step: Numeric, range: Numeric) -> FloatMap<T>
+    pub fn drop_table<T>(
+        &mut self,
+        zero_distance: Numeric,
+        step: Numeric,
+        range: Numeric,
+    ) -> FloatMap<T>
     where
         FloatMap<T>: FromIterator<(Numeric, TableVal)>,
     {
@@ -291,22 +296,13 @@ impl<'mc> PointMassModel<'mc> {
     }
 }
 
-impl<'p> IntoIterator for &'p PointMassModel<'p> {
-    type Item = <IterPointMassModel<'p> as Iterator>::Item;
-    type IntoIter = IterPointMassModel<'p>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
 // Abstract iter struct for running simulation through iter method
 // Essentially envelope of motion and ref to input variables
 struct IterPointMassModel<'p> {
     simulation: &'p PointMassModel<'p>, // Reference to model used for calculations
-    time: Numeric,                          // Position in time (s)
-    position: Vector3<Numeric>,             // Position (m)
-    velocity: Vector3<Numeric>,             // Velocity (m/s)
+    time: Numeric,                      // Position in time (s)
+    position: Vector3<Numeric>,         // Position (m)
+    velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> IterPointMassModel<'p> {
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
@@ -350,13 +346,22 @@ impl<'p> Iterator for IterPointMassModel<'p> {
     }
 }
 
+impl<'p> IntoIterator for &'p PointMassModel<'p> {
+    type Item = <IterPointMassModel<'p> as Iterator>::Item;
+    type IntoIter = IterPointMassModel<'p>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 // Output struct for wrapping envelope of motion, provides accessor methods for convenience
 // Mostly copied from IterPointMassModels envelope during iteration, some values from model
 pub struct Envelope<'p> {
     simulation: &'p PointMassModel<'p>, //Simulation this came from, used for various calculations
-    time: Numeric,                          // Position in time (s)
-    position: Vector3<Numeric>,             // Position (m)
-    velocity: Vector3<Numeric>,             // Velocity (m/s)
+    time: Numeric,                      // Position in time (s)
+    position: Vector3<Numeric>,         // Position (m)
+    velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> Envelope<'p> {
     // Supposed to show relative position of projectile against line of sight, which changes with
@@ -411,7 +416,10 @@ impl<'p> Output for Envelope<'p> {
         Numeric::from(Length::Meters(self.relative_position().z).to_inches())
     }
     fn moa(&self) -> Numeric {
-        self.relative_position().angle(&Vector3::x_axis()).to_degrees() * 60.0
+        self.relative_position()
+            .angle(&Vector3::x_axis())
+            .to_degrees()
+            * 60.0
     }
 }
 
