@@ -44,15 +44,19 @@ impl Model {
             scope_height: Length::Inches(scope_height),
         }
     }
+    // Radius of projectile cross section in meters
+    fn radius(&self) -> Numeric {
+        Numeric::from(self.caliber.to_meters()) / 2.0
+    }
     // Area of projectile in meters, used during drag force calculation
     fn area(&self) -> Numeric {
-        let radius = Numeric::from(self.caliber.to_meters()) / 2.0;
-        PI * radius.powf(2.0)
+        PI * self.radius().powf(2.0)
     }
     // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
     fn mass(&self) -> Numeric {
         self.weight.to_kgs().into()
     }
+    // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
     fn sd(&self) -> Numeric {
         Numeric::from(self.weight.to_lbs()) / Numeric::from(self.caliber.to_inches()).powf(2.0)
     }
@@ -100,7 +104,8 @@ impl Conditions {
         }
     }
     fn wind_velocity(&self) -> Vector3<Numeric> {
-        velocity_vector(self.wind_velocity, &AngleKind::Wind(self.wind_yaw))
+        Rotation3::from_axis_angle(&Vector3::y_axis(), self.wind_yaw.to_radians())
+            * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> Numeric {
@@ -171,11 +176,14 @@ impl<'mzs> Simulator<'mzs> {
     }
     // Find zero angle, then solve for current conditions
     fn solution_model(&mut self, zero_distance: Length) -> PointMassModel {
-        let muzzle_pitch = match self.zero_model().zero(zero_distance) {
-            Ok(muzzle_pitch) => muzzle_pitch,
-            Err(err) => panic!(err),
-        };
-        PointMassModel::new(&self.model, &self.solve_conditions, muzzle_pitch)
+        PointMassModel::new(
+            &self.model,
+            &self.solve_conditions,
+            match self.zero_model().zero(zero_distance) {
+                Ok(muzzle_pitch) => muzzle_pitch,
+                Err(err) => panic!(err),
+            },
+        )
     }
     // Produce a drop table using specified range and step size
     pub fn drop_table<T>(
@@ -245,13 +253,8 @@ impl<'mc> PointMassModel<'mc> {
     fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: Numeric = FRAC_PI_4;
-
-        // Run the simulation to find the drop at a specified range.
-        let zero_distance_meters = Numeric::from(zero_distance.to_meters());
-
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
-
         loop {
             let last_muzzle_pitch: Numeric = self.muzzle_pitch;
             self.muzzle_pitch += angle;
@@ -264,7 +267,7 @@ impl<'mc> PointMassModel<'mc> {
             // Find drop at distance, need way to break if we never reach position.x
             let drop = self
                 .iter()
-                .find(|e| e.relative_position().x > zero_distance_meters)
+                .find(|e| e.relative_position().x > Numeric::from(zero_distance.to_meters()))
                 .unwrap()
                 .relative_position()
                 .y;
@@ -282,15 +285,21 @@ impl<'mc> PointMassModel<'mc> {
             angle /= 2.0;
         }
     }
+    // Rotated vector of initial velocity, to account for line of sight and muzzle pitch
+    // Z axis indicates pitching up/down relative to shooters line of sight, which is
+    // parallel to the X axis (unit vector)
+    fn initial_velocity_vector(&self) -> Vector3<Numeric> {
+            Rotation3::from_axis_angle(
+                &Vector3::z_axis(),
+                self.conditions.shooter_pitch + self.muzzle_pitch.to_radians(),
+            ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
+    }
     // Iterate over simulation, initializing with specified velocity
     fn iter(&self) -> IterPointMassModel {
         IterPointMassModel {
             simulation: self,
             position: Vector3::zeros(),
-            velocity: velocity_vector(
-                self.model.muzzle_velocity,
-                &AngleKind::Projectile(self.muzzle_pitch + self.conditions.shooter_pitch),
-            ),
+            velocity: self.initial_velocity_vector(),
             time: 0.0,
         }
     }
@@ -309,13 +318,24 @@ impl<'p> IterPointMassModel<'p> {
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
     }
+    // Determine coefficient of drag used to determine drag force
+    // Scaled by form factor of projectile
+    fn cd(&self) -> Numeric {
+        self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i()
+    }
+    // Velocity vector, after impact from wind (actually from drag, not "being blown")
+    fn vv(&self) -> Vector3<Numeric> {
+        self.velocity - self.simulation.conditions.wind_velocity()
+    }
     // Primary function - determines force of drag for given projectile, at given mach speed,
     // with given air density, using ballistic tables to modify coefficient of drag based on
     // standard reference projectiles (Eg., G1 or G7)
     fn drag_force(&self) -> Vector3<Numeric> {
-        let cd = self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i();
-        let vv = self.velocity - self.simulation.conditions.wind_velocity();
-        -(self.simulation.conditions.rho() * self.simulation.model.area() * vv * vv.norm() * cd)
+        -(self.simulation.conditions.rho()
+            * self.simulation.model.area()
+            * self.vv()
+            * self.vv().norm()
+            * self.cd())
             / 2.0
     }
 }
@@ -370,13 +390,27 @@ impl<'p> Envelope<'p> {
     // I think this method is actually correct, but it needs more comparison against
     // other ballistic solvers, ideally other point mass models.  For certains projectiles,
     // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
+
+    // Angle of line of sight (shooter_pitch)
+    fn angle(&self) -> Numeric {
+        -self.simulation.conditions.shooter_pitch.to_radians()
+    }
+    // Height of scope as vector, used to translate after rotation
+    fn scope_height(&self) -> Vector3<Numeric> {
+        Vector3::new(
+            0.0,
+            Numeric::from(self.simulation.model.scope_height.to_meters()),
+            0.0,
+        )
+    }
+    // Rotation matrix along z axis, sine this is the angle the shooter_pitch is along
+    fn rotation(&self) -> Rotation3<Numeric> {
+        Rotation3::from_axis_angle(&Vector3::z_axis(), self.angle())
+    }
+    // Rotation point, then translate down to find position along oroginal origin
+    // This should indicate relative position to line of sight along scopes axis
     fn relative_position(&self) -> Vector3<Numeric> {
-        let angle = -self.simulation.conditions.shooter_pitch.to_radians();
-        let height = Numeric::from(self.simulation.model.scope_height.to_meters());
-        let axis = Vector3::z_axis();
-        let rotation = Rotation3::from_axis_angle(&axis, angle);
-        let height = Vector3::new(0.0, height, 0.0);
-        rotation * self.position - height
+        self.rotation() * self.position - self.scope_height()
     }
 }
 // Output accessor methods to get ballistic properties
@@ -421,28 +455,4 @@ impl<'p> Output for Envelope<'p> {
             .to_degrees()
             * 60.0
     }
-}
-
-// Module is probably overkill for this - just single method for building velocity based on angle
-// Will need to extend to euler angles later on when roll/cant of scope is taken into account
-pub enum AngleKind {
-    Projectile(Numeric),
-    Wind(Numeric),
-}
-
-pub fn velocity_vector(vel: Velocity, vk: &AngleKind) -> Vector3<Numeric> {
-    let (axis, angle) = match *vk {
-        AngleKind::Projectile(rad) => {
-            // Rotation along z axis is pitch, projectile up/down relative to x/y plane
-            (Vector3::z_axis(), rad)
-        }
-        AngleKind::Wind(rad) => {
-            // Rotation along y axis is yaw, wind left/right relative to x/z plane
-            (Vector3::y_axis(), rad)
-        }
-    };
-    let velocity_mps = vel.to_mps().into();
-    let rotation = Rotation3::from_axis_angle(&axis, angle.to_radians());
-    let velocity = Vector3::new(velocity_mps, 0.0, 0.0);
-    rotation * velocity
 }
