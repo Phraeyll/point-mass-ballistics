@@ -103,6 +103,8 @@ impl Conditions {
             shooter_pitch,
         }
     }
+    // Rotated wind velocity vector according to angle along XZ plane, relative
+    // to shooter line of sight (X axis unit vector)
     fn wind_velocity(&self) -> Vector3<Numeric> {
         Rotation3::from_axis_angle(&Vector3::y_axis(), self.wind_yaw.to_radians())
             * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
