@@ -9,6 +9,7 @@ macro_rules! my_type {
 my_type!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
+pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 // Rationals, and generic numeric types are going to require much more work
 // use num::{Rational, FromPrimitive};
 // pub type Numeric = Rational;

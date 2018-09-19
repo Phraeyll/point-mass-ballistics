@@ -9,6 +9,7 @@ use util::*;
 
 use std::iter::FromIterator;
 
+// Z IS NOW DOWN/GRAVITY
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314; // Universal gas constant (J/K*mol)
@@ -97,24 +98,29 @@ impl Conditions {
         pressure: Numeric,
         humidity: Numeric,
         shooter_pitch: Numeric,
+        lattitude: Numeric,
+        azimuth: Numeric,
     ) -> Self {
         Self {
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
-            gravity: Vector3::new(0.0, GRAVITY, 0.0),
+            gravity: Vector3::new(0.0, 0.0, GRAVITY),
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
             shooter_pitch,
-            azimuth: 90.0,
-            lattitude: 45.0,
+            lattitude,
+            azimuth,
         }
     }
-    // Rotated wind velocity vector according to angle along XZ plane, relative
+    // Rotated wind velocity vector according to angle along XY plane, relative
     // to shooter line of sight (X axis unit vector)
     fn wind_velocity(&self) -> Vector3<Numeric> {
-        Rotation3::from_axis_angle(&Vector3::y_axis(), self.wind_yaw.to_radians())
-            * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_euler_angles(
+            0.0,
+            0.0,
+            self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
+        ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> Numeric {
@@ -279,7 +285,7 @@ impl<'mc> PointMassModel<'mc> {
                 .find(|e| e.relative_position().x > Numeric::from(zero_distance.to_meters()))
                 .unwrap()
                 .relative_position()
-                .y;
+                .z;
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
                 break Ok(self.muzzle_pitch);
@@ -294,13 +300,12 @@ impl<'mc> PointMassModel<'mc> {
             angle /= 2.0;
         }
     }
-    // Rotated vector of initial velocity, to account for line of sight and muzzle pitch
-    // Z axis indicates pitching up/down relative to shooters line of sight, which is
-    // parallel to the X axis (unit vector)
+    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        Rotation3::from_axis_angle(
-            &Vector3::z_axis(),
-            self.conditions.shooter_pitch + self.muzzle_pitch.to_radians(),
+        Rotation3::from_euler_angles(
+            0.0,
+            -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
+            self.conditions.azimuth.to_radians() - FRAC_PI_2,
         ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Iterate over simulation, initializing with specified velocity
@@ -333,19 +338,18 @@ impl<'p> IterPointMassModel<'p> {
     // }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        let azimuth = self.simulation.conditions.azimuth.to_radians();
-        let lattitude = self.simulation.conditions.lattitude.to_radians();
-        let (vx, vy, vz) = (self.velocity.x, self.velocity.y, self.velocity.z);
-        2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-            -vz * lattitude.sin() - vy * lattitude.cos() * azimuth.sin(),
-            vz * lattitude.cos() * azimuth.cos() + vx * lattitude.cos() * azimuth.sin(),
-            vx * lattitude.sin() - vy * lattitude.cos() * azimuth.cos(),
-        )
         // 2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-        //     -vz * lattitude.sin(),
-        //     vz * lattitude.cos(),
-        //     vx * lattitude.sin() - vy * lattitude.cos(),
+        //     -vz * lattitude.sin() - vy * lattitude.cos() * azimuth.sin(),
+        //     vz * lattitude.cos() * azimuth.cos() + vx * lattitude.cos() * azimuth.sin(),
+        //     vx * lattitude.sin() - vy * lattitude.cos() * azimuth.cos(),
         // )
+        let lattitude = self.simulation.conditions.lattitude.to_radians();
+        let (ve, vn, vu) = (self.velocity.x, self.velocity.y, self.velocity.z);
+        2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
+            vn * lattitude.sin() - vu * lattitude.cos(),
+            -ve * lattitude.sin(),
+            ve * lattitude.cos(),
+        )
     }
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
@@ -383,8 +387,7 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         // Acceleration from drag force and gravity (F = ma)
         let acceleration = self.drag_force() / self.simulation.model.mass()
             + self.simulation.conditions.gravity
-            + self.coriolis_acceleration()
-            ;
+            + self.coriolis_acceleration();
         // Increment position in time
         self.time += time_step;
         // 'Second Equation of Motion'
@@ -426,25 +429,24 @@ impl<'p> Envelope<'p> {
     // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
 
     // Angle of line of sight (shooter_pitch)
-    fn angle(&self) -> Numeric {
-        -self.simulation.conditions.shooter_pitch.to_radians()
-    }
     // Height of scope as vector, used to translate after rotation
     fn scope_height(&self) -> Vector3<Numeric> {
         Vector3::new(
             0.0,
-            Numeric::from(self.simulation.model.scope_height.to_meters()),
             0.0,
+            Numeric::from(self.simulation.model.scope_height.to_meters()),
         )
     }
     // Rotation matrix along z axis, sine this is the angle the shooter_pitch is along
-    fn rotation(&self) -> Rotation3<Numeric> {
-        Rotation3::from_axis_angle(&Vector3::z_axis(), self.angle())
-    }
     // Rotation point, then translate down to find position along oroginal origin
     // This should indicate relative position to line of sight along scopes axis
     fn relative_position(&self) -> Vector3<Numeric> {
-        self.rotation() * self.position - self.scope_height()
+        Rotation3::from_euler_angles(
+            0.0,
+            self.simulation.conditions.shooter_pitch.to_radians(),
+            -(self.simulation.conditions.azimuth.to_radians() - FRAC_PI_2),
+        ) * self.position
+            - self.scope_height()
     }
 }
 // Output accessor methods to get ballistic properties
@@ -478,10 +480,10 @@ impl<'p> Output for Envelope<'p> {
         Numeric::from(Length::Meters(self.relative_position().x).to_yards())
     }
     fn drop(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().y).to_inches())
+        Numeric::from(Length::Meters(self.relative_position().z).to_inches())
     }
     fn windage(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().z).to_inches())
+        Numeric::from(Length::Meters(self.relative_position().y).to_inches())
     }
     fn moa(&self) -> Numeric {
         self.relative_position()
