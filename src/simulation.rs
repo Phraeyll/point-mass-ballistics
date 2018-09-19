@@ -337,10 +337,15 @@ impl<'p> IterPointMassModel<'p> {
         let lattitude = self.simulation.conditions.lattitude.to_radians();
         let (vx, vy, vz) = (self.velocity.x, self.velocity.y, self.velocity.z);
         2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-            -vy * lattitude.cos() * azimuth.sin() - vz * lattitude.sin(),
-            vx * lattitude.cos() * azimuth.sin() + vz * lattitude.cos() * azimuth.cos(),
+            -vz * lattitude.sin() - vy * lattitude.cos() * azimuth.sin(),
+            vz * lattitude.cos() * azimuth.cos() + vx * lattitude.cos() * azimuth.sin(),
             vx * lattitude.sin() - vy * lattitude.cos() * azimuth.cos(),
         )
+        // 2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
+        //     -vz * lattitude.sin(),
+        //     vz * lattitude.cos(),
+        //     vx * lattitude.sin() - vy * lattitude.cos(),
+        // )
     }
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
