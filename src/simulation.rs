@@ -116,9 +116,13 @@ impl Conditions {
     // Rotated wind velocity vector according to angle along XY plane, relative
     // to shooter line of sight (X axis unit vector)
     fn wind_velocity(&self) -> Vector3<Numeric> {
-        Rotation3::from_euler_angles(
-            0.0,
-            0.0,
+        // Rotation3::from_euler_angles(
+        //     0.0,
+        //     0.0,
+        //     -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
+        // ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_axis_angle(
+            &Vector3::y_axis(),
             -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
         ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
@@ -302,10 +306,18 @@ impl<'mc> PointMassModel<'mc> {
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        Rotation3::from_euler_angles(
-            0.0,
-            -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
+        // Rotation3::from_euler_angles(
+        //     0.0,
+        //     -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
+        //     self.conditions.azimuth.to_radians() - FRAC_PI_2,
+        // ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_axis_angle(
+            &Vector3::z_axis(),
             self.conditions.azimuth.to_radians() - FRAC_PI_2,
+        ) *
+        Rotation3::from_axis_angle(
+            &Vector3::y_axis(),
+            -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
         ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Iterate over simulation, initializing with specified velocity
@@ -430,23 +442,28 @@ impl<'p> Envelope<'p> {
 
     // Angle of line of sight (shooter_pitch)
     // Height of scope as vector, used to translate after rotation
-    fn scope_height(&self) -> Vector3<Numeric> {
-        Vector3::new(
-            0.0,
-            0.0,
-            Numeric::from(self.simulation.model.scope_height.to_meters()),
-        )
-    }
     // Rotation matrix along z axis, sine this is the angle the shooter_pitch is along
     // Rotation point, then translate down to find position along oroginal origin
     // This should indicate relative position to line of sight along scopes axis
     fn relative_position(&self) -> Vector3<Numeric> {
-        Rotation3::from_euler_angles(
-            0.0,
+        // Rotation3::from_euler_angles(
+        //     0.0,
+        //     self.simulation.conditions.shooter_pitch.to_radians(),
+        //     -(self.simulation.conditions.azimuth.to_radians() - FRAC_PI_2),
+        // ) * self.position
+        Rotation3::from_axis_angle(
+            &Vector3::y_axis(),
             self.simulation.conditions.shooter_pitch.to_radians(),
+        )
+        * Rotation3::from_axis_angle(
+            &Vector3::z_axis(),
             -(self.simulation.conditions.azimuth.to_radians() - FRAC_PI_2),
         ) * self.position
-            - self.scope_height()
+            - Vector3::new(
+                0.0,
+                0.0,
+                Numeric::from(self.simulation.model.scope_height.to_meters()),
+            )
     }
 }
 // Output accessor methods to get ballistic properties
