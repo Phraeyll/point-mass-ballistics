@@ -66,6 +66,9 @@ impl Model {
     fn i(&self) -> Numeric {
         self.sd() / Numeric::from(self.bc)
     }
+    fn scope_height(&self) -> Vector3<Numeric> {
+        Vector3::new(0.0, 0.0, Numeric::from(self.scope_height.to_meters()))
+    }
 }
 
 // Environmental Conditions and other varialbe for simulation
@@ -113,6 +116,15 @@ impl Conditions {
             azimuth,
         }
     }
+    fn shooter_pitch(&self) -> Numeric {
+        -self.shooter_pitch.to_radians()
+    }
+    fn wind_yaw(&self) -> Numeric {
+        -self.wind_yaw.to_radians()
+    }
+    fn azimuth(&self) -> Numeric {
+        -(self.azimuth.to_radians() - FRAC_PI_2)
+    }
     // Rotated wind velocity vector according to angle along XY plane, relative
     // to shooter line of sight (X axis unit vector)
     fn wind_velocity(&self) -> Vector3<Numeric> {
@@ -121,10 +133,8 @@ impl Conditions {
         //     0.0,
         //     -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
         // ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
-        Rotation3::from_axis_angle(
-            &Vector3::y_axis(),
-            -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
-        ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_axis_angle(&Vector3::y_axis(), self.wind_yaw() + self.azimuth())
+            * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
     fn rho(&self) -> Numeric {
@@ -304,6 +314,12 @@ impl<'mc> PointMassModel<'mc> {
             angle /= 2.0;
         }
     }
+    fn muzzle_pitch(&self) -> Numeric {
+        -self.muzzle_pitch.to_radians()
+    }
+    fn total_pitch(&self) -> Numeric {
+        self.conditions.shooter_pitch() + self.muzzle_pitch()
+    }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
         // Rotation3::from_euler_angles(
@@ -311,14 +327,9 @@ impl<'mc> PointMassModel<'mc> {
         //     -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
         //     self.conditions.azimuth.to_radians() - FRAC_PI_2,
         // ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
-        Rotation3::from_axis_angle(
-            &Vector3::z_axis(),
-            self.conditions.azimuth.to_radians() - FRAC_PI_2,
-        ) *
-        Rotation3::from_axis_angle(
-            &Vector3::y_axis(),
-            -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
-        ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_axis_angle(&Vector3::z_axis(), self.conditions.azimuth())
+            * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
+            * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Iterate over simulation, initializing with specified velocity
     fn iter(&self) -> IterPointMassModel {
@@ -453,17 +464,10 @@ impl<'p> Envelope<'p> {
         // ) * self.position
         Rotation3::from_axis_angle(
             &Vector3::y_axis(),
-            self.simulation.conditions.shooter_pitch.to_radians(),
-        )
-        * Rotation3::from_axis_angle(
-            &Vector3::z_axis(),
-            -(self.simulation.conditions.azimuth.to_radians() - FRAC_PI_2),
-        ) * self.position
-            - Vector3::new(
-                0.0,
-                0.0,
-                Numeric::from(self.simulation.model.scope_height.to_meters()),
-            )
+            -self.simulation.conditions.shooter_pitch(),
+        ) * Rotation3::from_axis_angle(&Vector3::z_axis(), -self.simulation.conditions.azimuth())
+            * self.position
+            - self.simulation.model.scope_height()
     }
 }
 // Output accessor methods to get ballistic properties
