@@ -15,6 +15,7 @@ const UNIVERSAL_GAS: Numeric = 8.314; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
+const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
 pub struct Model {
     pub weight: WeightMass,            // Weight (grains)
@@ -75,13 +76,17 @@ pub struct Conditions {
     pub wind_velocity: Velocity,   // Wind Velocity (miles/hour)
     pub wind_yaw: Numeric,         // Wind Angle (degrees)
     pub shooter_pitch: Numeric,    // Line of Sight angle (degrees)
+    pub azimuth: Numeric,          // Angle Facing (degrees) (Coriolis/Eotvos Effect)
+    pub lattitude: Numeric,        // Lattitude (Coriolis/Eotvos Effect)
 
     /*
     Other factors, not calculated yet
     pub ptmp: Numeric,                   // Powder Temperature (Modified Velocity?)
-    pub lat:  Numeric,                   // Lattitude (Coriolis/Eotvos Effect)
-    pub dir:  Direction,             // Direction Facing (Coriolis/Eotvos Effect)
-    pub spin: Numeric,                   // Spin drift (Gyroscopic Drift)
+
+    // Spin drift (Gyroscopic Drift)
+    pub barrel_length: Numeric
+    pub twist_ratio: Numeric
+
     */
 }
 impl Conditions {
@@ -101,6 +106,8 @@ impl Conditions {
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
             shooter_pitch,
+            azimuth: 90.0,
+            lattitude: 45.0,
         }
     }
     // Rotated wind velocity vector according to angle along XZ plane, relative
@@ -291,10 +298,10 @@ impl<'mc> PointMassModel<'mc> {
     // Z axis indicates pitching up/down relative to shooters line of sight, which is
     // parallel to the X axis (unit vector)
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-            Rotation3::from_axis_angle(
-                &Vector3::z_axis(),
-                self.conditions.shooter_pitch + self.muzzle_pitch.to_radians(),
-            ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
+        Rotation3::from_axis_angle(
+            &Vector3::z_axis(),
+            self.conditions.shooter_pitch + self.muzzle_pitch.to_radians(),
+        ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Iterate over simulation, initializing with specified velocity
     fn iter(&self) -> IterPointMassModel {
@@ -316,7 +323,25 @@ struct IterPointMassModel<'p> {
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> IterPointMassModel<'p> {
+    // Initial coriolis equation, just for east/west drift right now
+    // fn coriolis(&self) -> Numeric {
+    //     -(2.0 / 3.0) // (8.0 / 3.0) for west
+    //         * ANGULAR_VELOCITY_EARTH
+    //         * self.position.y
+    //         * self.simulation.conditions.lattitude.to_radians().sin()
+    //         * (2.0 * self.position.y / GRAVITY).sqrt()
+    // }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
+    fn coriolis_acceleration(&self) -> Vector3<Numeric> {
+        let azimuth = self.simulation.conditions.azimuth.to_radians();
+        let lattitude = self.simulation.conditions.lattitude.to_radians();
+        let (vx, vy, vz) = (self.velocity.x, self.velocity.y, self.velocity.z);
+        2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
+            -vy * lattitude.cos() * azimuth.sin() - vz * lattitude.sin(),
+            vx * lattitude.cos() * azimuth.sin() + vz * lattitude.cos() * azimuth.cos(),
+            vx * lattitude.sin() - vy * lattitude.cos() * azimuth.cos(),
+        )
+    }
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
     }
@@ -351,8 +376,10 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         // Unwrap time
         let time_step = Numeric::from(self.simulation.model.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        let acceleration =
-            self.drag_force() / self.simulation.model.mass() + self.simulation.conditions.gravity;
+        let acceleration = self.drag_force() / self.simulation.model.mass()
+            + self.simulation.conditions.gravity
+            + self.coriolis_acceleration()
+            ;
         // Increment position in time
         self.time += time_step;
         // 'Second Equation of Motion'
