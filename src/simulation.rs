@@ -119,7 +119,7 @@ impl Conditions {
         Rotation3::from_euler_angles(
             0.0,
             0.0,
-            self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
+            -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
         ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Determine air density using Arden Buck equation given temperature and relative humidity
