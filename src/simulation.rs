@@ -80,7 +80,7 @@ pub struct Conditions {
     pub wind_velocity: Velocity,   // Wind Velocity (miles/hour)
     pub wind_yaw: Numeric,         // Wind Angle (degrees)
     pub shooter_pitch: Numeric,    // Line of Sight angle (degrees)
-    pub azimuth: Numeric,          // Angle Facing (degrees) (Coriolis/Eotvos Effect)
+    pub azimuth: Numeric,          // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
     pub lattitude: Numeric,        // Lattitude (Coriolis/Eotvos Effect)
 
     /*
@@ -128,11 +128,6 @@ impl Conditions {
     // Rotated wind velocity vector according to angle along XY plane, relative
     // to shooter line of sight (X axis unit vector)
     fn wind_velocity(&self) -> Vector3<Numeric> {
-        // Rotation3::from_euler_angles(
-        //     0.0,
-        //     0.0,
-        //     -self.wind_yaw.to_radians() + self.azimuth.to_radians() - FRAC_PI_2,
-        // ) * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.wind_yaw() + self.azimuth())
             * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
@@ -321,12 +316,8 @@ impl<'mc> PointMassModel<'mc> {
         self.conditions.shooter_pitch() + self.muzzle_pitch()
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
+    // Start with velocity in X direction, no elevation (unless modified via zero function)
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        // Rotation3::from_euler_angles(
-        //     0.0,
-        //     -(self.conditions.shooter_pitch.to_radians() + self.muzzle_pitch.to_radians()),
-        //     self.conditions.azimuth.to_radians() - FRAC_PI_2,
-        // ) * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.conditions.azimuth())
             * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
             * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
@@ -351,34 +342,23 @@ struct IterPointMassModel<'p> {
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> IterPointMassModel<'p> {
-    // Initial coriolis equation, just for east/west drift right now
-    // fn coriolis(&self) -> Numeric {
-    //     -(2.0 / 3.0) // (8.0 / 3.0) for west
-    //         * ANGULAR_VELOCITY_EARTH
-    //         * self.position.y
-    //         * self.simulation.conditions.lattitude.to_radians().sin()
-    //         * (2.0 * self.position.y / GRAVITY).sqrt()
-    // }
-    // Determine velocity relative to speed of sound (c) with given atmospheric conditions
+    // Coriolis/Eotovos effect calculation.  Accounts for East/West drift in hemispheres
+    // This drift is always right in the northern hemisphere, regardless of initial bearing
+    // Also accounts for elevation changes when launching east or west
+    // Bearing East results in higher elevation, bearing West results in lower elevation
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        // 2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-        //     -vz * lattitude.sin() - vy * lattitude.cos() * azimuth.sin(),
-        //     vz * lattitude.cos() * azimuth.cos() + vx * lattitude.cos() * azimuth.sin(),
-        //     vx * lattitude.sin() - vy * lattitude.cos() * azimuth.cos(),
-        // )
         let lattitude = self.simulation.conditions.lattitude.to_radians();
-        let (ve, vn, vu) = (self.velocity.x, self.velocity.y, self.velocity.z);
         2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-            vn * lattitude.sin() - vu * lattitude.cos(),
-            -ve * lattitude.sin(),
-            ve * lattitude.cos(),
+            self.velocity.y * lattitude.sin() - self.velocity.z * lattitude.cos(),
+            -self.velocity.x * lattitude.sin(),
+            self.velocity.x * lattitude.cos(),
         )
     }
+    // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
     }
-    // Determine coefficient of drag used to determine drag force
-    // Scaled by form factor of projectile
+    // Determine coefficient of drag, and scale by the form factor of projectile
     fn cd(&self) -> Numeric {
         self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i()
     }
@@ -444,24 +424,13 @@ pub struct Envelope<'p> {
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> Envelope<'p> {
-    // Supposed to show relative position of projectile against line of sight, which changes with
-    // the angle of the shot.  Also offset by scope height.  Using rotation to rotate projectile
-    // position to level ground, and substracts scope height to determine relative position
-    // I think this method is actually correct, but it needs more comparison against
-    // other ballistic solvers, ideally other point mass models.  For certains projectiles,
-    // this seems to be off 1-3 inches at 1000 yards vs jbm ballistics calculations
-
-    // Angle of line of sight (shooter_pitch)
-    // Height of scope as vector, used to translate after rotation
-    // Rotation matrix along z axis, sine this is the angle the shooter_pitch is along
-    // Rotation point, then translate down to find position along oroginal origin
-    // This should indicate relative position to line of sight along scopes axis
+    // During the simulation, the velocity of the projectile is rotate so it alligns with the shooter's bearing
+    // and line of sight, listed here as azimuth and shooter_pitch - may rename later
+    // This function rotates the projectiles point of position back to the initial coordinate system
+    // where x_axis = East, y_axis = North, and z_axis = Elevation.  After rotation, the point is translated down
+    // by the scope height, which should inidicate the points position relative to the line of sight.
+    // This is used during zero'ing and output in the drop table
     fn relative_position(&self) -> Vector3<Numeric> {
-        // Rotation3::from_euler_angles(
-        //     0.0,
-        //     self.simulation.conditions.shooter_pitch.to_radians(),
-        //     -(self.simulation.conditions.azimuth.to_radians() - FRAC_PI_2),
-        // ) * self.position
         Rotation3::from_axis_angle(
             &Vector3::y_axis(),
             -self.simulation.conditions.shooter_pitch(),
