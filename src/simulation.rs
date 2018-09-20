@@ -116,6 +116,9 @@ impl Conditions {
             azimuth,
         }
     }
+    fn lattitude(&self) -> Numeric {
+        self.lattitude.to_radians()
+    }
     fn shooter_pitch(&self) -> Numeric {
         -self.shooter_pitch.to_radians()
     }
@@ -323,6 +326,7 @@ impl<'mc> PointMassModel<'mc> {
             * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
     // Create an iterator over the simulation model and conditions, starting with initial velocity
+    fn iter(&self) -> IterPointMassModel {
         IterPointMassModel {
             simulation: self,
             position: Vector3::zeros(),
@@ -345,8 +349,8 @@ impl<'p> IterPointMassModel<'p> {
     fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH * Vector3::new(
             0.0,
-            self.simulation.conditions.lattitude.to_radians().cos(),
-            self.simulation.conditions.lattitude.to_radians().sin(),
+            self.simulation.conditions.lattitude().cos(),
+            self.simulation.conditions.lattitude().sin(),
         )
     }
     // Coriolis/Eotovos effect calculation.  Accounts for East/West drift in hemispheres
