@@ -198,11 +198,11 @@ impl<'mzs> Simulator<'mzs> {
     }
     // Create simulation with conditions used to find zero angle
     // Ensure current muzzle pitch is 0 before running simulation
-    fn zero_model(&mut self) -> PointMassModel {
+    fn zero_model(&self) -> PointMassModel {
         PointMassModel::new(&self.model, &self.zero_conditions, 0.0)
     }
     // Find zero angle, then solve for current conditions
-    fn solution_model(&mut self, zero_distance: Length) -> PointMassModel {
+    fn solution_model(&self, zero_distance: Length) -> PointMassModel {
         PointMassModel::new(
             &self.model,
             &self.solve_conditions,
@@ -214,7 +214,7 @@ impl<'mzs> Simulator<'mzs> {
     }
     // Produce a drop table using specified range and step size
     pub fn drop_table<T>(
-        &mut self,
+        &self,
         zero_distance: Numeric,
         step: Numeric,
         range: Numeric,
