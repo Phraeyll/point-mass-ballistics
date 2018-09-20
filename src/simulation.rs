@@ -12,7 +12,7 @@ use std::iter::FromIterator;
 // Z IS NOW DOWN/GRAVITY
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
-const UNIVERSAL_GAS: Numeric = 8.314; // Universal gas constant (J/K*mol)
+const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
