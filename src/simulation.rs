@@ -1,4 +1,4 @@
-use na::{Rotation3, RowVector3, Vector3};
+use na::{Rotation3, Vector3};
 use of::OrderedFloat;
 
 pub use dragtables::BallisticCoefficient;
