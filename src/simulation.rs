@@ -1,4 +1,4 @@
-use na::{Rotation3, Vector3};
+use na::{Rotation3, RowVector3, Vector3};
 use of::OrderedFloat;
 
 pub use dragtables::BallisticCoefficient;
@@ -348,11 +348,7 @@ impl<'p> IterPointMassModel<'p> {
     // Bearing East results in higher elevation, bearing West results in lower elevation
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
         let lattitude = self.simulation.conditions.lattitude.to_radians();
-        2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(
-            self.velocity.y * lattitude.sin() - self.velocity.z * lattitude.cos(),
-            -self.velocity.x * lattitude.sin(),
-            self.velocity.x * lattitude.cos(),
-        )
+        -2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(0.0, lattitude.cos(), lattitude.sin()).cross(&self.velocity)
     }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> Numeric {
