@@ -222,19 +222,19 @@ impl<'mzs> Simulator<'mzs> {
         let mut current_step: Numeric = 0.0;
         self.solution_model(Length::Yards(zero_distance))
             .iter()
-            .take_do_while(|e| e.distance() < range)
-            .filter_map(|e| {
-                if e.distance() >= current_step {
+            .take_do_while(|p| p.distance() < range)
+            .filter_map(|p| {
+                if p.distance() >= current_step {
                     current_step += step;
                     Some((
-                        e.distance(), // Key
+                        p.distance(), // Key
                         (
-                            e.drop(),
-                            e.windage(),
-                            e.velocity(),
-                            e.energy(),
-                            e.moa(),
-                            e.time(),
+                            p.drop(),
+                            p.windage(),
+                            p.velocity(),
+                            p.energy(),
+                            p.moa(),
+                            p.time(),
                         ), // Value
                     ))
                 } else {
@@ -247,7 +247,7 @@ impl<'mzs> Simulator<'mzs> {
     //     let zero = Numeric::from(self.model.scope_height.to_meters());
     //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
     //     loop {
-    //         if let Some(Envelope { position, .. }) = sim.next() {
+    //         if let Some(Projectile { position, .. }) = sim.next() {
     //             if position.y > zero {
     //                 break position;
     //             }
@@ -258,8 +258,8 @@ impl<'mzs> Simulator<'mzs> {
 
 // All variable required for running point mass model of trajectory simulation
 struct PointMassModel<'mc> {
-    model: &'mc Model,           // Other variables used in point mass model
-    conditions: &'mc Conditions, // Conditions that vary depending on simulation type
+    model: &'mc Model,
+    conditions: &'mc Conditions,
     muzzle_pitch: Numeric,
 }
 impl<'mc> PointMassModel<'mc> {
@@ -288,10 +288,10 @@ impl<'mc> PointMassModel<'mc> {
             if self.muzzle_pitch == last_muzzle_pitch {
                 break Err("Issue with floating points, angle not changing during 'zero'");
             }
-            // Find drop at distance, need way to break if we never reach position.x
+            // Find drop at distance, need way to break if we never zero_distance
             let drop = self
                 .iter()
-                .find(|e| e.relative_position().x > Numeric::from(zero_distance.to_meters()))
+                .find(|p| p.relative_position().x > Numeric::from(zero_distance.to_meters()))
                 .unwrap()
                 .relative_position()
                 .z;
@@ -322,8 +322,7 @@ impl<'mc> PointMassModel<'mc> {
             * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
             * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
     }
-    // Iterate over simulation, initializing with specified velocity
-    fn iter(&self) -> IterPointMassModel {
+    // Create an iterator over the simulation model and conditions, starting with initial velocity
         IterPointMassModel {
             simulation: self,
             position: Vector3::zeros(),
@@ -333,8 +332,8 @@ impl<'mc> PointMassModel<'mc> {
     }
 }
 
-// Abstract iter struct for running simulation through iter method
-// Essentially envelope of motion and ref to input variables
+// Iterator of simulation - steps through time adjust position and velocity, based on
+// conditions of the simulation utilized
 struct IterPointMassModel<'p> {
     simulation: &'p PointMassModel<'p>, // Reference to model used for calculations
     time: Numeric,                      // Position in time (s)
@@ -342,13 +341,20 @@ struct IterPointMassModel<'p> {
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> IterPointMassModel<'p> {
+    // Angular velocity vector of earth, according with respect to current lattitude
+    fn omega(&self) -> Vector3<Numeric> {
+        ANGULAR_VELOCITY_EARTH * Vector3::new(
+            0.0,
+            self.simulation.conditions.lattitude.to_radians().cos(),
+            self.simulation.conditions.lattitude.to_radians().sin(),
+        )
+    }
     // Coriolis/Eotovos effect calculation.  Accounts for East/West drift in hemispheres
     // This drift is always right in the northern hemisphere, regardless of initial bearing
     // Also accounts for elevation changes when launching east or west
     // Bearing East results in higher elevation, bearing West results in lower elevation
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        let lattitude = self.simulation.conditions.lattitude.to_radians();
-        -2.0 * ANGULAR_VELOCITY_EARTH * Vector3::new(0.0, lattitude.cos(), lattitude.sin()).cross(&self.velocity)
+        -2.0 * self.omega().cross(&self.velocity)
     }
     // Determine velocity relative to speed of sound (c) with given atmospheric conditions
     fn mach(&self) -> Numeric {
@@ -374,10 +380,8 @@ impl<'p> IterPointMassModel<'p> {
             / 2.0
     }
 }
-
-// Iterate through simulation, outputting projectiles position in time and space, as well as current velocity
 impl<'p> Iterator for IterPointMassModel<'p> {
-    type Item = Envelope<'p>;
+    type Item = Projectile<'p>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values, so we can capture time '0' in output
         let (time, position, velocity) = (self.time, self.position, self.velocity);
@@ -393,7 +397,7 @@ impl<'p> Iterator for IterPointMassModel<'p> {
         self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
-        // Currently envelope of motion (need better name) and ref to which simulation was used
+
         Some(Self::Item {
             simulation: &self.simulation,
             time,
@@ -411,15 +415,16 @@ impl<'p> IntoIterator for &'p PointMassModel<'p> {
     }
 }
 
-// Output struct for wrapping envelope of motion, provides accessor methods for convenience
-// Mostly copied from IterPointMassModels envelope during iteration, some values from model
-pub struct Envelope<'p> {
+// Output struct which represents projectiles current position, and velocity
+// Basically same values used internally during iteration
+// Along with a ref to the simulation which was iterated over
+pub struct Projectile<'p> {
     simulation: &'p PointMassModel<'p>, //Simulation this came from, used for various calculations
     time: Numeric,                      // Position in time (s)
     position: Vector3<Numeric>,         // Position (m)
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
-impl<'p> Envelope<'p> {
+impl<'p> Projectile<'p> {
     // During the simulation, the velocity of the projectile is rotate so it alligns with the shooter's bearing
     // and line of sight, listed here as azimuth and shooter_pitch - may rename later
     // This function rotates the projectiles point of position back to the initial coordinate system
@@ -448,7 +453,7 @@ pub trait Output {
 
 // Accessor methods for getting common desired units of output
 // Hard coded units for now - need to use better library for this eventually
-impl<'p> Output for Envelope<'p> {
+impl<'p> Output for Projectile<'p> {
     fn time(&self) -> Numeric {
         Numeric::from(Time::Seconds(self.time).to_seconds())
     }
