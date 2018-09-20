@@ -9,7 +9,6 @@ use util::*;
 
 use std::iter::FromIterator;
 
-// Z IS NOW DOWN/GRAVITY
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
@@ -82,16 +81,6 @@ pub struct Conditions {
     pub shooter_pitch: Numeric,    // Line of Sight angle (degrees)
     pub azimuth: Numeric,          // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
     pub lattitude: Numeric,        // Lattitude (Coriolis/Eotvos Effect)
-
-    /*
-    Other factors, not calculated yet
-    pub ptmp: Numeric,                   // Powder Temperature (Modified Velocity?)
-
-    // Spin drift (Gyroscopic Drift)
-    pub barrel_length: Numeric
-    pub twist_ratio: Numeric
-
-    */
 }
 impl Conditions {
     pub fn new(
@@ -128,17 +117,17 @@ impl Conditions {
     fn azimuth(&self) -> Numeric {
         -(self.azimuth.to_radians() - FRAC_PI_2)
     }
-    // Rotated wind velocity vector according to angle along XY plane, relative
-    // to shooter line of sight (X axis unit vector)
+    // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
+    // factor, wind_pitch, to consider vertical wind components
     fn wind_velocity(&self) -> Vector3<Numeric> {
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.wind_yaw() + self.azimuth())
             * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
     }
-    // Determine air density using Arden Buck equation given temperature and relative humidity
+    // Density of air, using pressure, humidity, and temperature
     fn rho(&self) -> Numeric {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
     }
-    // Speed of sound
+    // Speed of sound at given air density and pressure
     fn c(&self) -> Numeric {
         (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
@@ -153,7 +142,7 @@ impl Conditions {
     fn pd(&self) -> Numeric {
         self.pa() - self.pv()
     }
-    // Total air pressure
+    // Total air pressure in pascals
     fn pa(&self) -> Numeric {
         Numeric::from(self.pressure.to_pascals())
     }
@@ -196,12 +185,14 @@ impl<'mzs> Simulator<'mzs> {
             solve_conditions,
         }
     }
-    // Create simulation with conditions used to find zero angle
-    // Ensure current muzzle pitch is 0 before running simulation
+    // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
+    // Starting from flat fire pitch (0.0)
     fn zero_model(&self) -> PointMassModel {
         PointMassModel::new(&self.model, &self.zero_conditions, 0.0)
     }
-    // Find zero angle, then solve for current conditions
+    // Create a simulation with muzzle pitch found in 'zeroin' simulation
+    // Then solve for current conditions
+    // Can be used for drop table, or eventually dialing in a specific distance
     fn solution_model(&self, zero_distance: Length) -> PointMassModel {
         PointMassModel::new(
             &self.model,
@@ -259,16 +250,13 @@ impl<'mzs> Simulator<'mzs> {
     // }
 }
 
-// All variable required for running point mass model of trajectory simulation
+// Struct which runs the simulation - has iter method attached
 struct PointMassModel<'mc> {
     model: &'mc Model,
     conditions: &'mc Conditions,
     muzzle_pitch: Numeric,
 }
 impl<'mc> PointMassModel<'mc> {
-    // Create a new trajectory model, assuming all parameters are in traditional imperial units
-    // All calculations are done using the SI system, mostly through trait methods on this struct
-    // Wind velocity is exception - stored in m/s - need better consistency
     fn new(model: &'mc Model, conditions: &'mc Conditions, muzzle_pitch: Numeric) -> Self {
         Self {
             model,
@@ -319,7 +307,7 @@ impl<'mc> PointMassModel<'mc> {
         self.conditions.shooter_pitch() + self.muzzle_pitch()
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
-    // Start with velocity in X direction, no elevation (unless modified via zero function)
+    // Start with velocity value along X unit vector
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.conditions.azimuth())
             * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
@@ -336,8 +324,8 @@ impl<'mc> PointMassModel<'mc> {
     }
 }
 
-// Iterator of simulation - steps through time adjust position and velocity, based on
-// conditions of the simulation utilized
+// Iterator over PointMassModel, steps through time and adjust position and velocity vectors
+// Using reference to current simulation model/conditions
 struct IterPointMassModel<'p> {
     simulation: &'p PointMassModel<'p>, // Reference to model used for calculations
     time: Numeric,                      // Position in time (s)
@@ -353,18 +341,20 @@ impl<'p> IterPointMassModel<'p> {
             self.simulation.conditions.lattitude().sin(),
         )
     }
-    // Coriolis/Eotovos effect calculation.  Accounts for East/West drift in hemispheres
-    // This drift is always right in the northern hemisphere, regardless of initial bearing
-    // Also accounts for elevation changes when launching east or west
-    // Bearing East results in higher elevation, bearing West results in lower elevation
+    // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drive dur to Earth's spin
+    // This drift is always right (-y) in the northern hemisphere, regardless of initial bearing
+    // This drive is always left (+y) in the southern hemisphere, regardless of initial bearing
+    // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
+    // Bearing East results in higher elevation (+z), bearing West results in lower elevation (-z)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
         -2.0 * self.omega().cross(&self.velocity)
     }
-    // Determine velocity relative to speed of sound (c) with given atmospheric conditions
+    // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
     }
-    // Determine coefficient of drag, and scale by the form factor of projectile
+    // Coefficient of drag, scaled by the form factor of projectile referenced to a
+    // particular standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
         self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i()
     }
@@ -372,9 +362,9 @@ impl<'p> IterPointMassModel<'p> {
     fn vv(&self) -> Vector3<Numeric> {
         self.velocity - self.simulation.conditions.wind_velocity()
     }
-    // Primary function - determines force of drag for given projectile, at given mach speed,
-    // with given air density, using ballistic tables to modify coefficient of drag based on
-    // standard reference projectiles (Eg., G1 or G7)
+    // Force of drag for given projectile, at given mach speed, with given conditions
+    // Drag force is proportional to square of velocity and area of projectile, scaled
+    // by a coefficient at mach speeds (approximately)
     fn drag_force(&self) -> Vector3<Numeric> {
         -(self.simulation.conditions.rho()
             * self.simulation.model.area()
@@ -387,7 +377,8 @@ impl<'p> IterPointMassModel<'p> {
 impl<'p> Iterator for IterPointMassModel<'p> {
     type Item = Projectile<'p>;
     fn next(&mut self) -> Option<Self::Item> {
-        // Previous values, so we can capture time '0' in output
+        // Previous values captured to be returned, so that time 0 can be accounted for
+        // Would like a better method perhaps?
         let (time, position, velocity) = (self.time, self.position, self.velocity);
         // Unwrap time
         let time_step = Numeric::from(self.simulation.model.time_step.to_seconds());
@@ -455,8 +446,7 @@ pub trait Output {
     fn moa(&self) -> Numeric;
 }
 
-// Accessor methods for getting common desired units of output
-// Hard coded units for now - need to use better library for this eventually
+// Hard coded Imperial units for now - need to use better library for this eventually
 impl<'p> Output for Projectile<'p> {
     fn time(&self) -> Numeric {
         Numeric::from(Time::Seconds(self.time).to_seconds())
@@ -470,7 +460,7 @@ impl<'p> Output for Projectile<'p> {
                 .to_ftlbs(),
         )
     }
-    // Positions relative to line of sight or scope height, imperial units
+    // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Numeric {
         Numeric::from(Length::Meters(self.relative_position().x).to_yards())
     }
