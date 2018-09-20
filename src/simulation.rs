@@ -66,7 +66,7 @@ impl Model {
         self.sd() / Numeric::from(self.bc)
     }
     fn scope_height(&self) -> Vector3<Numeric> {
-        Vector3::new(0.0, 0.0, Numeric::from(self.scope_height.to_meters()))
+        Numeric::from(self.scope_height.to_meters()) * Vector3::z()
     }
 }
 
@@ -97,7 +97,7 @@ impl Conditions {
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
-            gravity: Vector3::new(0.0, 0.0, GRAVITY),
+            gravity: GRAVITY * Vector3::z(),
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
             shooter_pitch,
@@ -121,7 +121,7 @@ impl Conditions {
     // factor, wind_pitch, to consider vertical wind components
     fn wind_velocity(&self) -> Vector3<Numeric> {
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.wind_yaw() + self.azimuth())
-            * Vector3::new(self.wind_velocity.to_mps().into(), 0.0, 0.0)
+            * (Numeric::from(self.wind_velocity.to_mps()) * Vector3::x())
     }
     // Density of air, using pressure, humidity, and temperature
     fn rho(&self) -> Numeric {
@@ -311,7 +311,7 @@ impl<'mc> PointMassModel<'mc> {
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
         Rotation3::from_axis_angle(&Vector3::z_axis(), self.conditions.azimuth())
             * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
-            * Vector3::new(self.model.muzzle_velocity.to_mps().into(), 0.0, 0.0)
+            * (Numeric::from(self.model.muzzle_velocity.to_mps()) * Vector3::x())
     }
     // Create an iterator over the simulation model and conditions, starting with initial velocity
     fn iter(&self) -> IterPointMassModel {
