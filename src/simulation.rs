@@ -305,15 +305,12 @@ impl<'mc> PointMassModel<'mc> {
     fn muzzle_pitch(&self) -> Numeric {
         -self.muzzle_pitch.to_radians()
     }
-    fn total_pitch(&self) -> Numeric {
-        self.conditions.shooter_pitch() + self.muzzle_pitch()
-    }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
         Numeric::from(self.model.muzzle_velocity.to_mps())
             .mul(Vector3::x())
-            .pitch(self.total_pitch())
+            .pitch(self.conditions.shooter_pitch() + self.muzzle_pitch())
             .yaw(self.conditions.azimuth())
     }
     // Create an iterator over the simulation model and conditions, starting with initial velocity
