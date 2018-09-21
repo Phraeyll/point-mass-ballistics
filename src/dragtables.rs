@@ -1,7 +1,7 @@
+pub use self::BallisticCoefficient::*;
+
 use crate::macros::FloatMap;
 use crate::util::Numeric;
-
-pub use self::BallisticCoefficient::*;
 
 mod g1;
 mod g2;
