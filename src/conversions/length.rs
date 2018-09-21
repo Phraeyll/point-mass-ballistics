@@ -1,5 +1,5 @@
 use self::Length::*;
-use util::Numeric;
+use crate::util::Numeric;
 
 pub const MILES_TO_YARDS: Numeric = 1_760.0;
 pub const YARDS_TO_MILES: Numeric = 1.0 / MILES_TO_YARDS;

@@ -1,6 +1,6 @@
-use of::OrderedFloat;
+use crate::of::OrderedFloat;
 
-use util::Numeric;
+use crate::util::Numeric;
 
 use std::collections::BTreeMap;
 

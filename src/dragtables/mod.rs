@@ -1,5 +1,5 @@
-use macros::FloatMap;
-use util::Numeric;
+use crate::macros::FloatMap;
+use crate::util::Numeric;
 
 pub use self::BallisticCoefficient::*;
 

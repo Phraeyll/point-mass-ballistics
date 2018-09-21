@@ -1,11 +1,11 @@
-use na::{Rotation3, Vector3};
-use of::OrderedFloat;
+use crate::na::{Rotation3, Vector3};
+use crate::of::OrderedFloat;
 
-pub use dragtables::BallisticCoefficient;
+pub use crate::dragtables::BallisticCoefficient;
 
-use conversions::*;
-use macros::FloatMap;
-use util::*;
+use crate::conversions::*;
+use crate::macros::FloatMap;
+use crate::util::*;
 
 use std::iter::FromIterator;
 use std::ops::{Mul, Sub};
