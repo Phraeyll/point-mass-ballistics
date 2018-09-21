@@ -1,4 +1,4 @@
-use crate::of::OrderedFloat;
+use ordered_float::OrderedFloat;
 
 use crate::util::Numeric;
 

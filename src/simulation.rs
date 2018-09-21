@@ -1,5 +1,6 @@
-use crate::na::{Rotation3, Vector3};
-use crate::of::OrderedFloat;
+use approx::relative_eq;
+use nalgebra::{Rotation3, Vector3};
+use ordered_float::OrderedFloat;
 
 pub use crate::dragtables::BallisticCoefficient;
 

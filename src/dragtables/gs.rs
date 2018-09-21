@@ -1,4 +1,4 @@
-use crate::of::OrderedFloat;
+use ordered_float::OrderedFloat;
 
 use crate::macros::FloatMap;
 use crate::util::Numeric;
