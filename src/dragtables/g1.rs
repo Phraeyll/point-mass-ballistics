@@ -1,7 +1,6 @@
 use ordered_float::OrderedFloat;
 
-use crate::macros::FloatMap;
-use crate::util::Numeric;
+use crate::util::{Numeric, FloatMap};
 
 use std::collections::BTreeMap;
 

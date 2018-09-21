@@ -5,7 +5,6 @@ use ordered_float::OrderedFloat;
 pub use crate::dragtables::BallisticCoefficient;
 
 use crate::conversions::*;
-use crate::macros::FloatMap;
 use crate::util::*;
 
 use std::iter::FromIterator;
