@@ -4,11 +4,12 @@ use ordered_float::OrderedFloat;
 
 pub use crate::dragtables::BallisticCoefficient;
 
-use crate::conversions::*;
-use crate::util::*;
+use crate::{conversions::*, util::*};
 
-use std::iter::FromIterator;
-use std::ops::{Mul, Sub};
+use std::{
+    iter::FromIterator,
+    ops::{Mul, Sub},
+};
 
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
@@ -266,6 +267,15 @@ impl<'mc> PointMassModel<'mc> {
             muzzle_pitch,
         }
     }
+    // Attempting to scale table with constant factors, so this doesn't have to be calculated at every
+    // iteration.  May be significant optimization if compiler is not already optimizing this away
+    // fn tweak_table(&mut self) {
+    //     self.model
+    //         .drag_table
+    //         .0
+    //         .values_mut()
+    //         .map(|cd| *cd * -0.5 * self.conditions.rho() * self.model.area() * self.model.i());
+    // }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -353,10 +363,9 @@ impl<'p> IterPointMassModel<'p> {
     fn mach(&self) -> Numeric {
         self.velocity.norm() / self.simulation.conditions.c()
     }
-    // Coefficient of drag, scaled by the form factor of projectile referenced to a
-    // particular standard projectile depending on drag table used
+    // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i()
+        self.simulation.model.drag_table.lerp(self.mach())
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     fn vv(&self) -> Vector3<Numeric> {
@@ -366,12 +375,12 @@ impl<'p> IterPointMassModel<'p> {
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
     fn drag_force(&self) -> Vector3<Numeric> {
-        -(self.simulation.conditions.rho()
+        -0.5 * self.simulation.conditions.rho()
             * self.simulation.model.area()
+            * self.simulation.model.i()
+            * self.cd()
             * self.vv()
             * self.vv().norm()
-            * self.cd())
-            / 2.0
     }
 }
 impl<'p> Iterator for IterPointMassModel<'p> {
