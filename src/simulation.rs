@@ -345,11 +345,9 @@ struct IterPointMassModel<'p> {
 impl<'p> IterPointMassModel<'p> {
     // Angular velocity vector of earth, according with respect to current lattitude
     fn omega(&self) -> Vector3<Numeric> {
-        ANGULAR_VELOCITY_EARTH * Vector3::new(
-            0.0,
-            self.simulation.conditions.lattitude().cos(),
-            self.simulation.conditions.lattitude().sin(),
-        )
+        ANGULAR_VELOCITY_EARTH
+            .mul(Vector3::y())
+            .roll(self.simulation.conditions.lattitude())
     }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drive dur to Earth's spin
     // This drift is always right (-y) in the northern hemisphere, regardless of initial bearing
