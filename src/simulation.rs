@@ -8,6 +8,7 @@ use macros::FloatMap;
 use util::*;
 
 use std::iter::FromIterator;
+use std::ops::{Mul, Sub};
 
 // Constants used during drag calculation, and gravity during acceleration
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
@@ -120,8 +121,9 @@ impl Conditions {
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
     fn wind_velocity(&self) -> Vector3<Numeric> {
-        Rotation3::from_axis_angle(&Vector3::z_axis(), self.wind_yaw() + self.azimuth())
-            * (Numeric::from(self.wind_velocity.to_mps()) * Vector3::x())
+        Numeric::from(self.wind_velocity.to_mps())
+            .mul(Vector3::x())
+            .yaw(self.wind_yaw() + self.azimuth())
     }
     // Density of air, using pressure, humidity, and temperature
     fn rho(&self) -> Numeric {
@@ -309,9 +311,10 @@ impl<'mc> PointMassModel<'mc> {
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        Rotation3::from_axis_angle(&Vector3::z_axis(), self.conditions.azimuth())
-            * Rotation3::from_axis_angle(&Vector3::y_axis(), self.total_pitch())
-            * (Numeric::from(self.model.muzzle_velocity.to_mps()) * Vector3::x())
+        Numeric::from(self.model.muzzle_velocity.to_mps())
+            .mul(Vector3::x())
+            .pitch(self.total_pitch())
+            .yaw(self.conditions.azimuth())
     }
     // Create an iterator over the simulation model and conditions, starting with initial velocity
     fn iter(&self) -> IterPointMassModel {
@@ -427,12 +430,10 @@ impl<'p> Projectile<'p> {
     // by the scope height, which should inidicate the points position relative to the line of sight.
     // This is used during zero'ing and output in the drop table
     fn relative_position(&self) -> Vector3<Numeric> {
-        Rotation3::from_axis_angle(
-            &Vector3::y_axis(),
-            -self.simulation.conditions.shooter_pitch(),
-        ) * Rotation3::from_axis_angle(&Vector3::z_axis(), -self.simulation.conditions.azimuth())
-            * self.position
-            - self.simulation.model.scope_height()
+        self.position
+            .yaw(-self.simulation.conditions.azimuth())
+            .pitch(-self.simulation.conditions.shooter_pitch())
+            .sub(self.simulation.model.scope_height())
     }
 }
 // Output accessor methods to get ballistic properties
@@ -475,5 +476,22 @@ impl<'p> Output for Projectile<'p> {
             .angle(&Vector3::x_axis())
             .to_degrees()
             * 60.0
+    }
+}
+
+trait PitchYawRoll {
+    fn pitch(&self, angle: Numeric) -> Self;
+    fn yaw(&self, angle: Numeric) -> Self;
+    fn roll(&self, angle: Numeric) -> Self;
+}
+impl PitchYawRoll for Vector3<Numeric> {
+    fn pitch(&self, angle: Numeric) -> Self {
+        Rotation3::from_axis_angle(&Vector3::y_axis(), angle) * self
+    }
+    fn yaw(&self, angle: Numeric) -> Self {
+        Rotation3::from_axis_angle(&Vector3::z_axis(), angle) * self
+    }
+    fn roll(&self, angle: Numeric) -> Self {
+        Rotation3::from_axis_angle(&Vector3::x_axis(), angle) * self
     }
 }
