@@ -343,7 +343,9 @@ struct IterPointMassModel<'p> {
     velocity: Vector3<Numeric>,         // Velocity (m/s)
 }
 impl<'p> IterPointMassModel<'p> {
-    // Angular velocity vector of earth, according with respect to current lattitude
+    // Angular velocity vector of earth, at current lattitude
+    // Can be thought of as vector pointing along y axis from center of earth, rolled along
+    // lines of lattitude, as represented here now
     fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::y())
