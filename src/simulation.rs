@@ -116,7 +116,7 @@ impl Conditions {
     // Negative indicates 90 degree wind is from east=>west
     // 0 degree wind is from north=>south (conventional)
     fn wind_yaw(&self) -> Numeric {
-        -self.wind_yaw.to_radians()
+        -(self.wind_yaw.to_radians() - PI)
     }
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
@@ -373,7 +373,7 @@ impl<'p> IterPointMassModel<'p> {
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     fn vv(&self) -> Vector3<Numeric> {
-        self.velocity + self.simulation.conditions.wind_velocity()
+        self.velocity - self.simulation.conditions.wind_velocity()
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
