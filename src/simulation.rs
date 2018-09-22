@@ -68,7 +68,7 @@ impl Model {
         self.sd() / Numeric::from(self.bc)
     }
     fn scope_height(&self) -> Vector3<Numeric> {
-        Numeric::from(self.scope_height.to_meters()) * Vector3::z()
+        Numeric::from(self.scope_height.to_meters()) * Vector3::y()
     }
 }
 
@@ -99,7 +99,7 @@ impl Conditions {
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
-            gravity: GRAVITY * Vector3::z(),
+            gravity: GRAVITY * Vector3::y(),
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
             shooter_pitch,
@@ -111,7 +111,7 @@ impl Conditions {
         self.lattitude.to_radians()
     }
     fn shooter_pitch(&self) -> Numeric {
-        -self.shooter_pitch.to_radians()
+        self.shooter_pitch.to_radians()
     }
     fn wind_yaw(&self) -> Numeric {
         -self.wind_yaw.to_radians()
@@ -297,7 +297,7 @@ impl<'mc> PointMassModel<'mc> {
                 .find(|p| p.relative_position().x > Numeric::from(zero_distance.to_meters()))
                 .unwrap()
                 .relative_position()
-                .z;
+                .y;
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
                 break Ok(self.muzzle_pitch);
@@ -313,7 +313,7 @@ impl<'mc> PointMassModel<'mc> {
         }
     }
     fn muzzle_pitch(&self) -> Numeric {
-        -self.muzzle_pitch.to_radians()
+        self.muzzle_pitch.to_radians()
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
@@ -348,7 +348,7 @@ impl<'p> IterPointMassModel<'p> {
     // lines of lattitude, as represented here now
     fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
-            .mul(Vector3::y())
+            .mul(Vector3::z())
             .roll(self.simulation.conditions.lattitude())
     }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drive dur to Earth's spin
@@ -357,7 +357,7 @@ impl<'p> IterPointMassModel<'p> {
     // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
     // Bearing East results in higher elevation (+z), bearing West results in lower elevation (-z)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        -2.0 * self.omega().cross(&self.velocity)
+        2.0 * self.omega().cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
@@ -472,10 +472,10 @@ impl<'p> Output for Projectile<'p> {
         Numeric::from(Length::Meters(self.relative_position().x).to_yards())
     }
     fn drop(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().z).to_inches())
+        Numeric::from(Length::Meters(self.relative_position().y).to_inches())
     }
     fn windage(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().y).to_inches())
+        Numeric::from(Length::Meters(self.relative_position().z).to_inches())
     }
     fn moa(&self) -> Numeric {
         self.relative_position()
@@ -492,10 +492,10 @@ trait PitchYawRoll {
 }
 impl PitchYawRoll for Vector3<Numeric> {
     fn pitch(&self, angle: Numeric) -> Self {
-        Rotation3::from_axis_angle(&Vector3::y_axis(), angle) * self
+        Rotation3::from_axis_angle(&Vector3::z_axis(), angle) * self
     }
     fn yaw(&self, angle: Numeric) -> Self {
-        Rotation3::from_axis_angle(&Vector3::z_axis(), angle) * self
+        Rotation3::from_axis_angle(&Vector3::y_axis(), angle) * self
     }
     fn roll(&self, angle: Numeric) -> Self {
         Rotation3::from_axis_angle(&Vector3::x_axis(), angle) * self
