@@ -113,10 +113,10 @@ impl Conditions {
     fn shooter_pitch(&self) -> Numeric {
         self.shooter_pitch.to_radians()
     }
-    // Negative indicates 90 degree wind is west=>east
-    // 0 degree wind is south=>north
+    // Positive indicates 90 degree wind is from east=>west
+    // 0 degree wind is from north=>south (conventional)
     fn wind_yaw(&self) -> Numeric {
-        -self.wind_yaw.to_radians()
+        self.wind_yaw.to_radians()
     }
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
