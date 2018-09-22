@@ -372,6 +372,7 @@ impl<'p> IterPointMassModel<'p> {
         self.simulation.model.drag_table.lerp(self.mach())
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
+    // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
         self.velocity - self.simulation.conditions.wind_velocity()
     }
