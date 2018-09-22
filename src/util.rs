@@ -8,7 +8,6 @@ macro_rules! my_type {
 my_type!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
-pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
 use ordered_float::OrderedFloat;
 

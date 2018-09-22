@@ -113,11 +113,15 @@ impl Conditions {
     fn shooter_pitch(&self) -> Numeric {
         self.shooter_pitch.to_radians()
     }
+    // Negative indicates 90 degree wind is west=>east
+    // 0 degree wind is south=>north
     fn wind_yaw(&self) -> Numeric {
         -self.wind_yaw.to_radians()
     }
+    // Flip, since circle functions rotate counter-clockwise,
+    // 90 degrees is east by compass bearing, but west(left) in trig
     fn azimuth(&self) -> Numeric {
-        -(self.azimuth.to_radians() - FRAC_PI_2)
+        -self.azimuth.to_radians()
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
@@ -348,16 +352,16 @@ impl<'p> IterPointMassModel<'p> {
     // lines of lattitude, as represented here now
     fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
-            .mul(Vector3::z())
-            .roll(self.simulation.conditions.lattitude())
+            .mul(Vector3::x())
+            .pitch(self.simulation.conditions.lattitude())
     }
-    // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drive dur to Earth's spin
-    // This drift is always right (-y) in the northern hemisphere, regardless of initial bearing
-    // This drive is always left (+y) in the southern hemisphere, regardless of initial bearing
+    // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
+    // This drift is always right (+z) in the northern hemisphere, regardless of initial bearing
+    // This drive is always left (-z) in the southern hemisphere, regardless of initial bearing
     // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
-    // Bearing East results in higher elevation (+z), bearing West results in lower elevation (-z)
+    // Bearing East results in higher elevation (+y), bearing West results in lower elevation (-y)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        2.0 * self.omega().cross(&self.velocity)
+        -2.0 * self.omega().cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
@@ -432,7 +436,7 @@ impl<'p> Projectile<'p> {
     // During the simulation, the velocity of the projectile is rotate so it alligns with the shooter's bearing
     // and line of sight, listed here as azimuth and shooter_pitch - may rename later
     // This function rotates the projectiles point of position back to the initial coordinate system
-    // where x_axis = East, y_axis = North, and z_axis = Elevation.  After rotation, the point is translated down
+    // where x_axis = North/South, y_axis = Up/Down, and z_axis = East/West.  After rotation, the point is translated down
     // by the scope height, which should inidicate the points position relative to the line of sight.
     // This is used during zero'ing and output in the drop table
     fn relative_position(&self) -> Vector3<Numeric> {
