@@ -271,15 +271,6 @@ impl<'mc> PointMassModel<'mc> {
             muzzle_pitch,
         }
     }
-    // Attempting to scale table with constant factors, so this doesn't have to be calculated at every
-    // iteration.  May be significant optimization if compiler is not already optimizing this away
-    // fn tweak_table(&mut self) {
-    //     self.model
-    //         .drag_table
-    //         .0
-    //         .values_mut()
-    //         .map(|cd| *cd * -0.5 * self.conditions.rho() * self.model.area() * self.model.i());
-    // }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -369,7 +360,7 @@ impl<'p> IterPointMassModel<'p> {
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation.model.drag_table.lerp(self.mach())
+        self.simulation.model.drag_table.lerp(self.mach()) * self.simulation.model.i()
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
@@ -382,7 +373,6 @@ impl<'p> IterPointMassModel<'p> {
     fn drag_force(&self) -> Vector3<Numeric> {
         -0.5 * self.simulation.conditions.rho()
             * self.simulation.model.area()
-            * self.simulation.model.i()
             * self.cd()
             * self.vv()
             * self.vv().norm()
