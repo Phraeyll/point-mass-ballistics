@@ -1,11 +1,8 @@
 pub use self::dragtables::BallisticCoefficient;
 
 use approx::relative_eq;
-use nalgebra::Vector3;
 
 use crate::util::*;
-
-use std::ops::Mul;
 
 mod dragtables;
 pub mod iter;
@@ -63,16 +60,5 @@ impl<'mc> Simulation<'mc> {
             // Reduce angle before next iteration, trying to converge on zero point
             angle /= 2.0;
         }
-    }
-    pub fn muzzle_pitch(&self) -> Numeric {
-        self.muzzle_pitch.to_radians()
-    }
-    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
-    // Start with velocity value along X unit vector
-    fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        Numeric::from(self.params.muzzle_velocity.to_mps())
-            .mul(Vector3::x())
-            .pitch(self.conditions.shooter_pitch() + self.muzzle_pitch())
-            .yaw(self.conditions.azimuth())
     }
 }
