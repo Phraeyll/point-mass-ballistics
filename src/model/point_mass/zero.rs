@@ -1,10 +1,10 @@
 use approx::relative_eq;
 
-use crate::util::{conversions::*, Numeric, FRAC_PI_4,};
+use crate::util::{conversions::*, Numeric, FRAC_PI_4};
 
 impl<'mc> super::Simulation<'mc> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
+    pub fn zero(&mut self, zero_distance: Length) -> Result<Numeric, String> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: Numeric = FRAC_PI_4;
         // Start with maximum angle to allow for zeroing at longer distances
@@ -13,10 +13,16 @@ impl<'mc> super::Simulation<'mc> {
             let last_muzzle_pitch: Numeric = self.muzzle_pitch;
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
-                break Err("Can never 'zero' at this range");
+                break Err(format!(
+                    "Can never 'zero' at this range: {}",
+                    Numeric::from(zero_distance)
+                ));
             }
             if self.muzzle_pitch == last_muzzle_pitch {
-                break Err("Issue with floating points, angle not changing during 'zero'");
+                break Err(format!(
+                    "Issue with floating points, angle: {} not changing during 'zero'",
+                    last_muzzle_pitch
+                ));
             }
             // Find drop at distance, need way to break if we never zero_distance
             let drop = self
