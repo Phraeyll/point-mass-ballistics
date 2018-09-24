@@ -16,7 +16,6 @@ pub struct Unconditional {
     caliber: Length,                          // Caliber (inches)
     bc: BallisticCoefficient,                 // Ballistic Coefficient
     pub(crate) drag_table: FloatMap<Numeric>, // Drag Function DragTable
-    pub(crate) time_step: Time,               // Timestep for simulation (s)
     pub(crate) muzzle_velocity: Velocity,     // Initial velocity (ft/s)
     scope_height: Length,                     // Scope Height (inches)
 }
@@ -25,7 +24,6 @@ impl Unconditional {
         weight: Numeric,
         caliber: Numeric,
         bc: BallisticCoefficient,
-        time_step: Numeric,
         muzzle_velocity: Numeric,
         scope_height: Numeric,
     ) -> Self {
@@ -34,7 +32,6 @@ impl Unconditional {
             caliber: Length::Inches(caliber),
             bc,
             drag_table: bc.table(),
-            time_step: Time::Seconds(time_step),
             muzzle_velocity: Velocity::Fps(muzzle_velocity),
             scope_height: Length::Inches(scope_height),
         }

@@ -47,7 +47,7 @@ impl<'p> Iterator for IterSimulation<'p> {
         // Would like a better method perhaps?
         let (time, position, velocity) = (self.time, self.position, self.velocity);
         // Unwrap time
-        let time_step = Numeric::from(self.simulation.params.time_step.to_seconds());
+        let time_step = Numeric::from(self.simulation.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
         let acceleration = self.drag_force() / self.simulation.params.mass()
             + self.simulation.conditions.gravity()

@@ -22,23 +22,26 @@ pub struct Simulator<'mzs> {
     pub params: &'mzs model::point_mass::params::Unconditional, // Model variables, mostly projectile properties
     pub zero_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used to find zero angle (muzzle_pitch)
     pub solve_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used for dialing, drop tables, etc.
+    pub time_step: Numeric,
 }
 impl<'mzs> Simulator<'mzs> {
     pub fn new(
         params: &'mzs model::point_mass::params::Unconditional,
         zero_conditions: &'mzs model::point_mass::params::Conditional,
         solve_conditions: &'mzs model::point_mass::params::Conditional,
+        time_step: Numeric,
     ) -> Self {
         Self {
             params,
             zero_conditions,
             solve_conditions,
+            time_step,
         }
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     fn zero_simulation(&self) -> model::point_mass::Simulation {
-        model::point_mass::Simulation::new(&self.params, &self.zero_conditions, 0.0)
+        model::point_mass::Simulation::new(&self.params, &self.zero_conditions, 0.0, self.time_step)
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
@@ -51,6 +54,7 @@ impl<'mzs> Simulator<'mzs> {
                 Ok(muzzle_pitch) => muzzle_pitch,
                 Err(err) => panic!(err),
             },
+            self.time_step,
         )
     }
     // Produce a drop table using specified range and step size
