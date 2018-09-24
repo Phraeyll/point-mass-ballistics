@@ -50,7 +50,7 @@ impl<'p> Iterator for IterSimulation<'p> {
         let time_step = Numeric::from(self.simulation.params.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
         let acceleration = self.drag_force() / self.simulation.params.mass()
-            + self.simulation.conditions.gravity
+            + self.simulation.conditions.gravity()
             + self.coriolis_acceleration();
         // Increment position in time
         self.time += time_step;

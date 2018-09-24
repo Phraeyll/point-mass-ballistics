@@ -12,13 +12,13 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 
 pub struct UnConditional {
-    weight: WeightMass,                // Weight (grains)
-    caliber: Length,                   // Caliber (inches)
-    bc: BallisticCoefficient,          // Ballistic Coefficient
-    pub drag_table: FloatMap<Numeric>, // Drag Function DragTable
-    pub time_step: Time,               // Timestep for simulation (s)
-    pub muzzle_velocity: Velocity,     // Initial velocity (ft/s)
-    scope_height: Length,              // Scope Height (inches)
+    weight: WeightMass,                       // Weight (grains)
+    caliber: Length,                          // Caliber (inches)
+    bc: BallisticCoefficient,                 // Ballistic Coefficient
+    pub(crate) drag_table: FloatMap<Numeric>, // Drag Function DragTable
+    pub(crate) time_step: Time,               // Timestep for simulation (s)
+    pub(crate) muzzle_velocity: Velocity,     // Initial velocity (ft/s)
+    scope_height: Length,                     // Scope Height (inches)
 }
 impl UnConditional {
     pub fn new(
@@ -66,15 +66,15 @@ impl UnConditional {
 
 // Environmental Conditions and other varialbe for simulation
 pub struct Conditional {
-    pub temperature: Temperature,  // Temperature (F)
-    pub pressure: Pressure,        // Pressure (InHg)
-    pub humidity: Numeric,         // Humidity (0-1)
-    pub gravity: Vector3<Numeric>, // Gravity (m/s^2)
-    pub wind_velocity: Velocity,   // Wind Velocity (miles/hour)
-    pub wind_yaw: Numeric,         // Wind Angle (degrees)
-    pub shooter_pitch: Numeric,    // Line of Sight angle (degrees)
-    pub azimuth: Numeric,          // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub lattitude: Numeric,        // Lattitude (Coriolis/Eotvos Effect)
+    temperature: Temperature, // Temperature (F)
+    pressure: Pressure,       // Pressure (InHg)
+    humidity: Numeric,        // Humidity (0-1)
+    gravity: Numeric,         // Gravity (m/s^2)
+    wind_velocity: Velocity,  // Wind Velocity (miles/hour)
+    wind_yaw: Numeric,        // Wind Angle (degrees)
+    shooter_pitch: Numeric,   // Line of Sight angle (degrees)
+    azimuth: Numeric,         // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    lattitude: Numeric,       // Lattitude (Coriolis/Eotvos Effect)
 }
 impl Conditional {
     pub fn new(
@@ -86,18 +86,25 @@ impl Conditional {
         shooter_pitch: Numeric,
         lattitude: Numeric,
         azimuth: Numeric,
+        gravity: Option<Numeric>,
     ) -> Self {
         Self {
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
-            gravity: GRAVITY * Vector3::y(),
+            gravity: match gravity {
+                Some(gravity) => gravity,
+                None => GRAVITY,
+            },
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
             shooter_pitch,
             lattitude,
             azimuth,
         }
+    }
+    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
+        self.gravity * Vector3::y()
     }
     pub(crate) fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()
