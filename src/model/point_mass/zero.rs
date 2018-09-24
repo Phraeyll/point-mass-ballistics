@@ -20,8 +20,9 @@ impl<'mc> super::Simulation<'mc> {
             }
             if self.muzzle_pitch == last_muzzle_pitch {
                 break Err(format!(
-                    "Issue with floating points, angle: {} not changing during 'zero'",
-                    last_muzzle_pitch
+                    "Issue with floating points, pitch: {} by angle: {} not changing during 'zero'",
+                    last_muzzle_pitch,
+                    angle,
                 ));
             }
             // Find drop at distance, need way to break if we never zero_distance
