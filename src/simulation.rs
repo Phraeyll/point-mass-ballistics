@@ -19,13 +19,13 @@ impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
 }
 
 pub struct Simulator<'mzs> {
-    pub params: &'mzs model::point_mass::params::UnConditional, // Model variables, mostly projectile properties
+    pub params: &'mzs model::point_mass::params::Unconditional, // Model variables, mostly projectile properties
     pub zero_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used to find zero angle (muzzle_pitch)
     pub solve_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used for dialing, drop tables, etc.
 }
 impl<'mzs> Simulator<'mzs> {
     pub fn new(
-        params: &'mzs model::point_mass::params::UnConditional,
+        params: &'mzs model::point_mass::params::Unconditional,
         zero_conditions: &'mzs model::point_mass::params::Conditional,
         solve_conditions: &'mzs model::point_mass::params::Conditional,
     ) -> Self {

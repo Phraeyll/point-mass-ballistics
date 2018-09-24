@@ -11,7 +11,7 @@ const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 
-pub struct UnConditional {
+pub struct Unconditional {
     weight: WeightMass,                       // Weight (grains)
     caliber: Length,                          // Caliber (inches)
     bc: BallisticCoefficient,                 // Ballistic Coefficient
@@ -20,7 +20,7 @@ pub struct UnConditional {
     pub(crate) muzzle_velocity: Velocity,     // Initial velocity (ft/s)
     scope_height: Length,                     // Scope Height (inches)
 }
-impl UnConditional {
+impl Unconditional {
     pub fn new(
         weight: Numeric,
         caliber: Numeric,
