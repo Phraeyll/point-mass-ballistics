@@ -1,5 +1,5 @@
-use nalgebra::{Rotation3, Vector3};
 use super::*;
+use nalgebra::{Rotation3, Vector3};
 
 pub trait PitchYawRoll {
     fn pitch(&self, angle: Numeric) -> Self;
