@@ -1,6 +1,6 @@
 pub use self::BallisticCoefficient::*;
 
-use crate::util::{Numeric, FloatMap};
+use crate::util::{FloatMap, Numeric};
 
 mod g1;
 mod g2;

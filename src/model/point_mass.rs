@@ -1,0 +1,78 @@
+pub use self::dragtables::BallisticCoefficient;
+
+use approx::relative_eq;
+use nalgebra::Vector3;
+
+use crate::util::*;
+
+use std::ops::Mul;
+
+mod dragtables;
+pub mod iter;
+pub mod params;
+
+pub struct Simulation<'mc> {
+    params: &'mc params::UnConditional,
+    conditions: &'mc params::Conditional,
+    muzzle_pitch: Numeric,
+}
+impl<'mc> Simulation<'mc> {
+    pub fn new(
+        params: &'mc params::UnConditional,
+        conditions: &'mc params::Conditional,
+        muzzle_pitch: Numeric,
+    ) -> Self {
+        Self {
+            params,
+            conditions,
+            muzzle_pitch,
+        }
+    }
+    // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
+    pub fn zero(&mut self, zero_distance: Length) -> Result<Numeric, &'static str> {
+        // This angle will trace the longest possible trajectory for a projectile (45 degrees)
+        const MAX_ANGLE: Numeric = FRAC_PI_4;
+        // Start with maximum angle to allow for zeroing at longer distances
+        let mut angle = MAX_ANGLE;
+        loop {
+            let last_muzzle_pitch: Numeric = self.muzzle_pitch;
+            self.muzzle_pitch += angle;
+            if self.muzzle_pitch > MAX_ANGLE {
+                break Err("Can never 'zero' at this range");
+            }
+            if self.muzzle_pitch == last_muzzle_pitch {
+                break Err("Issue with floating points, angle not changing during 'zero'");
+            }
+            // Find drop at distance, need way to break if we never zero_distance
+            let drop = self
+                .iter()
+                .find(|p| p.relative_position().x > Numeric::from(zero_distance.to_meters()))
+                .unwrap()
+                .relative_position()
+                .y;
+            // Quit once zero point is found, once drop is equal to zero
+            if relative_eq!(drop, 0.0) {
+                break Ok(self.muzzle_pitch);
+            }
+            // If in the following states (xor), change direction by flipping angle sign
+            // true, false || false, true
+            // up,   above || down,  below
+            if angle.is_sign_positive() ^ drop.is_sign_negative() {
+                angle *= -1.0;
+            }
+            // Reduce angle before next iteration, trying to converge on zero point
+            angle /= 2.0;
+        }
+    }
+    pub fn muzzle_pitch(&self) -> Numeric {
+        self.muzzle_pitch.to_radians()
+    }
+    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
+    // Start with velocity value along X unit vector
+    fn initial_velocity_vector(&self) -> Vector3<Numeric> {
+        Numeric::from(self.params.muzzle_velocity.to_mps())
+            .mul(Vector3::x())
+            .pitch(self.conditions.shooter_pitch() + self.muzzle_pitch())
+            .yaw(self.conditions.azimuth())
+    }
+}
