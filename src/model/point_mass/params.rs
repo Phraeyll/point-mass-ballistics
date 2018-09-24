@@ -49,7 +49,7 @@ impl Unconditional {
         self.weight.to_kgs().into()
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    pub(crate) fn sd(&self) -> Numeric {
+    fn sd(&self) -> Numeric {
         Numeric::from(self.weight.to_lbs()) / Numeric::from(self.caliber.to_inches()).powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
@@ -111,7 +111,7 @@ impl Conditional {
     }
     // Negative indicates 90 degree wind is from east=>west
     // 0 degree wind is from north=>south (conventional)
-    pub(crate) fn wind_yaw(&self) -> Numeric {
+    fn wind_yaw(&self) -> Numeric {
         -(self.wind_yaw.to_radians() - PI)
     }
     // Flip, since circle functions rotate counter-clockwise,
@@ -127,7 +127,7 @@ impl Conditional {
             .yaw(self.wind_yaw() + self.azimuth())
     }
     // Density of air, using pressure, humidity, and temperature
-    pub fn rho(&self) -> Numeric {
+    pub(crate) fn rho(&self) -> Numeric {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
     }
     // Speed of sound at given air density and pressure
