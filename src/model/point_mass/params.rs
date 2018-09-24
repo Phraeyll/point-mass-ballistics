@@ -69,7 +69,7 @@ pub struct Conditional {
     temperature: Temperature, // Temperature (F)
     pressure: Pressure,       // Pressure (InHg)
     humidity: Numeric,        // Humidity (0-1)
-    gravity: Numeric,         // Gravity (m/s^2)
+    gravity: Acceleration,         // Gravity (m/s^2)
     wind_velocity: Velocity,  // Wind Velocity (miles/hour)
     wind_yaw: Numeric,        // Wind Angle (degrees)
     shooter_pitch: Numeric,   // Line of Sight angle (degrees)
@@ -93,8 +93,8 @@ impl Conditional {
             pressure: Pressure::Inhg(pressure),
             humidity,
             gravity: match gravity {
-                Some(gravity) => gravity,
-                None => GRAVITY,
+                Some(gravity) => Acceleration::Fps2(gravity),
+                None => Acceleration::Mps2(GRAVITY),
             },
             wind_velocity: Velocity::Mph(wind_velocity),
             wind_yaw: wind_yaw,
@@ -104,7 +104,7 @@ impl Conditional {
         }
     }
     pub(crate) fn gravity(&self) -> Vector3<Numeric> {
-        self.gravity * Vector3::y()
+       Numeric::from(self.gravity.to_mps2()) * Vector3::y()
     }
     pub(crate) fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()
