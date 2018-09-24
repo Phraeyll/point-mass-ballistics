@@ -1,5 +1,3 @@
-pub use super::dragtables::BallisticCoefficient;
-
 use approx::relative_eq;
 
 use crate::util::{conversions::*, Numeric, FRAC_PI_4,};
