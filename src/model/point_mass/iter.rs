@@ -108,7 +108,6 @@ impl<'p> IterSimulation<'p> {
             * self.vv().norm()
     }
 }
-
 impl<'p> IntoIterator for &'p super::Simulation<'p> {
     type Item = <IterSimulation<'p> as Iterator>::Item;
     type IntoIter = IterSimulation<'p>;

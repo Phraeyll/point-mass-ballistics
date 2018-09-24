@@ -9,13 +9,13 @@ my_type!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 
-pub use self::btreemap_wrapper::*;
 pub use self::conversions::*;
+pub use self::float_map::*;
 pub use self::iter_adaptors::*;
 pub use self::nalgebra_helpers::*;
 
 #[macro_use]
-mod btreemap_wrapper;
+mod float_map;
 mod conversions;
 mod iter_adaptors;
 mod nalgebra_helpers;
