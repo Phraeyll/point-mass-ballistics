@@ -15,7 +15,7 @@ pub use self::iter_adaptors::*;
 pub use self::nalgebra_helpers::*;
 
 #[macro_use]
-mod float_map;
-mod conversions;
-mod iter_adaptors;
-mod nalgebra_helpers;
+pub mod float_map;
+pub mod conversions;
+pub mod iter_adaptors;
+pub mod nalgebra_helpers;

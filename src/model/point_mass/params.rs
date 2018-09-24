@@ -40,26 +40,26 @@ impl UnConditional {
         }
     }
     // Radius of projectile cross section in meters
-    pub fn radius(&self) -> Numeric {
+    pub(crate) fn radius(&self) -> Numeric {
         Numeric::from(self.caliber.to_meters()) / 2.0
     }
     // Area of projectile in meters, used during drag force calculation
-    pub fn area(&self) -> Numeric {
+    pub(crate) fn area(&self) -> Numeric {
         PI * self.radius().powf(2.0)
     }
     // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
-    pub fn mass(&self) -> Numeric {
+    pub(crate) fn mass(&self) -> Numeric {
         self.weight.to_kgs().into()
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    pub fn sd(&self) -> Numeric {
+    pub(crate) fn sd(&self) -> Numeric {
         Numeric::from(self.weight.to_lbs()) / Numeric::from(self.caliber.to_inches()).powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
-    pub fn i(&self) -> Numeric {
+    pub(crate) fn i(&self) -> Numeric {
         self.sd() / Numeric::from(self.bc)
     }
-    pub fn scope_height(&self) -> Vector3<Numeric> {
+    pub(crate) fn scope_height(&self) -> Vector3<Numeric> {
         Numeric::from(self.scope_height.to_meters()) * Vector3::y()
     }
 }
@@ -99,25 +99,25 @@ impl Conditional {
             azimuth,
         }
     }
-    pub fn lattitude(&self) -> Numeric {
+    pub(crate) fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()
     }
-    pub fn shooter_pitch(&self) -> Numeric {
+    pub(crate) fn shooter_pitch(&self) -> Numeric {
         self.shooter_pitch.to_radians()
     }
     // Negative indicates 90 degree wind is from east=>west
     // 0 degree wind is from north=>south (conventional)
-    pub fn wind_yaw(&self) -> Numeric {
+    pub(crate) fn wind_yaw(&self) -> Numeric {
         -(self.wind_yaw.to_radians() - PI)
     }
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
-    pub fn azimuth(&self) -> Numeric {
+    pub(crate) fn azimuth(&self) -> Numeric {
         -self.azimuth.to_radians()
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
-    pub fn wind_velocity(&self) -> Vector3<Numeric> {
+    pub(crate) fn wind_velocity(&self) -> Vector3<Numeric> {
         Numeric::from(self.wind_velocity.to_mps())
             .mul(Vector3::x())
             .yaw(self.wind_yaw() + self.azimuth())
@@ -127,7 +127,7 @@ impl Conditional {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
     }
     // Speed of sound at given air density and pressure
-    pub fn c(&self) -> Numeric {
+    pub(crate) fn c(&self) -> Numeric {
         (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation

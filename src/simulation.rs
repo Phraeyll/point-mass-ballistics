@@ -1,3 +1,5 @@
+pub use crate::model::BallisticCoefficient;
+
 use ordered_float::OrderedFloat;
 
 use crate::{model, model::point_mass::iter::Output, util::*};
