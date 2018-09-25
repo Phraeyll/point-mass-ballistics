@@ -1,3 +1,5 @@
+#![feature(tool_lints)]
+#![feature(stmt_expr_attributes)]
 #[macro_use]
 mod util;
 

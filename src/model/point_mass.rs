@@ -4,6 +4,7 @@ use crate::util::{conversions::*, Numeric};
 
 pub mod params;
 pub(crate) mod iter;
+#[allow(clippy::float_cmp)]
 pub(crate) mod zero;
 mod dragtables;
 
