@@ -7,14 +7,14 @@ pub(crate) mod iter;
 pub(crate) mod zero;
 mod dragtables;
 
-pub struct Simulation<'mc> {
+pub(crate) struct Simulation<'mc> {
     params: &'mc params::Unconditional,
     conditions: &'mc params::Conditional,
     muzzle_pitch: Numeric,
-    time_step: Time,               // Timestep for simulation (s)
+    time_step: Time,
 }
 impl<'mc> Simulation<'mc> {
-    pub fn new(
+    pub(crate) fn new(
         params: &'mc params::Unconditional,
         conditions: &'mc params::Conditional,
         muzzle_pitch: Numeric,

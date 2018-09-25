@@ -4,7 +4,7 @@ use crate::util::{conversions::*, Numeric, FRAC_PI_4};
 
 impl<'mc> super::Simulation<'mc> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub fn zero(&mut self, zero_distance: Length) -> Result<Numeric, String> {
+    pub(crate) fn zero(&mut self, zero_distance: Length) -> Result<Numeric, String> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: Numeric = FRAC_PI_4;
         // Start with maximum angle to allow for zeroing at longer distances
