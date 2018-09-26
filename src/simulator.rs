@@ -23,7 +23,7 @@ pub struct SimulatorConditions {
     atmosphere: params::Atmosphere,
     conditions: params::Conditions,
 }
-impl<'wac> SimulatorConditions {
+impl SimulatorConditions {
     pub fn new(
         wind: params::Wind,
         atmosphere: params::Atmosphere,
