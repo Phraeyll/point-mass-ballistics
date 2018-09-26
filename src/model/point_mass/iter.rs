@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 
 use crate::util::*;
 
-use std::ops::{Mul, Sub};
+use std::ops::Sub;
 
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
@@ -13,20 +13,22 @@ impl<'mc> super::Simulation<'mc> {
         IterSimulation {
             simulation: self,
             position: Vector3::zeros(),
-            velocity: self.initial_velocity_vector(),
+            velocity: self.muzzle_velocity_vector(),
             time: 0.0,
         }
     }
-    fn muzzle_pitch(&self) -> Numeric {
-        self.muzzle_pitch.to_radians()
-    }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
-    fn initial_velocity_vector(&self) -> Vector3<Numeric> {
-        Numeric::from(self.params.muzzle_velocity.to_mps())
-            .mul(Vector3::x())
-            .pitch(self.conditions.shooter_pitch() + self.muzzle_pitch())
+    fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
+        self.projectile.velocity()
+            .pitch(self.conditions.line_of_sight() + self.muzzle_pitch())
             .yaw(self.conditions.azimuth())
+    }
+    // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
+    // factor, wind_pitch, to consider vertical wind components
+    fn wind_velocity_vector(&self) -> Vector3<Numeric> {
+        self.wind.velocity()
+            .yaw(self.wind.yaw() + self.conditions.azimuth())
     }
 }
 
@@ -49,7 +51,7 @@ impl<'p> Iterator for IterSimulation<'p> {
         // Unwrap time
         let time_step = Numeric::from(self.simulation.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
-        let acceleration = self.drag_force() / self.simulation.params.mass()
+        let acceleration = self.drag_force() / self.simulation.projectile.mass()
             + self.simulation.conditions.gravity()
             + self.coriolis_acceleration();
         // Increment position in time
@@ -68,41 +70,34 @@ impl<'p> Iterator for IterSimulation<'p> {
     }
 }
 impl<'p> IterSimulation<'p> {
-    // Angular velocity vector of earth, at current lattitude
-    // Can be thought of as vector pointing along y axis from center of earth, rolled along
-    // lines of lattitude, as represented here now
-    fn omega(&self) -> Vector3<Numeric> {
-        ANGULAR_VELOCITY_EARTH
-            .mul(Vector3::x())
-            .pitch(self.simulation.conditions.lattitude())
-    }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
-    // This drift is always right (+z) in the northern hemisphere, regardless of initial bearing
-    // This drive is always left (-z) in the southern hemisphere, regardless of initial bearing
+    // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
+    // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
     // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
-    // Bearing East results in higher elevation (+y), bearing West results in lower elevation (-y)
+    // Bearing East results in higher elevation (+y absolute/relative)
+    // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        -2.0 * self.omega().cross(&self.velocity)
+        -2.0 * ANGULAR_VELOCITY_EARTH * self.simulation.conditions.omega().cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
-        self.velocity.norm() / self.simulation.conditions.c()
+        self.velocity.norm() / self.simulation.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation.params.drag_table.lerp(self.mach()) * self.simulation.params.i()
+        self.simulation.projectile.drag_table.lerp(self.mach()) * self.simulation.projectile.i()
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
-        self.velocity - self.simulation.conditions.wind_velocity()
+        self.velocity - self.simulation.wind_velocity_vector()
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
     fn drag_force(&self) -> Vector3<Numeric> {
-        -0.5 * self.simulation.conditions.rho()
-            * self.simulation.params.area()
+        -0.5 * self.simulation.atmosphere.rho()
+            * self.simulation.projectile.area()
             * self.cd()
             * self.vv()
             * self.vv().norm()
@@ -136,8 +131,8 @@ impl<'p> Projectile<'p> {
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
             .yaw(-self.simulation.conditions.azimuth())
-            .pitch(-self.simulation.conditions.shooter_pitch())
-            .sub(self.simulation.params.scope_height())
+            .pitch(-self.simulation.conditions.line_of_sight())
+            .sub(self.simulation.scope.height())
     }
 }
 
@@ -161,7 +156,7 @@ impl<'p> Output for Projectile<'p> {
     }
     fn energy(&self) -> Numeric {
         Numeric::from(
-            Energy::Joules(self.simulation.params.mass() * self.velocity.norm().powf(2.0) / 2.0)
+            Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
                 .to_ftlbs(),
         )
     }

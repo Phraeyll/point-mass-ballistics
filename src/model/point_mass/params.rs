@@ -3,37 +3,32 @@ use nalgebra::Vector3;
 
 use crate::util::*;
 
-use std::ops::Mul;
-
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 
-pub struct Unconditional {
+pub struct Projectile {
     weight: WeightMass,                       // Weight (grains)
     caliber: Length,                          // Caliber (inches)
     bc: BallisticCoefficient,                 // Ballistic Coefficient
     pub(crate) drag_table: FloatMap<Numeric>, // Drag Function DragTable
-    pub(crate) muzzle_velocity: Velocity,     // Initial velocity (ft/s)
-    scope_height: Length,                     // Scope Height (inches)
+    pub(crate) velocity: Velocity,            // Initial velocity (ft/s)
 }
-impl Unconditional {
+impl Projectile {
     pub fn new(
         weight: Numeric,
         caliber: Numeric,
         bc: BallisticCoefficient,
-        muzzle_velocity: Numeric,
-        scope_height: Numeric,
+        velocity: Numeric,
     ) -> Self {
         Self {
             weight: WeightMass::Grains(weight),
             caliber: Length::Inches(caliber),
             bc,
             drag_table: bc.table(),
-            muzzle_velocity: Velocity::Fps(muzzle_velocity),
-            scope_height: Length::Inches(scope_height),
+            velocity: Velocity::Fps(velocity),
         }
     }
     // Radius of projectile cross section in meters
@@ -56,82 +51,66 @@ impl Unconditional {
     pub(crate) fn i(&self) -> Numeric {
         self.sd() / Numeric::from(self.bc)
     }
-    pub(crate) fn scope_height(&self) -> Vector3<Numeric> {
-        Numeric::from(self.scope_height.to_meters()) * Vector3::y()
+    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
+        Numeric::from(self.velocity.to_mps()) * Vector3::x()
+    }
+}
+
+pub struct Scope {
+    height: Length, // Scope Height (inches)
+}
+impl Scope {
+    pub fn new(height: Numeric) -> Self {
+        Self {
+            height: Length::Inches(height),
+        }
+    }
+    pub(crate) fn height(&self) -> Vector3<Numeric> {
+        Numeric::from(self.height.to_meters()) * Vector3::y()
+    }
+}
+
+pub struct Wind {
+    velocity: Velocity, // Wind Velocity (miles/hour)
+    yaw: Numeric,       // Wind Angle (degrees)
+}
+impl Wind {
+    pub fn new(velocity: Numeric, yaw: Numeric) -> Self {
+        Self {
+            velocity: Velocity::Mph(velocity),
+            yaw: yaw,
+        }
+    }
+    // Negative indicates 90 degree wind is from east=>west
+    // 0 degree wind is from north=>south (conventional)
+    pub(crate) fn yaw(&self) -> Numeric {
+        -(self.yaw.to_radians() - PI)
+    }
+    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
+        Numeric::from(self.velocity.to_mps()) * Vector3::x()
     }
 }
 
 // Environmental Conditions and other varialbe for simulation
-pub struct Conditional {
+pub struct Atmosphere {
     temperature: Temperature, // Temperature (F)
     pressure: Pressure,       // Pressure (InHg)
     humidity: Numeric,        // Humidity (0-1)
-    wind_velocity: Velocity,  // Wind Velocity (miles/hour)
-    wind_yaw: Numeric,        // Wind Angle (degrees)
-    shooter_pitch: Numeric,   // Line of Sight angle (degrees)
-    azimuth: Numeric,         // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    lattitude: Numeric,       // Lattitude (Coriolis/Eotvos Effect)
-    gravity: Acceleration,    // Gravity (m/s^2)
 }
-impl Conditional {
-    pub fn new(
-        wind_velocity: Numeric,
-        wind_yaw: Numeric,
-        temperature: Numeric,
-        pressure: Numeric,
-        humidity: Numeric,
-        shooter_pitch: Numeric,
-        lattitude: Numeric,
-        azimuth: Numeric,
-        gravity: Option<Numeric>,
-    ) -> Self {
+impl Atmosphere {
+    pub fn new(temperature: Numeric, pressure: Numeric, humidity: Numeric) -> Self {
         Self {
             temperature: Temperature::F(temperature),
             pressure: Pressure::Inhg(pressure),
             humidity,
-            gravity: match gravity {
-                Some(gravity) => Acceleration::Fps2(gravity),
-                None => Acceleration::Mps2(GRAVITY),
-            },
-            wind_velocity: Velocity::Mph(wind_velocity),
-            wind_yaw: wind_yaw,
-            shooter_pitch,
-            lattitude,
-            azimuth,
         }
-    }
-    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
-        Numeric::from(self.gravity.to_mps2()) * Vector3::y()
-    }
-    pub(crate) fn lattitude(&self) -> Numeric {
-        self.lattitude.to_radians()
-    }
-    pub(crate) fn shooter_pitch(&self) -> Numeric {
-        self.shooter_pitch.to_radians()
-    }
-    // Negative indicates 90 degree wind is from east=>west
-    // 0 degree wind is from north=>south (conventional)
-    fn wind_yaw(&self) -> Numeric {
-        -(self.wind_yaw.to_radians() - PI)
-    }
-    // Flip, since circle functions rotate counter-clockwise,
-    // 90 degrees is east by compass bearing, but west(left) in trig
-    pub(crate) fn azimuth(&self) -> Numeric {
-        -self.azimuth.to_radians()
-    }
-    // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
-    // factor, wind_pitch, to consider vertical wind components
-    pub(crate) fn wind_velocity(&self) -> Vector3<Numeric> {
-        Numeric::from(self.wind_velocity.to_mps())
-            .mul(Vector3::x())
-            .yaw(self.wind_yaw() + self.azimuth())
     }
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> Numeric {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
     }
     // Speed of sound at given air density and pressure
-    pub(crate) fn c(&self) -> Numeric {
+    pub(crate) fn speed_of_sound(&self) -> Numeric {
         (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
@@ -156,5 +135,51 @@ impl Conditional {
     // Temperature in kelvin
     fn kelvin(&self) -> Numeric {
         Numeric::from(self.temperature.to_kelvin())
+    }
+}
+
+pub struct Conditions {
+    line_of_sight: Numeric, // Line of Sight angle (degrees)
+    azimuth: Numeric,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    lattitude: Numeric,     // Lattitude (Coriolis/Eotvos Effect)
+    gravity: Acceleration,  // Gravity (m/s^2)
+}
+impl Conditions {
+    pub fn new(
+        line_of_sight: Numeric,
+        lattitude: Numeric,
+        azimuth: Numeric,
+        gravity: Option<Numeric>,
+    ) -> Self {
+        Self {
+            gravity: match gravity {
+                Some(gravity) => Acceleration::Fps2(gravity),
+                None => Acceleration::Mps2(GRAVITY),
+            },
+            line_of_sight,
+            lattitude,
+            azimuth,
+        }
+    }
+    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
+        Numeric::from(self.gravity.to_mps2()) * Vector3::y()
+    }
+    fn lattitude(&self) -> Numeric {
+        self.lattitude.to_radians()
+    }
+    pub(crate) fn line_of_sight(&self) -> Numeric {
+        self.line_of_sight.to_radians()
+    }
+    // Flip, since circle functions rotate counter-clockwise,
+    // 90 degrees is east by compass bearing, but west(left) in trig
+    pub(crate) fn azimuth(&self) -> Numeric {
+        -self.azimuth.to_radians()
+    }
+    // Angular velocity vector of earth, at current lattitude
+    // Can be thought of as vector pointing along y axis from center of earth, rolled along
+    // lines of lattitude, as represented here now
+    pub(crate) fn omega(&self) -> Vector3<Numeric> {
+            Vector3::x()
+            .pitch(self.lattitude())
     }
 }

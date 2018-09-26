@@ -2,7 +2,7 @@ pub use crate::model::BallisticCoefficient;
 
 use ordered_float::OrderedFloat;
 
-use crate::{model, model::point_mass::iter::Output, util::*};
+use crate::{model, model::point_mass::iter::Output, model::point_mass::params, util::*};
 
 use std::iter::FromIterator;
 
@@ -18,21 +18,42 @@ impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
     }
 }
 
+pub struct SimulatorConditions {
+    wind: params::Wind,
+    atmosphere: params::Atmosphere,
+    conditions: params::Conditions,
+}
+impl<'wac> SimulatorConditions {
+    pub fn new(
+        wind: params::Wind,
+        atmosphere: params::Atmosphere,
+        conditions: params::Conditions,
+    ) -> Self {
+        Self {
+            wind,
+            atmosphere,
+            conditions,
+        }
+    }
+}
 pub struct Simulator<'mzs> {
-    pub params: &'mzs model::point_mass::params::Unconditional, // Model variables, mostly projectile properties
-    pub zero_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used to find zero angle (muzzle_pitch)
-    pub solve_conditions: &'mzs model::point_mass::params::Conditional, // Conditions used for dialing, drop tables, etc.
+    pub projectile: &'mzs params::Projectile, // Model variables, mostly projectile properties
+    pub scope: &'mzs params::Scope,           // Model variables, mostly projectile properties
+    pub zero_conditions: SimulatorConditions,
+    pub solve_conditions: SimulatorConditions,
     pub time_step: Numeric,
 }
 impl<'mzs> Simulator<'mzs> {
     pub fn new(
-        params: &'mzs model::point_mass::params::Unconditional,
-        zero_conditions: &'mzs model::point_mass::params::Conditional,
-        solve_conditions: &'mzs model::point_mass::params::Conditional,
+        projectile: &'mzs params::Projectile,
+        scope: &'mzs params::Scope,
+        zero_conditions: SimulatorConditions,
+        solve_conditions: SimulatorConditions,
         time_step: Numeric,
     ) -> Self {
         Self {
-            params,
+            projectile,
+            scope,
             zero_conditions,
             solve_conditions,
             time_step,
@@ -41,15 +62,26 @@ impl<'mzs> Simulator<'mzs> {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     fn zero_simulation(&self) -> model::point_mass::Simulation {
-        model::point_mass::Simulation::new(&self.params, &self.zero_conditions, 0.0, self.time_step)
+        model::point_mass::Simulation::new(
+            &self.projectile,
+            &self.scope,
+            &self.zero_conditions.wind,
+            &self.zero_conditions.atmosphere,
+            &self.zero_conditions.conditions,
+            0.0,
+            self.time_step,
+        )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
     fn solution_simulation(&self, zero_distance: Length) -> model::point_mass::Simulation {
         model::point_mass::Simulation::new(
-            &self.params,
-            &self.solve_conditions,
+            &self.projectile,
+            &self.scope,
+            &self.solve_conditions.wind,
+            &self.solve_conditions.atmosphere,
+            &self.solve_conditions.conditions,
             match self.zero_simulation().zero(zero_distance) {
                 Ok(muzzle_pitch) => muzzle_pitch,
                 Err(err) => panic!(err),
