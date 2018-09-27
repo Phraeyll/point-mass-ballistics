@@ -4,8 +4,6 @@ use crate::util::*;
 
 use std::ops::Sub;
 
-const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
-
 // Create an new iterator over Simulation
 impl<'mc> super::Simulation<'mc> {
     // Create an iterator over the simulation model and conditions, starting with initial velocity
@@ -77,7 +75,7 @@ impl<'p> IterSimulation<'p> {
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        -2.0 * ANGULAR_VELOCITY_EARTH * self.simulation.conditions.omega().cross(&self.velocity)
+        -2.0 * self.simulation.conditions.omega().cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {

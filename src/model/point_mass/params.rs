@@ -3,11 +3,14 @@ use nalgebra::Vector3;
 
 use crate::util::*;
 
+use std::ops::Mul;
+
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
+const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
 pub struct Projectile {
     weight: WeightMass,                       // Weight (grains)
@@ -179,7 +182,8 @@ impl Conditions {
     // Can be thought of as vector pointing along y axis from center of earth, rolled along
     // lines of lattitude, as represented here now
     pub(crate) fn omega(&self) -> Vector3<Numeric> {
-            Vector3::x()
+            ANGULAR_VELOCITY_EARTH
+            .mul(Vector3::x())
             .pitch(self.lattitude())
     }
 }

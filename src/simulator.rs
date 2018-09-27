@@ -39,16 +39,16 @@ impl SimulatorConditions {
 pub struct Simulator<'mzs> {
     pub projectile: &'mzs params::Projectile, // Model variables, mostly projectile properties
     pub scope: &'mzs params::Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: SimulatorConditions,
-    pub solve_conditions: SimulatorConditions,
+    pub zero_conditions: &'mzs SimulatorConditions,
+    pub solve_conditions: &'mzs SimulatorConditions,
     pub time_step: Numeric,
 }
 impl<'mzs> Simulator<'mzs> {
     pub fn new(
         projectile: &'mzs params::Projectile,
         scope: &'mzs params::Scope,
-        zero_conditions: SimulatorConditions,
-        solve_conditions: SimulatorConditions,
+        zero_conditions: &'mzs SimulatorConditions,
+        solve_conditions: &'mzs SimulatorConditions,
         time_step: Numeric,
     ) -> Self {
         Self {
