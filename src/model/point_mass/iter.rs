@@ -18,14 +18,16 @@ impl<'mc> super::Simulation<'mc> {
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
-        self.projectile.velocity()
+        self.projectile
+            .velocity()
             .pitch(self.conditions.line_of_sight() + self.muzzle_pitch())
             .yaw(self.conditions.azimuth())
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
     fn wind_velocity_vector(&self) -> Vector3<Numeric> {
-        self.wind.velocity()
+        self.wind
+            .velocity()
             .yaw(self.wind.yaw() + self.conditions.azimuth())
     }
 }
@@ -154,8 +156,10 @@ impl<'p> Output for Projectile<'p> {
     }
     fn energy(&self) -> Numeric {
         Numeric::from(
-            Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
-                .to_ftlbs(),
+            Energy::Joules(
+                self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0,
+            )
+            .to_ftlbs(),
         )
     }
     // Positions relative to line of sight (shooter_pitch)

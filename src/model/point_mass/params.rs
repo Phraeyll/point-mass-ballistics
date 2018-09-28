@@ -182,7 +182,7 @@ impl Conditions {
     // Can be thought of as vector pointing along y axis from center of earth, rolled along
     // lines of lattitude, as represented here now
     pub(crate) fn omega(&self) -> Vector3<Numeric> {
-            ANGULAR_VELOCITY_EARTH
+        ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
             .pitch(self.lattitude())
     }

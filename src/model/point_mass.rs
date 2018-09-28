@@ -2,11 +2,11 @@ pub use self::dragtables::BallisticCoefficient;
 
 use crate::util::{conversions::*, Numeric};
 
-pub mod params;
+mod dragtables;
 pub(crate) mod iter;
+pub mod params;
 #[allow(clippy::float_cmp)]
 pub(crate) mod zero;
-mod dragtables;
 
 pub(crate) struct Simulation<'mc> {
     projectile: &'mc params::Projectile,

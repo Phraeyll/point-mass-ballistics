@@ -120,7 +120,8 @@ impl<'mzs> Simulator<'mzs> {
                 } else {
                     None
                 }
-            }).collect::<FloatMap<T>>()
+            })
+            .collect::<FloatMap<T>>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<Numeric> {
