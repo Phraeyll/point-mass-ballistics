@@ -10,9 +10,9 @@ use std::iter::FromIterator;
 type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
 impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
     fn from_iter<I: IntoIterator<Item = (Numeric, T)>>(iter: I) -> Self {
-        let mut drop_table = FloatMap::<T>::default();
-        for i in iter {
-            drop_table.0.insert(OrderedFloat(i.0), i.1);
+        let mut drop_table = FloatMap::<T>::new();
+        for (key, val) in iter {
+            drop_table.0.insert(OrderedFloat(key), val);
         }
         drop_table
     }
