@@ -69,6 +69,16 @@ impl<'p> Iterator for IterSimulation<'p> {
         })
     }
 }
+
+impl<'p> IntoIterator for &'p super::Simulation<'p> {
+    type Item = <IterSimulation<'p> as Iterator>::Item;
+    type IntoIter = IterSimulation<'p>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 impl<'p> IterSimulation<'p> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
@@ -101,14 +111,6 @@ impl<'p> IterSimulation<'p> {
             * self.cd()
             * self.vv()
             * self.vv().norm()
-    }
-}
-impl<'p> IntoIterator for &'p super::Simulation<'p> {
-    type Item = <IterSimulation<'p> as Iterator>::Item;
-    type IntoIter = IterSimulation<'p>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
     }
 }
 
