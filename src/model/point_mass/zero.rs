@@ -2,7 +2,7 @@ use approx::relative_eq;
 
 use crate::util::{conversions::*, Numeric, FRAC_PI_4};
 
-impl<'mc> super::Simulation<'mc> {
+impl super::Simulation<'_> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     pub(crate) fn zero(&mut self, zero_distance: Length) -> Result<Numeric, String> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)

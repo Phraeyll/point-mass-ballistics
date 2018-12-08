@@ -36,19 +36,19 @@ impl SimulatorConditions {
         }
     }
 }
-pub struct Simulator<'mzs> {
-    pub projectile: &'mzs params::Projectile, // Model variables, mostly projectile properties
-    pub scope: &'mzs params::Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: &'mzs SimulatorConditions,
-    pub solve_conditions: &'mzs SimulatorConditions,
+pub struct Simulator<'p> {
+    pub projectile: &'p params::Projectile, // Model variables, mostly projectile properties
+    pub scope: &'p params::Scope,           // Model variables, mostly projectile properties
+    pub zero_conditions: &'p SimulatorConditions,
+    pub solve_conditions: &'p SimulatorConditions,
     pub time_step: Numeric,
 }
-impl<'mzs> Simulator<'mzs> {
+impl<'p> Simulator<'p> {
     pub fn new(
-        projectile: &'mzs params::Projectile,
-        scope: &'mzs params::Scope,
-        zero_conditions: &'mzs SimulatorConditions,
-        solve_conditions: &'mzs SimulatorConditions,
+        projectile: &'p params::Projectile,
+        scope: &'p params::Scope,
+        zero_conditions: &'p SimulatorConditions,
+        solve_conditions: &'p SimulatorConditions,
         time_step: Numeric,
     ) -> Self {
         Self {
@@ -121,7 +121,7 @@ impl<'mzs> Simulator<'mzs> {
                     None
                 }
             })
-            .collect::<FloatMap<T>>()
+            .collect::<FloatMap<_>>()
     }
     // // Need way to produce or find first zero for PBR calculations
     // pub fn first_zero(&self) -> Vector3<Numeric> {

@@ -5,7 +5,7 @@ use crate::util::*;
 use std::ops::Sub;
 
 // Create an new iterator over Simulation
-impl<'mc> super::Simulation<'mc> {
+impl super::Simulation<'_> {
     // Create an iterator over the simulation model and conditions, starting with initial velocity
     pub fn iter(&self) -> IterSimulation {
         IterSimulation {
@@ -35,19 +35,20 @@ impl<'mc> super::Simulation<'mc> {
 // Struct which runs the simulation - has iter method attached
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Using reference to current simulation model/conditions
-pub struct IterSimulation<'p> {
-    simulation: &'p super::Simulation<'p>, // Reference to model used for calculations
+pub struct IterSimulation<'s> {
+    simulation: &'s super::Simulation<'s>, // Reference to model used for calculations
     time: Numeric,                         // Position in time (s)
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
 
-impl<'p> Iterator for IterSimulation<'p> {
-    type Item = Projectile<'p>;
+impl<'s> Iterator for IterSimulation<'s> {
+    type Item = Projectile<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         // Would like a better method perhaps?
         let (time, position, velocity) = (self.time, self.position, self.velocity);
+
         // Unwrap time
         let time_step = Numeric::from(self.simulation.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
@@ -79,7 +80,7 @@ impl<'p> IntoIterator for &'p super::Simulation<'p> {
     }
 }
 
-impl<'p> IterSimulation<'p> {
+impl IterSimulation<'_> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -123,7 +124,7 @@ pub struct Projectile<'p> {
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
-impl<'p> Projectile<'p> {
+impl Projectile<'_> {
     // During the simulation, the velocity of the projectile is rotate so it alligns with the shooter's bearing
     // and line of sight, listed here as azimuth and shooter_pitch - may rename later
     // This function rotates the projectiles point of position back to the initial coordinate system
@@ -149,7 +150,7 @@ pub trait Output {
 }
 
 // Hard coded Imperial units for now - need to use better library for this eventually
-impl<'p> Output for Projectile<'p> {
+impl Output for Projectile<'_> {
     fn time(&self) -> Numeric {
         Numeric::from(Time::Seconds(self.time).to_seconds())
     }

@@ -8,22 +8,22 @@ pub mod params;
 #[allow(clippy::float_cmp)]
 pub(crate) mod zero;
 
-pub(crate) struct Simulation<'mc> {
-    projectile: &'mc params::Projectile,
-    scope: &'mc params::Scope,
-    wind: &'mc params::Wind,
-    atmosphere: &'mc params::Atmosphere,
-    conditions: &'mc params::Conditions,
+pub(crate) struct Simulation<'c> {
+    projectile: &'c params::Projectile,
+    scope: &'c params::Scope,
+    wind: &'c params::Wind,
+    atmosphere: &'c params::Atmosphere,
+    conditions: &'c params::Conditions,
     muzzle_pitch: Numeric,
     time_step: Time,
 }
-impl<'mc> Simulation<'mc> {
+impl<'c> Simulation<'c> {
     pub(crate) fn new(
-        projectile: &'mc params::Projectile,
-        scope: &'mc params::Scope,
-        wind: &'mc params::Wind,
-        atmosphere: &'mc params::Atmosphere,
-        conditions: &'mc params::Conditions,
+        projectile: &'c params::Projectile,
+        scope: &'c params::Scope,
+        wind: &'c params::Wind,
+        atmosphere: &'c params::Atmosphere,
+        conditions: &'c params::Conditions,
         muzzle_pitch: Numeric,
         time_step: Numeric,
     ) -> Self {
