@@ -5,7 +5,7 @@ use crate::util::{FloatMap, Numeric};
 use std::collections::BTreeMap;
 
 pub fn init() -> FloatMap<Numeric> {
-    float_map! {
+    float_map! [
         0.00 => 0.2303,
         0.05 => 0.2298,
         0.10 => 0.2287,
@@ -91,5 +91,5 @@ pub fn init() -> FloatMap<Numeric> {
         4.60 => 0.1741,
         4.80 => 0.1693,
         5.00 => 0.1648,
-    }
+    ]
 }
