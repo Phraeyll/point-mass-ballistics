@@ -4,7 +4,6 @@ use crate::util::{FloatMap, Numeric};
 
 mod g1;
 mod g2;
-#[allow(clippy::approx_constant)]
 mod g5;
 mod g6;
 mod g7;

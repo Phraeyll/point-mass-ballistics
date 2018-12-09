@@ -1,11 +1,11 @@
 // Determine which type to use dynamically, accounts for f32/f64 consts as well.
-macro_rules! my_type {
+macro_rules! numeric {
     ( $t:ident ) => {
         use std::$t::consts;
         pub type Numeric = $t;
     };
 }
-my_type!(f64);
+numeric!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 

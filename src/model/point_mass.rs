@@ -2,9 +2,12 @@ pub use self::dragtables::BallisticCoefficient;
 
 use crate::util::{conversions::*, Numeric};
 
-mod dragtables;
 pub(crate) mod iter;
 pub mod params;
+
+#[allow(clippy::approx_constant)]
+mod dragtables;
+
 #[allow(clippy::float_cmp)]
 pub(crate) mod zero;
 
