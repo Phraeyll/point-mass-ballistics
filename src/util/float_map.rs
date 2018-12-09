@@ -36,11 +36,15 @@ impl FloatMap<Numeric> {
 }
 
 macro_rules! float_map {
-    ( $($mach:expr => $cd:expr,)+ ) => ( float_map!($($mach => $cd),+) );
-    ( $($mach:expr => $cd:expr),* ) => {{
+    ( $($key:expr => $val:expr,)+ ) => {
+        float_map! {
+            $($key => $val),+
+        }
+    };
+    ( $($key:expr => $val:expr),* ) => {{
         let mut _float_map = FloatMap(BTreeMap::new());
         $(
-            let _ = _float_map.0.insert(OrderedFloat($mach), $cd);
+            let _ = _float_map.0.insert(OrderedFloat($key), $val);
         )*
         _float_map
     }}
