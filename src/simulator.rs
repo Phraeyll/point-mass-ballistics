@@ -60,13 +60,13 @@ impl<'p> Simulator<'p> {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    fn solution_simulation(&self, zero_distance: Length) -> model::point_mass::Simulation {
+    fn solution_simulation(&self, zero_distance: Length, offset: Numeric) -> model::point_mass::Simulation {
         model::point_mass::Simulation::new(
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
             match self.zero_simulation(zero_distance).zero() {
-                Ok(muzzle_pitch) => muzzle_pitch,
+                Ok(muzzle_pitch) => muzzle_pitch + (offset / 60.0).to_radians(),
                 Err(err) => panic!(err),
             },
             zero_distance,
@@ -79,12 +79,13 @@ impl<'p> Simulator<'p> {
         zero_distance: Numeric,
         step: Numeric,
         range: Numeric,
+        offset: Numeric,
     ) -> FloatMap<T>
     where
         FloatMap<T>: FromIterator<(Numeric, TableVal)>,
     {
         let mut current_step: Numeric = 0.0;
-        self.solution_simulation(Length::Yards(zero_distance))
+        self.solution_simulation(Length::Yards(zero_distance), offset)
             .iter()
             .take_do_while(|p| p.distance() <= range)
             .filter_map(|p| {
