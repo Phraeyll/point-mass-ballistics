@@ -11,14 +11,7 @@ use crate::{
 use std::iter::FromIterator;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
-type TableVal = (
-    Numeric,
-    Numeric,
-    Numeric,
-    Numeric,
-    Numeric,
-    Numeric,
-);
+type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
 impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
     fn from_iter<I: IntoIterator<Item = (Numeric, T)>>(iter: I) -> Self {
         let mut drop_table = FloatMap::<T>::new();

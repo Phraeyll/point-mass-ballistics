@@ -68,7 +68,6 @@ impl<'s> Iterator for IterSimulation<'s> {
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
-
         // Only continue iteration for non terminal velocity
         if self.velocity.norm() != velocity.norm() {
             Some(Self::Item {

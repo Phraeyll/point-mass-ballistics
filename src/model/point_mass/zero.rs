@@ -61,9 +61,7 @@ impl<'s> super::Simulation<'s> {
 impl<'s> super::Simulation<'s> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
     pub(crate) fn zero(&'s mut self) -> Result<Numeric, String> {
-        if let Some((muzzle_pitch, _)) =
-            self.zero_iter()
-                .find(|(_, drop)| relative_eq!(*drop, 0.0))
+        if let Some((muzzle_pitch, _)) = self.zero_iter().find(|(_, drop)| relative_eq!(*drop, 0.0))
         {
             Ok(muzzle_pitch)
         } else {
