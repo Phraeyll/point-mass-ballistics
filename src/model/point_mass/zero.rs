@@ -11,8 +11,8 @@ struct IterZero<'s> {
 impl<'s> Iterator for IterZero<'s> {
     type Item = (Numeric, Numeric);
     fn next(&mut self) -> Option<Self::Item> {
-        // Keep previous values for return, and checking for pitch change
-        let (muzzle_pitch, drop) = (self.iter.muzzle_pitch, self.drop);
+        // Keep previous value to check if pitch changes
+        let muzzle_pitch = self.iter.muzzle_pitch;
 
         // Increment/decrement pitch before iteration below
         self.iter.muzzle_pitch += self.angle;
@@ -26,7 +26,7 @@ impl<'s> Iterator for IterZero<'s> {
         if self.iter.muzzle_pitch == muzzle_pitch {
             println!(
                 "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}",
-                muzzle_pitch, self.angle, self.iter.muzzle_pitch, drop
+                muzzle_pitch, self.angle, self.iter.muzzle_pitch, self.drop
             );
             return None;
         }
@@ -50,7 +50,7 @@ impl<'s> Iterator for IterZero<'s> {
         // Always reduce angle on next iteration, converging towards drop = 0
         self.angle /= 2.0;
 
-        Some((muzzle_pitch, drop))
+        Some((self.iter.muzzle_pitch, self.drop))
     }
 }
 
