@@ -12,6 +12,21 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
+pub struct Conditions {
+    pub(crate) wind: Wind,
+    pub(crate) atmosphere: Atmosphere,
+    pub(crate) other: Other,
+}
+impl Conditions {
+    pub fn new(wind: Wind, atmosphere: Atmosphere, other: Other) -> Self {
+        Self {
+            wind,
+            atmosphere,
+            other,
+        }
+    }
+}
+
 pub struct Projectile {
     weight: WeightMass,                       // Weight (grains)
     caliber: Length,                          // Caliber (inches)
@@ -141,13 +156,13 @@ impl Atmosphere {
     }
 }
 
-pub struct Conditions {
+pub struct Other {
     line_of_sight: Numeric, // Line of Sight angle (degrees)
     azimuth: Numeric,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
     lattitude: Numeric,     // Lattitude (Coriolis/Eotvos Effect)
     gravity: Acceleration,  // Gravity (m/s^2)
 }
-impl Conditions {
+impl Other {
     pub fn new(
         line_of_sight: Numeric,
         lattitude: Numeric,

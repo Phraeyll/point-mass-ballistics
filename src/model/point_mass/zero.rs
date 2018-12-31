@@ -1,36 +1,40 @@
 use approx::relative_eq;
 
-use crate::util::{conversions::*, Numeric, FRAC_PI_4};
+use crate::util::{Numeric, FRAC_PI_4};
 
 impl super::Simulation<'_> {
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub(crate) fn zero(&mut self, zero_distance: Length) -> Result<Numeric, String> {
+    pub(crate) fn zero(&mut self) -> Result<Numeric, String> {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         const MAX_ANGLE: Numeric = FRAC_PI_4;
         // Start with maximum angle to allow for zeroing at longer distances
         let mut angle = MAX_ANGLE;
         loop {
-            let last_muzzle_pitch: Numeric = self.muzzle_pitch;
+            let muzzle_pitch: Numeric = self.muzzle_pitch;
             self.muzzle_pitch += angle;
             if self.muzzle_pitch > MAX_ANGLE {
                 break Err(format!(
                     "Can never 'zero' at this range: {}",
-                    Numeric::from(zero_distance)
+                    Numeric::from(self.zero_distance)
                 ));
             }
-            if self.muzzle_pitch == last_muzzle_pitch {
+            if self.muzzle_pitch == muzzle_pitch {
                 break Err(format!(
                     "Issue with floating points, pitch: {} by angle: {} not changing during 'zero'",
-                    last_muzzle_pitch, angle,
+                    muzzle_pitch, angle,
                 ));
             }
-            // Find drop at distance, need way to break if we never zero_distance
-            let drop = self
+            let drop = if let Some(projectile) = self
                 .iter()
-                .find(|p| p.relative_position().x > Numeric::from(zero_distance.to_meters()))
-                .unwrap()
-                .relative_position()
-                .y;
+                .find(|p| p.relative_position().x >= Numeric::from(self.zero_distance.to_meters()))
+            {
+                projectile.relative_position().y
+            } else {
+                break Err(format!(
+                    "Reach terminal velocity 'zeroing' for this range: {}",
+                    Numeric::from(self.zero_distance)
+                ));
+            };
             // Quit once zero point is found, once drop is equal to zero
             if relative_eq!(drop, 0.0) {
                 break Ok(self.muzzle_pitch);

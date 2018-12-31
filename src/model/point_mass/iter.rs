@@ -20,15 +20,16 @@ impl super::Simulation<'_> {
     fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity()
-            .pitch(self.conditions.line_of_sight() + self.muzzle_pitch())
-            .yaw(self.conditions.azimuth())
+            .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch())
+            .yaw(self.conditions.other.azimuth())
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
     fn wind_velocity_vector(&self) -> Vector3<Numeric> {
-        self.wind
+        self.conditions
+            .wind
             .velocity()
-            .yaw(self.wind.yaw() + self.conditions.azimuth())
+            .yaw(self.conditions.wind.yaw() + self.conditions.other.azimuth())
     }
 }
 
@@ -37,23 +38,28 @@ impl super::Simulation<'_> {
 // Using reference to current simulation model/conditions
 pub struct IterSimulation<'s> {
     simulation: &'s super::Simulation<'s>, // Reference to model used for calculations
-    time: Numeric,                         // Position in time (s)
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
+    time: Numeric,                         // Position in time (s)
 }
 
 impl<'s> Iterator for IterSimulation<'s> {
     type Item = Projectile<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
-        // Would like a better method perhaps?
-        let (time, position, velocity) = (self.time, self.position, self.velocity);
+        let Self {
+            time,
+            position,
+            velocity,
+            ..
+        } = *self;
 
         // Unwrap time
         let time_step = Numeric::from(self.simulation.time_step.to_seconds());
         // Acceleration from drag force and gravity (F = ma)
+        // Keep drag acceleration for other uses
         let acceleration = self.drag_force() / self.simulation.projectile.mass()
-            + self.simulation.conditions.gravity()
+            + self.simulation.conditions.other.gravity()
             + self.coriolis_acceleration();
         // Increment position in time
         self.time += time_step;
@@ -62,12 +68,18 @@ impl<'s> Iterator for IterSimulation<'s> {
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
-        Some(Self::Item {
-            simulation: &self.simulation,
-            time,
-            position,
-            velocity,
-        })
+
+        // Only continue iteration for non terminal velocity
+        if self.velocity.norm() != velocity.norm() {
+            Some(Self::Item {
+                simulation: &self.simulation,
+                time,
+                position,
+                velocity,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -88,11 +100,16 @@ impl IterSimulation<'_> {
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        -2.0 * self.simulation.conditions.omega().cross(&self.velocity)
+        -2.0 * self
+            .simulation
+            .conditions
+            .other
+            .omega()
+            .cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
-        self.velocity.norm() / self.simulation.atmosphere.speed_of_sound()
+        self.velocity.norm() / self.simulation.conditions.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
@@ -107,7 +124,7 @@ impl IterSimulation<'_> {
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
     fn drag_force(&self) -> Vector3<Numeric> {
-        -0.5 * self.simulation.atmosphere.rho()
+        -0.5 * self.simulation.conditions.atmosphere.rho()
             * self.simulation.projectile.area()
             * self.cd()
             * self.vv()
@@ -125,16 +142,14 @@ pub struct Projectile<'p> {
     velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
 impl Projectile<'_> {
-    // During the simulation, the velocity of the projectile is rotate so it alligns with the shooter's bearing
-    // and line of sight, listed here as azimuth and shooter_pitch - may rename later
-    // This function rotates the projectiles point of position back to the initial coordinate system
-    // where x_axis = North/South, y_axis = Up/Down, and z_axis = East/West.  After rotation, the point is translated down
-    // by the scope height, which should inidicate the points position relative to the line of sight.
-    // This is used during zero'ing and output in the drop table
+    // During the simulation, the velocity of the projectile is rotated to allign with
+    // the shooter's bearing (azimuth and line of sight)
+    // This function returns the position rotated back to the initial frame of reference
+    // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .yaw(-self.simulation.conditions.azimuth())
-            .pitch(-self.simulation.conditions.line_of_sight())
+            .yaw(-self.simulation.conditions.other.azimuth())
+            .pitch(-self.simulation.conditions.other.line_of_sight())
             .sub(self.simulation.scope.height())
     }
 }

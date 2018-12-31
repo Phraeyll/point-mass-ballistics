@@ -2,12 +2,23 @@ pub use crate::model::BallisticCoefficient;
 
 use ordered_float::OrderedFloat;
 
-use crate::{model, model::point_mass::iter::Output, model::point_mass::params, util::*};
+use crate::{
+    model,
+    model::point_mass::{iter::Output, *},
+    util::*,
+};
 
 use std::iter::FromIterator;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
-type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
+type TableVal = (
+    Numeric,
+    Numeric,
+    Numeric,
+    Numeric,
+    Numeric,
+    Numeric,
+);
 impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
     fn from_iter<I: IntoIterator<Item = (Numeric, T)>>(iter: I) -> Self {
         let mut drop_table = FloatMap::<T>::new();
@@ -18,37 +29,19 @@ impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
     }
 }
 
-pub struct SimulatorConditions {
-    wind: params::Wind,
-    atmosphere: params::Atmosphere,
-    conditions: params::Conditions,
-}
-impl SimulatorConditions {
-    pub fn new(
-        wind: params::Wind,
-        atmosphere: params::Atmosphere,
-        conditions: params::Conditions,
-    ) -> Self {
-        Self {
-            wind,
-            atmosphere,
-            conditions,
-        }
-    }
-}
 pub struct Simulator<'p> {
     pub projectile: &'p params::Projectile, // Model variables, mostly projectile properties
     pub scope: &'p params::Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: &'p SimulatorConditions,
-    pub solve_conditions: &'p SimulatorConditions,
+    pub zero_conditions: &'p params::Conditions,
+    pub solve_conditions: &'p params::Conditions,
     pub time_step: Numeric,
 }
 impl<'p> Simulator<'p> {
     pub fn new(
         projectile: &'p params::Projectile,
         scope: &'p params::Scope,
-        zero_conditions: &'p SimulatorConditions,
-        solve_conditions: &'p SimulatorConditions,
+        zero_conditions: &'p params::Conditions,
+        solve_conditions: &'p params::Conditions,
         time_step: Numeric,
     ) -> Self {
         Self {
@@ -61,14 +54,13 @@ impl<'p> Simulator<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn zero_simulation(&self) -> model::point_mass::Simulation {
+    fn zero_simulation(&self, zero_distance: Length) -> model::point_mass::Simulation {
         model::point_mass::Simulation::new(
             &self.projectile,
             &self.scope,
-            &self.zero_conditions.wind,
-            &self.zero_conditions.atmosphere,
-            &self.zero_conditions.conditions,
+            &self.zero_conditions,
             0.0,
+            zero_distance,
             self.time_step,
         )
     }
@@ -79,13 +71,12 @@ impl<'p> Simulator<'p> {
         model::point_mass::Simulation::new(
             &self.projectile,
             &self.scope,
-            &self.solve_conditions.wind,
-            &self.solve_conditions.atmosphere,
-            &self.solve_conditions.conditions,
-            match self.zero_simulation().zero(zero_distance) {
+            &self.solve_conditions,
+            match self.zero_simulation(zero_distance).zero() {
                 Ok(muzzle_pitch) => muzzle_pitch,
                 Err(err) => panic!(err),
             },
+            zero_distance,
             self.time_step,
         )
     }
@@ -102,7 +93,7 @@ impl<'p> Simulator<'p> {
         let mut current_step: Numeric = 0.0;
         self.solution_simulation(Length::Yards(zero_distance))
             .iter()
-            .take_do_while(|p| p.distance() < range)
+            .take_do_while(|p| p.distance() <= range)
             .filter_map(|p| {
                 if p.distance() >= current_step {
                     current_step += step;

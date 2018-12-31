@@ -2,6 +2,7 @@ pub use self::dragtables::BallisticCoefficient;
 
 use crate::util::{conversions::*, Numeric};
 
+#[allow(clippy::float_cmp)]
 pub(crate) mod iter;
 pub mod params;
 
@@ -14,29 +15,26 @@ pub(crate) mod zero;
 pub(crate) struct Simulation<'c> {
     projectile: &'c params::Projectile,
     scope: &'c params::Scope,
-    wind: &'c params::Wind,
-    atmosphere: &'c params::Atmosphere,
     conditions: &'c params::Conditions,
     muzzle_pitch: Numeric,
+    zero_distance: Length,
     time_step: Time,
 }
 impl<'c> Simulation<'c> {
     pub(crate) fn new(
         projectile: &'c params::Projectile,
         scope: &'c params::Scope,
-        wind: &'c params::Wind,
-        atmosphere: &'c params::Atmosphere,
         conditions: &'c params::Conditions,
         muzzle_pitch: Numeric,
+        zero_distance: Length,
         time_step: Numeric,
     ) -> Self {
         Self {
             projectile,
             scope,
-            wind,
-            atmosphere,
             conditions,
             muzzle_pitch,
+            zero_distance,
             time_step: Time::Seconds(time_step),
         }
     }
