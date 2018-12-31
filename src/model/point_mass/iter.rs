@@ -20,7 +20,7 @@ impl super::Simulation<'_> {
     fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity()
-            .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch())
+            .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch)
             .yaw(self.conditions.other.azimuth())
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
@@ -77,6 +77,7 @@ impl<'s> Iterator for IterSimulation<'s> {
                 velocity,
             })
         } else {
+            println!("Terminal Velocity reached at: {}", self.velocity.norm());
             None
         }
     }

@@ -38,7 +38,4 @@ impl<'c> Simulation<'c> {
             time_step: Time::Seconds(time_step),
         }
     }
-    pub(crate) fn muzzle_pitch(&self) -> Numeric {
-        self.muzzle_pitch.to_radians()
-    }
 }
