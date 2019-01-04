@@ -30,7 +30,7 @@ impl<'p> IntoIterator for &'p super::Simulation<'p> {
 }
 
 impl<'s> Iterator for IterSimulation<'s> {
-    type Item = Projectile<'s>;
+    type Item = Packet<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -112,13 +112,13 @@ impl IterSimulation<'_> {
 // Output struct which represents projectiles current position, and velocity
 // Basically same values used internally during iteration
 // Along with a ref to the simulation which was iterated over
-pub struct Projectile<'p> {
+pub struct Packet<'p> {
     simulation: &'p super::Simulation<'p>, //Simulation this came from, used for various calculations
     time: Numeric,                         // Position in time (s)
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
-impl Projectile<'_> {
+impl Packet<'_> {
     // During the simulation, the velocity of the projectile is rotated to allign with
     // the shooter's bearing (azimuth and line of sight)
     // This function returns the position rotated back to the initial frame of reference
@@ -142,7 +142,7 @@ pub trait Output {
 }
 
 // Hard coded Imperial units for now - need to use better library for this eventually
-impl Output for Projectile<'_> {
+impl Output for Packet<'_> {
     fn time(&self) -> Numeric {
         Time::Seconds(self.time).to_seconds().to_num()
     }
@@ -156,13 +156,19 @@ impl Output for Projectile<'_> {
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Numeric {
-        Length::Meters(self.relative_position().x).to_yards().to_num()
+        Length::Meters(self.relative_position().x)
+            .to_yards()
+            .to_num()
     }
     fn drop(&self) -> Numeric {
-        Length::Meters(self.relative_position().y).to_inches().to_num()
+        Length::Meters(self.relative_position().y)
+            .to_inches()
+            .to_num()
     }
     fn windage(&self) -> Numeric {
-        Length::Meters(self.relative_position().z).to_inches().to_num()
+        Length::Meters(self.relative_position().z)
+            .to_inches()
+            .to_num()
     }
     fn moa(&self) -> Numeric {
         self.relative_position()
