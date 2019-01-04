@@ -4,35 +4,6 @@ use crate::util::*;
 
 use std::ops::Sub;
 
-// Create an new iterator over Simulation
-impl super::Simulation<'_> {
-    // Create an iterator over the simulation model and conditions, starting with initial velocity
-    pub fn iter(&self) -> IterSimulation {
-        IterSimulation {
-            simulation: self,
-            position: Vector3::zeros(),
-            velocity: self.muzzle_velocity_vector(),
-            time: 0.0,
-        }
-    }
-    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
-    // Start with velocity value along X unit vector
-    fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
-        self.projectile
-            .velocity()
-            .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch)
-            .yaw(self.conditions.other.azimuth())
-    }
-    // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
-    // factor, wind_pitch, to consider vertical wind components
-    fn wind_velocity_vector(&self) -> Vector3<Numeric> {
-        self.conditions
-            .wind
-            .velocity()
-            .yaw(self.conditions.wind.yaw() + self.conditions.other.azimuth())
-    }
-}
-
 // Struct which runs the simulation - has iter method attached
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Using reference to current simulation model/conditions
@@ -43,16 +14,31 @@ pub struct IterSimulation<'s> {
     time: Numeric,                         // Position in time (s)
 }
 
+// Create an new iterator over Simulation
+impl<'p> IntoIterator for &'p super::Simulation<'p> {
+    type Item = <IterSimulation<'p> as Iterator>::Item;
+    type IntoIter = IterSimulation<'p>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter {
+            simulation: self,
+            position: Vector3::zeros(),
+            velocity: self.muzzle_velocity_vector(),
+            time: 0.0,
+        }
+    }
+}
+
 impl<'s> Iterator for IterSimulation<'s> {
     type Item = Projectile<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
-        let Self {
+        let &mut Self {
             time,
             position,
             velocity,
             ..
-        } = *self;
+        } = self;
 
         // Unwrap time
         let time_step = Numeric::from(self.simulation.time_step.to_seconds());
@@ -80,15 +66,6 @@ impl<'s> Iterator for IterSimulation<'s> {
             println!("Terminal Velocity reached at: {}", self.velocity.norm());
             None
         }
-    }
-}
-
-impl<'p> IntoIterator for &'p super::Simulation<'p> {
-    type Item = <IterSimulation<'p> as Iterator>::Item;
-    type IntoIter = IterSimulation<'p>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
     }
 }
 

@@ -86,7 +86,7 @@ impl<'p> Simulator<'p> {
     {
         let mut current_step: Numeric = 0.0;
         self.solution_simulation(Length::Yards(zero_distance), offset)
-            .iter()
+            .into_iter()
             .take_do_while(|p| p.distance() <= range)
             .filter_map(|p| {
                 if p.distance() >= current_step {

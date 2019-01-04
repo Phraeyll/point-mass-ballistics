@@ -33,7 +33,7 @@ impl<'s> Iterator for IterZero<'s> {
         // Find height in meters relative to zero, given pitch
         if let Some(p) = self
             .sim
-            .iter()
+            .into_iter()
             .find(|p| p.relative_position().x >= Numeric::from(self.sim.zero_distance.to_meters()))
         {
             self.drop = p.relative_position().y;
