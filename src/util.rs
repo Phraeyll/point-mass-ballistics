@@ -8,6 +8,7 @@ macro_rules! numeric {
 numeric!(f64);
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
+pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
 pub use self::conversions::*;
 pub use self::float_map::*;

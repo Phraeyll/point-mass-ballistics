@@ -1,4 +1,4 @@
-use crate::util::{conversions::*, Numeric, FRAC_PI_4};
+use crate::util::{conversions::*, Numeric, FRAC_PI_2, FRAC_PI_4};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const MAX_ANGLE: Numeric = FRAC_PI_4;
@@ -7,40 +7,20 @@ struct IterZero<'s> {
     sim: &'s mut super::Simulation<'s>,
     angle: Numeric,
     drop: Numeric,
+    count: u64,
 }
+
 impl<'s> Iterator for IterZero<'s> {
     type Item = (Numeric, Numeric);
     fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
         // Keep previous value to check if pitch changes
-        let muzzle_pitch = self.sim.muzzle_pitch;
+        let &mut Self {
+            sim: &mut super::Simulation { muzzle_pitch, .. },
+            count,
+            ..
+        } = self;
 
-        // Increment/decrement pitch before iteration below
-        self.sim.muzzle_pitch += self.angle;
-
-        // Maximum angle or muzzle_pitch not changing due to very small angle (floating point limitation)
-        if self.sim.muzzle_pitch > MAX_ANGLE {
-            println!("Greater than MAX_ANGLE: {}", MAX_ANGLE);
-            return None;
-        }
-        // This should probably not happen in practice, only for very small values close to 0
-        if self.sim.muzzle_pitch == muzzle_pitch {
-            println!(
-                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}",
-                muzzle_pitch, self.angle, self.sim.muzzle_pitch, self.drop
-            );
-            return None;
-        }
-        // Find height in meters relative to zero, given pitch
-        if let Some(p) = self
-            .sim
-            .into_iter()
-            .find(|p| p.relative_position().x >= self.sim.zero_distance.to_meters().to_num())
-        {
-            self.drop = p.relative_position().y;
-        } else {
-            // Terminal velocity reached
-            return None;
-        };
         // Change direction if
         // above(positive drop) and going   up(positive angle) or
         // below(negative drop) and going down(negative angle)
@@ -50,10 +30,39 @@ impl<'s> Iterator for IterZero<'s> {
         // Always reduce angle on next iteration, converging towards drop = 0
         self.angle /= 2.0;
 
-        Some((
-            self.sim.muzzle_pitch,
-            Length::Meters(self.drop).to_inches().to_num(),
-        ))
+        // Increment/decrement pitch before iteration below
+        self.sim.muzzle_pitch += self.angle;
+
+        if self.sim.muzzle_pitch > MAX_ANGLE {
+            // Maximum angle or muzzle_pitch not changing due to very small angle (floating point limitation)
+            println!(
+                "Greater than MAX_ANGLE: {} at iteration: {}",
+                MAX_ANGLE, count
+            );
+            None
+        } else if self.sim.muzzle_pitch == muzzle_pitch {
+            // This should probably not happen in practice, only for very small values close to 0
+            println!(
+                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}\ncount: {}",
+                muzzle_pitch, self.angle, self.sim.muzzle_pitch, self.drop, count
+            );
+            None
+        } else if let Some(p) = self
+            // Find height in meters relative to zero, given pitch
+            .sim
+            .into_iter()
+            .find(|p| p.relative_position().x >= self.sim.zero_distance.to_meters().to_num())
+        {
+            self.drop = p.relative_position().y;
+            Some((
+                self.sim.muzzle_pitch,
+                Length::Meters(self.drop).to_inches().to_num(),
+            ))
+        } else {
+            // Terminal velocity reached
+            println!("count: {}", count);
+            None
+        }
     }
 }
 
@@ -63,8 +72,9 @@ impl<'s> super::Simulation<'s> {
         // Start with maximum angle to allow for zeroing at longer distances
         IterZero {
             sim: self,
-            angle: MAX_ANGLE,
+            angle: FRAC_PI_2,
             drop: -1.0,
+            count: 0u64,
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
