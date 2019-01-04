@@ -54,16 +54,21 @@ impl<'s> Iterator for IterSimulation<'s> {
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
-        // Only continue iteration for non terminal velocity
+        let packet = Self::Item {
+            simulation: &self.simulation,
+            time,
+            position,
+            velocity,
+        };
+        // Only continue iteration for non terminal velocity, may change later
         if self.velocity.norm() != velocity.norm() {
-            Some(Self::Item {
-                simulation: &self.simulation,
-                time,
-                position,
-                velocity,
-            })
+            Some(packet)
         } else {
-            println!("Terminal Velocity reached at: {}", self.velocity.norm());
+            println!(
+                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards",
+                packet.velocity(),
+                packet.distance(),
+            );
             None
         }
     }
