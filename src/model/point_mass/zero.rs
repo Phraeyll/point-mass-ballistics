@@ -50,7 +50,10 @@ impl<'s> Iterator for IterZero<'s> {
         // Always reduce angle on next iteration, converging towards drop = 0
         self.angle /= 2.0;
 
-        Some((self.sim.muzzle_pitch, Numeric::from(Length::Meters(self.drop).to_inches())))
+        Some((
+            self.sim.muzzle_pitch,
+            Numeric::from(Length::Meters(self.drop).to_inches()),
+        ))
     }
 }
 

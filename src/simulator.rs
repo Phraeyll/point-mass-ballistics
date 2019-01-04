@@ -60,7 +60,11 @@ impl<'p> Simulator<'p> {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    fn solution_simulation(&self, zero_distance: Length, offset: Numeric) -> model::point_mass::Simulation {
+    fn solution_simulation(
+        &self,
+        zero_distance: Length,
+        offset: Numeric,
+    ) -> model::point_mass::Simulation {
         model::point_mass::Simulation::new(
             &self.projectile,
             &self.scope,
@@ -108,18 +112,4 @@ impl<'p> Simulator<'p> {
             })
             .collect::<FloatMap<_>>()
     }
-    // // Need way to produce or find first zero for PBR calculations
-    // pub fn first_zero(&self) -> Vector3<Numeric> {
-    //     let zero = Numeric::from(self.model.scope_height.to_meters());
-    //     let mut sim = PointMassModel::new(&mut self.model, &self.zero_conditions).iter();
-    //     loop {
-    //         if let Some(Projectile { position, .. }) = sim.next() {
-    //             if position.y > zero {
-    //                 break position;
-    //             }
-    //         }
-    //     }
-    // }
 }
-
-// Output accessor methods to get ballistic properties

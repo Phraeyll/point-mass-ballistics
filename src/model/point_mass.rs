@@ -2,7 +2,7 @@ pub use self::dragtables::BallisticCoefficient;
 
 use nalgebra::Vector3;
 
-use crate::util::{conversions::*, Numeric, nalgebra_helpers::*};
+use crate::util::{conversions::*, nalgebra_helpers::*, Numeric};
 
 #[allow(clippy::float_cmp)]
 pub(crate) mod iter;
