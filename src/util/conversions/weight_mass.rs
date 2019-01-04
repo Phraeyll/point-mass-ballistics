@@ -26,6 +26,9 @@ impl From<WeightMass> for Numeric {
     }
 }
 impl self::WeightMass {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_grains(self) -> Self {
         match self {
             u @ Grains(_) => u,

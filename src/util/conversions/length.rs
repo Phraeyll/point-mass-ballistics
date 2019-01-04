@@ -51,6 +51,9 @@ impl From<Length> for Numeric {
     }
 }
 impl self::Length {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_meters(self) -> Self {
         match self {
             u @ Meters(_) => u,

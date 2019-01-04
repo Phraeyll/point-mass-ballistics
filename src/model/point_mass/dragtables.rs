@@ -26,6 +26,9 @@ pub enum BallisticCoefficient {
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
+    pub(crate) fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub(crate) fn table(self) -> FloatMap<Numeric> {
         match self {
             G1(_) => g1::init(),

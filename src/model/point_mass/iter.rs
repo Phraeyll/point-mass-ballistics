@@ -41,7 +41,7 @@ impl<'s> Iterator for IterSimulation<'s> {
         } = self;
 
         // Unwrap time
-        let time_step = Numeric::from(self.simulation.time_step.to_seconds());
+        let time_step = self.simulation.time_step.to_seconds().to_num();
         // Acceleration from drag force and gravity (F = ma)
         // Keep drag acceleration for other uses
         let acceleration = self.drag_force() / self.simulation.projectile.mass()
@@ -144,28 +144,25 @@ pub trait Output {
 // Hard coded Imperial units for now - need to use better library for this eventually
 impl Output for Projectile<'_> {
     fn time(&self) -> Numeric {
-        Numeric::from(Time::Seconds(self.time).to_seconds())
+        Time::Seconds(self.time).to_seconds().to_num()
     }
     fn velocity(&self) -> Numeric {
-        Numeric::from(Velocity::Mps(self.velocity.norm()).to_fps())
+        Velocity::Mps(self.velocity.norm()).to_fps().to_num()
     }
     fn energy(&self) -> Numeric {
-        Numeric::from(
-            Energy::Joules(
-                self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0,
-            )
-            .to_ftlbs(),
-        )
+        Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
+            .to_ftlbs()
+            .to_num()
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().x).to_yards())
+        Length::Meters(self.relative_position().x).to_yards().to_num()
     }
     fn drop(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().y).to_inches())
+        Length::Meters(self.relative_position().y).to_inches().to_num()
     }
     fn windage(&self) -> Numeric {
-        Numeric::from(Length::Meters(self.relative_position().z).to_inches())
+        Length::Meters(self.relative_position().z).to_inches().to_num()
     }
     fn moa(&self) -> Numeric {
         self.relative_position()

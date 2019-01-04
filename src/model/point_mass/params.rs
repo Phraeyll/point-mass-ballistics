@@ -51,7 +51,7 @@ impl Projectile {
     }
     // Radius of projectile cross section in meters
     pub(crate) fn radius(&self) -> Numeric {
-        Numeric::from(self.caliber.to_meters()) / 2.0
+        self.caliber.to_meters().to_num() / 2.0
     }
     // Area of projectile in meters, used during drag force calculation
     pub(crate) fn area(&self) -> Numeric {
@@ -63,14 +63,14 @@ impl Projectile {
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
     fn sd(&self) -> Numeric {
-        Numeric::from(self.weight.to_lbs()) / Numeric::from(self.caliber.to_inches()).powf(2.0)
+        self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     pub(crate) fn i(&self) -> Numeric {
-        self.sd() / Numeric::from(self.bc)
+        self.sd() / self.bc.to_num()
     }
     pub(crate) fn velocity(&self) -> Vector3<Numeric> {
-        Numeric::from(self.velocity.to_mps()) * Vector3::x()
+        self.velocity.to_mps().to_num() * Vector3::x()
     }
 }
 
@@ -84,7 +84,7 @@ impl Scope {
         }
     }
     pub(crate) fn height(&self) -> Vector3<Numeric> {
-        Numeric::from(self.height.to_meters()) * Vector3::y()
+        self.height.to_meters().to_num() * Vector3::y()
     }
 }
 
@@ -105,7 +105,7 @@ impl Wind {
         -(self.yaw.to_radians() - PI)
     }
     pub(crate) fn velocity(&self) -> Vector3<Numeric> {
-        Numeric::from(self.velocity.to_mps()) * Vector3::x()
+        self.velocity.to_mps().to_num() * Vector3::x()
     }
 }
 
@@ -144,15 +144,15 @@ impl Atmosphere {
     }
     // Total air pressure in pascals
     fn pa(&self) -> Numeric {
-        Numeric::from(self.pressure.to_pascals())
+        self.pressure.to_pascals().to_num()
     }
     // Temperature in celsius
     fn celsius(&self) -> Numeric {
-        Numeric::from(self.temperature.to_celsius())
+        self.temperature.to_celsius().to_num()
     }
     // Temperature in kelvin
     fn kelvin(&self) -> Numeric {
-        Numeric::from(self.temperature.to_kelvin())
+        self.temperature.to_kelvin().to_num()
     }
 }
 
@@ -180,7 +180,7 @@ impl Other {
         }
     }
     pub(crate) fn gravity(&self) -> Vector3<Numeric> {
-        Numeric::from(self.gravity.to_mps2()) * Vector3::y()
+        self.gravity.to_mps2().to_num() * Vector3::y()
     }
     fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()

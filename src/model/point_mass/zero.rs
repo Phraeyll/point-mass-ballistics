@@ -34,7 +34,7 @@ impl<'s> Iterator for IterZero<'s> {
         if let Some(p) = self
             .sim
             .into_iter()
-            .find(|p| p.relative_position().x >= Numeric::from(self.sim.zero_distance.to_meters()))
+            .find(|p| p.relative_position().x >= self.sim.zero_distance.to_meters().to_num())
         {
             self.drop = p.relative_position().y;
         } else {
@@ -52,7 +52,7 @@ impl<'s> Iterator for IterZero<'s> {
 
         Some((
             self.sim.muzzle_pitch,
-            Numeric::from(Length::Meters(self.drop).to_inches()),
+            Length::Meters(self.drop).to_inches().to_num(),
         ))
     }
 }

@@ -32,6 +32,9 @@ impl From<Temperature> for Numeric {
     }
 }
 impl self::Temperature {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_celsius(self) -> Self {
         match self {
             u @ C(_) => u,

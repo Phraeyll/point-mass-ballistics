@@ -48,6 +48,9 @@ impl From<Energy> for Numeric {
     }
 }
 impl Energy {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_joules(self) -> Self {
         match self {
             u @ Joules(_) => u,
@@ -76,6 +79,9 @@ impl From<Pressure> for Numeric {
     }
 }
 impl Pressure {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_pascals(self) -> Self {
         match self {
             u @ Pascals(_) => u,
@@ -104,6 +110,9 @@ impl From<Density> for Numeric {
     }
 }
 impl self::Density {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_kgpm3(self) -> Self {
         match self {
             u @ Kgpm3(_) => u,
@@ -134,6 +143,9 @@ impl From<Velocity> for Numeric {
     }
 }
 impl self::Velocity {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_mps(self) -> Self {
         match self {
             u @ Mps(_) => u,
@@ -173,6 +185,9 @@ impl From<Acceleration> for Numeric {
     }
 }
 impl self::Acceleration {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_mps2(self) -> Self {
         match self {
             u @ Mps2(_) => u,

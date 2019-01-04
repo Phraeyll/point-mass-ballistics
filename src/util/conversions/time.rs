@@ -26,6 +26,9 @@ impl From<Time> for Numeric {
     }
 }
 impl self::Time {
+    pub fn to_num(self) -> Numeric {
+        Numeric::from(self)
+    }
     pub fn to_hours(self) -> Self {
         match self {
             u @ Hours(_) => u,
