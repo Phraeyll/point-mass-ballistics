@@ -65,9 +65,10 @@ impl<'s> Iterator for IterSimulation<'s> {
             Some(packet)
         } else {
             println!(
-                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards",
+                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards at angle: {:.2}",
                 packet.velocity(),
                 packet.distance(),
+                packet.simulation.muzzle_pitch.to_degrees(),
             );
             None
         }

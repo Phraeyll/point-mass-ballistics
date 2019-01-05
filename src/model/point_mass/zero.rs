@@ -1,4 +1,4 @@
-use crate::util::{conversions::*, Numeric, FRAC_PI_2, FRAC_PI_4};
+use crate::util::{conversions::*, Numeric, FRAC_PI_4};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const MAX_ANGLE: Numeric = FRAC_PI_4;
@@ -27,24 +27,25 @@ impl<'s> Iterator for IterZero<'s> {
         if self.angle.is_sign_positive() ^ self.drop.is_sign_negative() {
             self.angle *= -1.0;
         }
-        // Always reduce angle on next iteration, converging towards drop = 0
+        // Always reduce angle on next iteration, converging towards either max(45) or min(0) degrees
         self.angle /= 2.0;
 
         // Increment/decrement pitch before iteration below
         self.sim.muzzle_pitch += self.angle;
+        let deg = self.sim.muzzle_pitch.to_degrees();
 
         if self.sim.muzzle_pitch > MAX_ANGLE {
             // Maximum angle or muzzle_pitch not changing due to very small angle (floating point limitation)
             println!(
-                "Greater than MAX_ANGLE: {} at iteration: {}",
-                MAX_ANGLE, count
+                "Greater than MAX_ANGLE: {} at iteration: {} at pitch: {:.2}",
+                MAX_ANGLE.to_degrees(), count, deg
             );
             None
         } else if self.sim.muzzle_pitch == muzzle_pitch {
             // This should probably not happen in practice, only for very small values close to 0
             println!(
-                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}\ncount: {}",
-                muzzle_pitch, self.angle, self.sim.muzzle_pitch, self.drop, count
+                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}\ncount: {}\npitch: {:.2}",
+                muzzle_pitch, self.angle, self.sim.muzzle_pitch, self.drop, count, deg
             );
             None
         } else if let Some(p) = self
@@ -72,7 +73,7 @@ impl<'s> super::Simulation<'s> {
         // Start with maximum angle to allow for zeroing at longer distances
         IterZero {
             sim: self,
-            angle: FRAC_PI_2,
+            angle: MAX_ANGLE,
             drop: -1.0,
             count: 0u64,
         }
