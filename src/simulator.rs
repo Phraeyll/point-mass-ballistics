@@ -81,20 +81,20 @@ impl<'p> Simulator<'p> {
     pub fn drop_table<T>(
         &self,
         zero_distance: Numeric,
-        step: Numeric,
-        range: Numeric,
+        step: u32,
+        range: u32,
         offset: Numeric,
     ) -> FloatMap<T>
     where
         FloatMap<T>: FromIterator<(Numeric, TableVal)>,
     {
-        let mut current_step: Numeric = 0.0;
+        let mut current_step: u32 = 0; // This can overflow, not sure how to check
         self.solution_simulation(Length::Yards(zero_distance), offset)
             .into_iter()
-            .take_do_while(|p| p.distance() <= range)
+            .take_do_while(|p| p.distance() <= Numeric::from(range))
             .filter_map(|p| {
-                if p.distance() >= current_step {
-                    current_step += step;
+                if p.distance() >= Numeric::from(current_step) {
+                    current_step += step; // Can overflow here
                     Some((
                         p.distance(), // Key
                         (
