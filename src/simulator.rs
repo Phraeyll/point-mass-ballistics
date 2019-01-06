@@ -91,7 +91,7 @@ impl<'p> Simulator<'p> {
         let mut current_step: u32 = 0; // This can overflow, not sure how to check
         self.solution_simulation(Length::Yards(zero_distance), offset)
             .into_iter()
-            .take_do_while(|p| p.distance() <= Numeric::from(range))
+            .do_take_while(|p| p.distance() <= Numeric::from(range))
             .filter_map(|p| {
                 if p.distance() >= Numeric::from(current_step) {
                     current_step += step; // Can overflow here
