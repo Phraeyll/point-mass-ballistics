@@ -23,15 +23,18 @@ impl<T> FloatMap<T> {
 impl FloatMap<Numeric> {
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, x: Numeric) -> Numeric {
-        let (x0, y0) = match self.0.range(..OrderedFloat(x)).next_back() {
-            Some((OrderedFloat(key), val)) => (key, val),
-            None => panic!("Velocity out of range!"),
-        };
-        let (x1, y1) = match self.0.range(OrderedFloat(x)..).next() {
-            Some((OrderedFloat(key), val)) => (key, val),
-            None => panic!("Velocity out of range!"),
-        };
-        y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
+        self.0
+            .range(..OrderedFloat(x))
+            .next_back()
+            .map(|(OrderedFloat(key), val)| (key, val))
+            .and_then(|(x0, y0)| {
+                self.0
+                    .range(OrderedFloat(x)..)
+                    .next()
+                    .map(|(OrderedFloat(key), val)| (key, val))
+                    .map(|(x1, y1)| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+            })
+            .unwrap_or_else(|| panic!("Velocity out of range"))
     }
 }
 
