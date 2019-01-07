@@ -24,11 +24,10 @@ impl FloatMap<Numeric> {
     // Linear interpolation of point 'mach' and associated CD
     pub fn lerp(&self, x: Numeric) -> Numeric {
         self.0
-            .range(..OrderedFloat(x))
-            .rev()
-            .zip(self.0.range(OrderedFloat(x)..))
+            .range(OrderedFloat(x)..)
+            .zip(self.0.range(..OrderedFloat(x)).rev())
             .next()
-            .map(|((OrderedFloat(x0), y0), (OrderedFloat(x1), y1))| {
+            .map(|((OrderedFloat(x1), y1), (OrderedFloat(x0), y0))| {
                 y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
             })
             .expect("Velocity out of range")
