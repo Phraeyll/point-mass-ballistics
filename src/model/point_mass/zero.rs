@@ -1,4 +1,4 @@
-use crate::util::{conversions::*, Numeric, FRAC_PI_4};
+use crate::util::{conversions::*, Numeric, FRAC_PI_2, FRAC_PI_4};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const MAX_ANGLE: Numeric = FRAC_PI_4;
@@ -35,10 +35,14 @@ impl<'s> Iterator for IterZero<'s> {
         let deg = self.sim.muzzle_pitch.to_degrees();
 
         if self.sim.muzzle_pitch > MAX_ANGLE {
-            // This never happens unless we start at MAX_ANGLE - if started at 45/2 degrees, will never go above 45
+            // This only can happen on second iteration, starting at 45 degrees
+            // If switched to 45/2 degrees, algorithm will converge to either 45 or 0
+            // Switched back to starting at 45 degrees to allow quick break if possible
             println!(
                 "Greater than MAX_ANGLE: {} at iteration: {} at pitch: {:.2}",
-                MAX_ANGLE.to_degrees(), count, deg
+                MAX_ANGLE.to_degrees(),
+                count,
+                deg
             );
             None
         } else if self.sim.muzzle_pitch == muzzle_pitch {
@@ -74,7 +78,7 @@ impl<'s> super::Simulation<'s> {
         // Start with maximum angle to allow for zeroing at longer distances
         IterZero {
             sim: self,
-            angle: MAX_ANGLE,
+            angle: FRAC_PI_2,
             drop: -1.0,
             count: 0u64,
         }

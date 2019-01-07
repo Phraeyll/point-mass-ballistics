@@ -4,9 +4,9 @@ use crate::util::*;
 
 use std::ops::Sub;
 
-// Struct which runs the simulation - has iter method attached
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
-// Using reference to current simulation model/conditions
+// Has reference to current simulation model for calculations
+// Output Item has this same reference
 pub struct IterSimulation<'s> {
     simulation: &'s super::Simulation<'s>, // Reference to model used for calculations
     position: Vector3<Numeric>,            // Position (m)
@@ -29,6 +29,8 @@ impl<'p> IntoIterator for &'p super::Simulation<'p> {
     }
 }
 
+// Produce new 'packet', based on drag, coriolis acceleration, and gravity
+// Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
     type Item = Packet<'s>;
     fn next(&mut self) -> Option<Self::Item> {

@@ -16,12 +16,11 @@ impl<T> FloatMap<T> {
     }
 }
 
-// Create wrapped btreemap representation of drag tables from vector representation
-// May consider parsing from a file, but I think it would be better to bundle tables inside
-// the binary, rather than reducing performance due to IO access
-// Consider adding another enum variant for custom table construction
 impl FloatMap<Numeric> {
-    // Linear interpolation of point 'mach' and associated CD
+    // Linear interpolation for 'y' of value 'x'
+    // Search for closest surrounding 'x' keys in map
+    // and use them along with their values for interpolation
+    // Works for exact values of 'x' as well
     pub fn lerp(&self, x: Numeric) -> Numeric {
         self.0
             .range(OrderedFloat(x)..)
@@ -34,6 +33,8 @@ impl FloatMap<Numeric> {
     }
 }
 
+// Initialize BTreeMap with OrdereredFloat wrapper around key, and FloatMap wrapper
+// around entire map.  Used for drag tables and output/drop tables
 macro_rules! float_map {
     ( $($key:expr => $val:expr,)+ ) => {
         float_map![
