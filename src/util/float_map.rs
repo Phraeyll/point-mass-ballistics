@@ -34,7 +34,7 @@ impl FloatMap<Numeric> {
                     .map(|(OrderedFloat(key), val)| (key, val))
                     .map(|(x1, y1)| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             })
-            .unwrap_or_else(|| panic!("Velocity out of range"))
+            .expect("Velocity out of range")
     }
 }
 
