@@ -23,18 +23,18 @@ impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
 }
 
 pub struct Simulator<'p> {
-    pub projectile: &'p params::Projectile, // Model variables, mostly projectile properties
-    pub scope: &'p params::Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: &'p params::Conditions,
-    pub solve_conditions: &'p params::Conditions,
+    pub projectile: &'p Projectile, // Model variables, mostly projectile properties
+    pub scope: &'p Scope,           // Model variables, mostly projectile properties
+    pub zero_conditions: &'p Conditions,
+    pub solve_conditions: &'p Conditions,
     pub time_step: Numeric,
 }
 impl<'p> Simulator<'p> {
     pub fn new(
-        projectile: &'p params::Projectile,
-        scope: &'p params::Scope,
-        zero_conditions: &'p params::Conditions,
-        solve_conditions: &'p params::Conditions,
+        projectile: &'p Projectile,
+        scope: &'p Scope,
+        zero_conditions: &'p Conditions,
+        solve_conditions: &'p Conditions,
         time_step: Numeric,
     ) -> Self {
         Self {

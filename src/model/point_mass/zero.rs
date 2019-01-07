@@ -35,13 +35,14 @@ impl<'s> Iterator for IterZero<'s> {
         let deg = self.sim.muzzle_pitch.to_degrees();
 
         if self.sim.muzzle_pitch > MAX_ANGLE {
-            // Maximum angle or muzzle_pitch not changing due to very small angle (floating point limitation)
+            // This never happens unless we start at MAX_ANGLE - if started at 45/2 degrees, will never go above 45
             println!(
                 "Greater than MAX_ANGLE: {} at iteration: {} at pitch: {:.2}",
                 MAX_ANGLE.to_degrees(), count, deg
             );
             None
         } else if self.sim.muzzle_pitch == muzzle_pitch {
+            // muzzle_pitch not changing due to very small angle (floating point limitation)
             // This should probably not happen in practice, only for very small values close to 0
             println!(
                 "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}\ncount: {}\npitch: {:.2}",
