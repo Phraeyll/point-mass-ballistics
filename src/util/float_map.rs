@@ -25,14 +25,11 @@ impl FloatMap<Numeric> {
     pub fn lerp(&self, x: Numeric) -> Numeric {
         self.0
             .range(..OrderedFloat(x))
-            .next_back()
-            .map(|(OrderedFloat(key), val)| (key, val))
-            .and_then(|(x0, y0)| {
-                self.0
-                    .range(OrderedFloat(x)..)
-                    .next()
-                    .map(|(OrderedFloat(key), val)| (key, val))
-                    .map(|(x1, y1)| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+            .rev()
+            .zip(self.0.range(OrderedFloat(x)..))
+            .next()
+            .map(|((OrderedFloat(x0), y0), (OrderedFloat(x1), y1))| {
+                y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
             })
             .expect("Velocity out of range")
     }
