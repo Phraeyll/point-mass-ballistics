@@ -88,6 +88,7 @@ impl<'s> super::Simulation<'s> {
         const MAX: Numeric = 0.001;
         self.zero_iter()
             .find(|&(_, drop)| drop > -MAX && drop < MAX)
-            .map_or(Err("Cannot zero for this range"), |(p, _)| Ok(p))
+            .map(|(p, _)| Ok(p))
+            .expect("Cannot zero for this range")
     }
 }
