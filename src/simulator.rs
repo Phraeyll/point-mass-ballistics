@@ -6,8 +6,6 @@ use crate::{
     util::*,
 };
 
-use std::iter::FromIterator;
-
 // Distance => (drop, windage, velocity, energy, moa, time)
 type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
 
@@ -67,15 +65,13 @@ impl<'p> Simulator<'p> {
         )
     }
     // Produce a drop table using specified range and step size
-    pub fn drop_table<T>(
+    pub fn drop_table(
         &self,
         zero_distance: Numeric,
         step: u32,
         range: u32,
         offset: Numeric,
-    ) -> FloatMap<T>
-    where
-        FloatMap<T>: FromIterator<(Numeric, TableVal)>,
+    ) -> FloatMap<TableVal>
     {
         let mut current_step: u32 = 0; // This can overflow, not sure how to check
         self.solution_simulation(Length::Yards(zero_distance), offset)
@@ -99,6 +95,6 @@ impl<'p> Simulator<'p> {
                     None
                 }
             })
-            .collect::<FloatMap<_>>()
+            .collect::<FloatMap<TableVal>>()
     }
 }
