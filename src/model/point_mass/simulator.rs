@@ -1,10 +1,6 @@
 pub use crate::model::BallisticCoefficient;
 
-use crate::{
-    model,
-    model::point_mass::{iter::Output, *},
-    util::*,
-};
+use super::{iter::Output, *};
 
 // Distance => (drop, windage, velocity, energy, moa, time)
 type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
@@ -34,8 +30,8 @@ impl<'p> Simulator<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn zero_simulation(&self, zero_distance: Length) -> model::point_mass::Simulation {
-        model::point_mass::Simulation::new(
+    fn zero_simulation(&self, zero_distance: Length) -> Simulation {
+        Simulation::new(
             &self.projectile,
             &self.scope,
             &self.zero_conditions,
@@ -47,12 +43,8 @@ impl<'p> Simulator<'p> {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    fn solution_simulation(
-        &self,
-        zero_distance: Length,
-        offset: Numeric,
-    ) -> model::point_mass::Simulation {
-        model::point_mass::Simulation::new(
+    fn solution_simulation(&self, zero_distance: Length, offset: Numeric) -> Simulation {
+        Simulation::new(
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
@@ -71,8 +63,7 @@ impl<'p> Simulator<'p> {
         step: u32,
         range: u32,
         offset: Numeric,
-    ) -> FloatMap<TableVal>
-    {
+    ) -> FloatMap<TableVal> {
         let mut current_step: u32 = 0; // This can overflow, not sure how to check
         self.solution_simulation(Length::Yards(zero_distance), offset)
             .into_iter()

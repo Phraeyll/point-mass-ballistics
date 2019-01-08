@@ -10,6 +10,7 @@ use std::ops::Mul;
 mod dragtables;
 #[allow(clippy::float_cmp)]
 pub(crate) mod iter;
+pub mod simulator;
 #[allow(clippy::float_cmp)]
 pub(crate) mod zero;
 
