@@ -1,24 +1,15 @@
 pub use crate::model::BallisticCoefficient;
 
-use ordered_float::OrderedFloat;
-
 use crate::{
     model,
     model::point_mass::{iter::Output, *},
     util::*,
 };
 
-use std::{collections::BTreeMap, iter::FromIterator};
+use std::iter::FromIterator;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
 type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
-impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
-    fn from_iter<I: IntoIterator<Item = (Numeric, T)>>(iter: I) -> Self {
-        FloatMap(BTreeMap::from_iter(
-            iter.into_iter().map(|(key, val)| (OrderedFloat(key), val)),
-        ))
-    }
-}
 
 pub struct Simulator<'p> {
     pub projectile: &'p Projectile, // Model variables, mostly projectile properties

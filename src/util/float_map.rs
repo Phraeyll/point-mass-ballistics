@@ -2,9 +2,20 @@ use ordered_float::OrderedFloat;
 
 use super::Numeric;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, iter::FromIterator};
 
 pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<Numeric>, T>);
+
+impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = (Numeric, T)>,
+    {
+        FloatMap(BTreeMap::from_iter(
+            iter.into_iter().map(|(key, val)| (OrderedFloat(key), val)),
+        ))
+    }
+}
 
 impl FloatMap<Numeric> {
     // Linear interpolation for 'y' of value 'x'
