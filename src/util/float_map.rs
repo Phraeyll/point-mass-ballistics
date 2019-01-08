@@ -5,16 +5,6 @@ use super::Numeric;
 use std::collections::BTreeMap;
 
 pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<Numeric>, T>);
-impl<T> Default for FloatMap<T> {
-    fn default() -> Self {
-        FloatMap(BTreeMap::new())
-    }
-}
-impl<T> FloatMap<T> {
-    pub fn new() -> Self {
-        FloatMap::default()
-    }
-}
 
 impl FloatMap<Numeric> {
     // Linear interpolation for 'y' of value 'x'
