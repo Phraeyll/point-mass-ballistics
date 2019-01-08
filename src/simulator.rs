@@ -95,6 +95,6 @@ impl<'p> Simulator<'p> {
                     None
                 }
             })
-            .collect::<FloatMap<TableVal>>()
+            .collect::<FloatMap<_>>()
     }
 }
