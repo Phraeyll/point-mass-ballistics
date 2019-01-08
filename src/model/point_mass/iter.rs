@@ -20,7 +20,13 @@ impl<'p> IntoIterator for &'p super::Simulation<'p> {
     type IntoIter = IterSimulation<'p>;
 
     fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl super::Simulation<'_> {
+    pub fn iter(&self) -> IterSimulation {
+        IterSimulation {
             simulation: self,
             position: Vector3::zeros(),
             velocity: self.muzzle_velocity_vector(),

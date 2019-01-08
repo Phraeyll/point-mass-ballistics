@@ -66,7 +66,7 @@ impl<'p> Simulator<'p> {
     ) -> FloatMap<TableVal> {
         let mut current_step: u32 = 0; // This can overflow, not sure how to check
         self.solution_simulation(Length::Yards(zero_distance), offset)
-            .into_iter()
+            .iter()
             .do_take_while(|p| p.distance() <= Numeric::from(range))
             .filter_map(|p| {
                 if p.distance() >= Numeric::from(current_step) {
