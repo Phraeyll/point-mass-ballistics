@@ -1,8 +1,4 @@
-use ordered_float::OrderedFloat;
-
 use crate::util::{FloatMap, Numeric};
-
-use std::collections::BTreeMap;
 
 pub fn init() -> FloatMap<Numeric> {
     float_map![

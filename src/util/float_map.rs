@@ -4,12 +4,26 @@ use super::Numeric;
 
 use std::{collections::BTreeMap, iter::FromIterator};
 
-pub struct FloatMap<T>(pub BTreeMap<OrderedFloat<Numeric>, T>);
+pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
 
-impl<T> FromIterator<(Numeric, T)> for FloatMap<T> {
+impl<V> Default for FloatMap<V> {
+    fn default() -> Self {
+        FloatMap(BTreeMap::new())
+    }
+}
+impl<V> FloatMap<V> {
+    pub fn new() -> Self {
+        FloatMap::default()
+    }
+    pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
+        self.0.insert(OrderedFloat(key), value)
+    }
+}
+
+impl<V> FromIterator<(Numeric, V)> for FloatMap<V> {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = (Numeric, T)>,
+        I: IntoIterator<Item = (Numeric, V)>,
     {
         FloatMap(BTreeMap::from_iter(
             iter.into_iter().map(|(key, val)| (OrderedFloat(key), val)),
@@ -43,9 +57,9 @@ macro_rules! float_map {
         ]
     };
     ( $($key:expr => $val:expr),* ) => {{
-        let mut _float_map = FloatMap(BTreeMap::new());
+        let mut _float_map = FloatMap::new();
         $(
-            let _ = _float_map.0.insert(OrderedFloat($key), $val);
+            let _ = _float_map.insert($key, $val);
         )*
         _float_map
     }};
