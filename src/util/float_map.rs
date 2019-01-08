@@ -2,7 +2,11 @@ use ordered_float::OrderedFloat;
 
 use super::Numeric;
 
-use std::{collections::{btree_map, BTreeMap}, iter::FromIterator};
+use std::{
+    collections::{btree_map, BTreeMap},
+    iter::FromIterator,
+    ops::RangeBounds,
+};
 
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
 
@@ -33,8 +37,15 @@ impl<V> FloatMap<V> {
     pub fn iter(&self) -> btree_map::Iter<OrderedFloat<Numeric>, V> {
         self.0.iter()
     }
+    pub fn range<R>(&self, range: R) -> impl DoubleEndedIterator<Item = (&Numeric, &V)>
+    where
+        R: RangeBounds<OrderedFloat<Numeric>>,
+    {
+        self.0
+            .range(range)
+            .map(|(OrderedFloat(key), val)| (key, val))
+    }
 }
-
 
 impl FloatMap<Numeric> {
     // Linear interpolation for 'y' of value 'x'
@@ -42,13 +53,11 @@ impl FloatMap<Numeric> {
     // and use them along with their values for interpolation
     // Works for exact values of 'x' as well
     pub fn lerp(&self, x: Numeric) -> Numeric {
-        self.0
-            .range(OrderedFloat(x)..)
-            .zip(self.0.range(..OrderedFloat(x)).rev())
+        let key = OrderedFloat(x);
+        self.range(key..)
+            .zip(self.range(..key).rev())
             .next()
-            .map(|((OrderedFloat(x1), y1), (OrderedFloat(x0), y0))| {
-                y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
-            })
+            .map(|((x1, y1), (x0, y0))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             .expect("Velocity out of range")
     }
 }
