@@ -8,15 +8,7 @@ pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
 
 impl<V> Default for FloatMap<V> {
     fn default() -> Self {
-        FloatMap(BTreeMap::new())
-    }
-}
-impl<V> FloatMap<V> {
-    pub fn new() -> Self {
-        FloatMap::default()
-    }
-    pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
-        self.0.insert(OrderedFloat(key), value)
+        FloatMap::new()
     }
 }
 
@@ -30,6 +22,16 @@ impl<V> FromIterator<(Numeric, V)> for FloatMap<V> {
         ))
     }
 }
+
+impl<V> FloatMap<V> {
+    pub fn new() -> Self {
+        FloatMap(BTreeMap::new())
+    }
+    pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
+        self.0.insert(OrderedFloat(key), value)
+    }
+}
+
 
 impl FloatMap<Numeric> {
     // Linear interpolation for 'y' of value 'x'
