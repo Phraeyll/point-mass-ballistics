@@ -2,7 +2,7 @@ use ordered_float::OrderedFloat;
 
 use super::Numeric;
 
-use std::{collections::BTreeMap, iter::FromIterator};
+use std::{collections::{btree_map, BTreeMap}, iter::FromIterator};
 
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
 
@@ -29,6 +29,9 @@ impl<V> FloatMap<V> {
     }
     pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
         self.0.insert(OrderedFloat(key), value)
+    }
+    pub fn iter(&self) -> btree_map::Iter<OrderedFloat<Numeric>, V> {
+        self.0.iter()
     }
 }
 
