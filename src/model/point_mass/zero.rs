@@ -72,6 +72,18 @@ impl<'s> Iterator for IterFindElevation<'s> {
     }
 }
 
+// I would expect lifetime elision to work here
+// but it currently does not
+//
+// impl super::Simulation<'_>
+//
+// note: ...so that the expression is assignable:
+//           expected model::point_mass::zero::IterFindElevation<'_>
+//              found model::point_mass::zero::IterFindElevation<'_>
+// note: ...so that the expression is assignable:
+//           expected &mut model::point_mass::Simulation<'_>
+//              found &mut model::point_mass::Simulation<'_>
+//
 impl<'s> super::Simulation<'s> {
     fn find_elevation(&'s mut self) -> IterFindElevation {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)

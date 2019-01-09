@@ -15,9 +15,9 @@ pub struct IterSimulation<'s> {
 }
 
 // Create an new iterator over Simulation
-impl<'p> IntoIterator for &'p super::Simulation<'p> {
-    type Item = <IterSimulation<'p> as Iterator>::Item;
-    type IntoIter = IterSimulation<'p>;
+impl<'s> IntoIterator for &'s super::Simulation<'s> {
+    type Item = <IterSimulation<'s> as Iterator>::Item;
+    type IntoIter = IterSimulation<'s>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -126,8 +126,8 @@ impl IterSimulation<'_> {
 // Output struct which represents projectiles current position, and velocity
 // Basically same values used internally during iteration
 // Along with a ref to the simulation which was iterated over
-pub struct Packet<'p> {
-    simulation: &'p super::Simulation<'p>, //Simulation this came from, used for various calculations
+pub struct Packet<'s> {
+    simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
     time: Numeric,                         // Position in time (s)
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
