@@ -21,21 +21,21 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
-pub(crate) struct Simulation<'c> {
-    projectile: &'c Projectile,
-    scope: &'c Scope,
-    conditions: &'c Conditions,
+pub(crate) struct Simulation<'p> {
+    projectile: &'p Projectile,
+    scope: &'p Scope,
+    conditions: &'p Conditions,
     muzzle_pitch: Numeric,
     zero_distance: Length,
     time_step: Time,
 }
-impl<'c> Simulation<'c> {
+impl<'p> Simulation<'p> {
     pub(crate) fn new(
-        projectile: &'c Projectile,
-        scope: &'c Scope,
-        conditions: &'c Conditions,
+        projectile: &'p Projectile,
+        scope: &'p Scope,
+        conditions: &'p Conditions,
         muzzle_pitch: Numeric,
-        zero_distance: Length,
+        zero_distance: Numeric,
         time_step: Numeric,
     ) -> Self {
         Self {
@@ -43,7 +43,7 @@ impl<'c> Simulation<'c> {
             scope,
             conditions,
             muzzle_pitch,
-            zero_distance,
+            zero_distance: Length::Yards(zero_distance),
             time_step: Time::Seconds(time_step),
         }
     }

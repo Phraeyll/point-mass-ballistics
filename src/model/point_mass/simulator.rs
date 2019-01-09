@@ -10,7 +10,7 @@ pub struct SimulationBuilder<'p> {
     pub scope: &'p Scope,           // Model variables, mostly projectile properties
     pub zero_conditions: &'p Conditions,
     pub solve_conditions: &'p Conditions,
-    pub zero_distance: Length,
+    pub zero_distance: Numeric,
     pub time_step: Numeric,
 }
 impl<'p> SimulationBuilder<'p> {
@@ -27,7 +27,7 @@ impl<'p> SimulationBuilder<'p> {
             scope,
             zero_conditions,
             solve_conditions,
-            zero_distance: Length::Yards(zero_distance),
+            zero_distance,
             time_step,
         }
     }
