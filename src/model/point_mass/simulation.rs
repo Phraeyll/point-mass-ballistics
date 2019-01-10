@@ -62,7 +62,7 @@ impl<'p> SimulationBuilder<'p> {
     // Produce a drop table using specified range and step size
     pub fn drop_table(&self, step: u32, range: u32, offset: Numeric) -> FloatMap<TableVal> {
         let sim = self.solution_simulation(offset);
-        let mut iter = sim.iter().fuse();
+        let mut iter = sim.iter();
         (0..=range)
             .step_by(step as usize)
             .filter_map(|current_step| {
