@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 
 use crate::util::*;
 
-use std::ops::Sub;
+use std::ops::Add;
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
@@ -141,7 +141,7 @@ impl Packet<'_> {
         self.position
             .yaw(-self.simulation.conditions.other.azimuth())
             .pitch(-self.simulation.conditions.other.line_of_sight())
-            .sub(self.simulation.scope.height())
+            .add(-self.simulation.scope.height())
     }
 }
 
