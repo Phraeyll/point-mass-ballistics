@@ -31,7 +31,7 @@ impl<'p> SimulationBuilder<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn zero_simulation(&self) -> Simulation {
+    pub fn zero_simulation(&self, zero: Numeric) -> Simulation {
         Simulation::new(
             self.projectile,
             self.scope,
@@ -39,22 +39,29 @@ impl<'p> SimulationBuilder<'p> {
             0.0,
             self.zero_distance,
             self.time_step,
+            zero,
         )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    pub fn solution_simulation(&self, tolerance: Numeric, offset: Numeric) -> Simulation {
+    pub fn solution_simulation(
+        &self,
+        tolerance: Numeric,
+        zero: Numeric,
+        offset: Numeric,
+    ) -> Simulation {
         Simulation::new(
             self.projectile,
             self.scope,
             self.solve_conditions,
-            match self.zero_simulation().zero(tolerance) {
+            match self.zero_simulation(zero).zero(tolerance) {
                 Ok(muzzle_pitch) => muzzle_pitch + (offset / 60.0).to_radians(),
                 Err(err) => panic!(err),
             },
             self.zero_distance,
             self.time_step,
+            zero,
         )
     }
 }
