@@ -104,7 +104,7 @@ impl<'s> super::Simulation<'s> {
         let zero = self.zero;
         self.find_elevation()
             .find(|&(_, elevation)| {
-                elevation >= (zero - tolerance) && elevation <= (zero + tolerance)
+                elevation > (zero - tolerance) && elevation < (zero + tolerance)
             })
             .map(|(p, _)| Ok(p))
             .expect("Cannot zero for this range")
