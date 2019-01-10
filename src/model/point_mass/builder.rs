@@ -44,12 +44,12 @@ impl<'p> SimulationBuilder<'p> {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    pub fn solution_simulation(&self, offset: Numeric) -> Simulation {
+    pub fn solution_simulation(&self, tolerance: Numeric, offset: Numeric) -> Simulation {
         Simulation::new(
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
-            match self.zero_simulation().zero() {
+            match self.zero_simulation().zero(tolerance) {
                 Ok(muzzle_pitch) => muzzle_pitch + (offset / 60.0).to_radians(),
                 Err(err) => panic!(err),
             },

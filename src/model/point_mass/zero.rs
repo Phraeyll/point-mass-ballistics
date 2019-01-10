@@ -96,10 +96,9 @@ impl<'s> super::Simulation<'s> {
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub(crate) fn zero(&'s mut self) -> Result<Numeric, &'static str> {
-        const MAX: Numeric = 0.001;
+    pub(crate) fn zero(&'s mut self, tolerance: Numeric) -> Result<Numeric, &'static str> {
         self.find_elevation()
-            .find(|&(_, elevation)| elevation > -MAX && elevation < MAX)
+            .find(|&(_, elevation)| elevation > -tolerance && elevation < tolerance)
             .map(|(p, _)| Ok(p))
             .expect("Cannot zero for this range")
     }
