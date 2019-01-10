@@ -12,11 +12,9 @@ pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
 pub use self::conversions::*;
 pub use self::float_map::*;
-pub use self::iter_adaptors::*;
 pub use self::nalgebra_helpers::*;
 
 #[macro_use]
 pub mod float_map;
 pub mod conversions;
-pub mod iter_adaptors;
 pub mod nalgebra_helpers;
