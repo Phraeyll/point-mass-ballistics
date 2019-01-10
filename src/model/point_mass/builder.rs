@@ -1,10 +1,8 @@
 pub use crate::model::BallisticCoefficient;
 
-use super::{iter::Output, *};
+use super::*;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
-type TableVal = (Numeric, Numeric, Numeric, Numeric, Numeric, Numeric);
-
 pub struct SimulationBuilder<'p> {
     pub projectile: &'p Projectile, // Model variables, mostly projectile properties
     pub scope: &'p Scope,           // Model variables, mostly projectile properties
@@ -33,7 +31,7 @@ impl<'p> SimulationBuilder<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn zero_simulation(&self) -> Simulation {
+    pub fn zero_simulation(&self) -> Simulation {
         Simulation::new(
             &self.projectile,
             &self.scope,
@@ -46,7 +44,7 @@ impl<'p> SimulationBuilder<'p> {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    fn solution_simulation(&self, offset: Numeric) -> Simulation {
+    pub fn solution_simulation(&self, offset: Numeric) -> Simulation {
         Simulation::new(
             &self.projectile,
             &self.scope,
@@ -58,30 +56,5 @@ impl<'p> SimulationBuilder<'p> {
             self.zero_distance,
             self.time_step,
         )
-    }
-    // Produce a drop table using specified range and step size
-    pub fn drop_table(&self, step: u32, range: u32, offset: Numeric) -> FloatMap<TableVal> {
-        let sim = self.solution_simulation(offset);
-        let mut iter = sim.iter();
-        (0..=range)
-            .step_by(step as usize)
-            .filter_map(|current_step| {
-                iter.by_ref()
-                    .find(|p| p.distance() >= Numeric::from(current_step))
-                    .map(|p| {
-                        (
-                            p.distance(), // Key
-                            (
-                                p.elevation(),
-                                p.windage(),
-                                p.velocity(),
-                                p.energy(),
-                                p.moa(),
-                                p.time(),
-                            ), // Value
-                        )
-                    })
-            })
-            .collect::<FloatMap<_>>()
     }
 }

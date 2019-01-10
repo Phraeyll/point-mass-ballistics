@@ -6,11 +6,12 @@ use crate::util::*;
 
 use std::ops::Mul;
 
+pub mod builder;
 #[allow(clippy::approx_constant)]
 mod dragtables;
 #[allow(clippy::float_cmp)]
-pub(crate) mod iter;
-pub mod simulation;
+pub mod iter;
+pub mod table;
 #[allow(clippy::float_cmp)]
 pub(crate) mod zero;
 
@@ -21,7 +22,7 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
-pub(crate) struct Simulation<'p> {
+pub struct Simulation<'p> {
     projectile: &'p Projectile,
     scope: &'p Scope,
     conditions: &'p Conditions,
