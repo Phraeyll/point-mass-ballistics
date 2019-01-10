@@ -16,7 +16,9 @@ impl<'s> Iterator for IterFindElevation<'s> {
         self.count += 1;
         // Keep previous value to check if pitch changes
         let &mut Self {
-            sim: &mut super::Simulation { muzzle_pitch, zero, .. },
+            sim: &mut super::Simulation {
+                muzzle_pitch, zero, ..
+            },
             count,
             elevation,
             ..
@@ -26,7 +28,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
         // Change direction if
         // above(positive drop) and going   up(positive angle) or
         // below(negative drop) and going down(negative angle)
-        if self.angle.is_sign_positive() ^ (elevation < zero){
+        if self.angle.is_sign_positive() ^ (elevation < zero) {
             self.angle *= -1.0;
         }
         // Always reduce angle on next iteration, converging towards either max(45) or min(0) degrees
@@ -98,10 +100,7 @@ impl<'s> super::Simulation<'s> {
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub(crate) fn zero(
-        &'s mut self,
-        tolerance: Numeric,
-    ) -> Result<Numeric, &'static str> {
+    pub(crate) fn zero(&'s mut self, tolerance: Numeric) -> Result<Numeric, &'static str> {
         let zero = self.zero;
         self.find_elevation()
             .find(|&(_, elevation)| {
