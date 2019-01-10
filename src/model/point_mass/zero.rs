@@ -53,8 +53,8 @@ impl<'s> Iterator for IterFindElevation<'s> {
             // muzzle_pitch not changing due to very small angle (floating point limitation)
             // This should probably not happen in practice, only for very small values close to 0
             println!(
-                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\ndrop: {:+.64}\ncount: {}\npitch: {:.2}",
-                muzzle_pitch, self.angle, self.sim.muzzle_pitch, self.elevation, count, deg
+                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\nelevation: {:+.64}\ncount: {}\npitch: {:.2}",
+                muzzle_pitch, self.angle, self.sim.muzzle_pitch, elevation, count, deg
             );
             None
         } else if let Some(p) = self
