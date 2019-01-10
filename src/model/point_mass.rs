@@ -25,7 +25,7 @@ const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity o
 pub struct Simulation<'p> {
     projectile: &'p Projectile,
     scope: &'p Scope,
-    conditions: &'p Conditions,
+    conditions: &'p Conditions<'p>,
     muzzle_pitch: Numeric,
     zero_distance: Length,
     time_step: Time,
@@ -34,7 +34,7 @@ impl<'p> Simulation<'p> {
     pub(crate) fn new(
         projectile: &'p Projectile,
         scope: &'p Scope,
-        conditions: &'p Conditions,
+        conditions: &'p Conditions<'p>,
         muzzle_pitch: Numeric,
         zero_distance: Numeric,
         time_step: Numeric,
@@ -66,13 +66,13 @@ impl<'p> Simulation<'p> {
     }
 }
 
-pub struct Conditions {
-    pub(crate) wind: Wind,
-    pub(crate) atmosphere: Atmosphere,
-    pub(crate) other: Other,
+pub struct Conditions<'c> {
+    pub(crate) wind: &'c Wind,
+    pub(crate) atmosphere: &'c Atmosphere,
+    pub(crate) other: &'c Other,
 }
-impl Conditions {
-    pub fn new(wind: Wind, atmosphere: Atmosphere, other: Other) -> Self {
+impl<'c> Conditions<'c> {
+    pub fn new(wind: &'c Wind, atmosphere: &'c Atmosphere, other: &'c Other) -> Self {
         Self {
             wind,
             atmosphere,

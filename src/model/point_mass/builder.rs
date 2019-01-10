@@ -6,8 +6,8 @@ use super::*;
 pub struct SimulationBuilder<'p> {
     pub projectile: &'p Projectile, // Model variables, mostly projectile properties
     pub scope: &'p Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: &'p Conditions,
-    pub solve_conditions: &'p Conditions,
+    pub zero_conditions: &'p Conditions<'p>,
+    pub solve_conditions: &'p Conditions<'p>,
     pub zero_distance: Numeric,
     pub time_step: Numeric,
 }
