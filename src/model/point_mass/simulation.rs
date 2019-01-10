@@ -72,7 +72,7 @@ impl<'p> SimulationBuilder<'p> {
                         (
                             p.distance(), // Key
                             (
-                                p.drop(),
+                                p.elevation(),
                                 p.windage(),
                                 p.velocity(),
                                 p.energy(),

@@ -150,7 +150,7 @@ pub trait Output {
     fn velocity(&self) -> Numeric;
     fn energy(&self) -> Numeric;
     fn distance(&self) -> Numeric;
-    fn drop(&self) -> Numeric;
+    fn elevation(&self) -> Numeric;
     fn windage(&self) -> Numeric;
     fn moa(&self) -> Numeric;
 }
@@ -174,7 +174,7 @@ impl Output for Packet<'_> {
             .to_yards()
             .to_num()
     }
-    fn drop(&self) -> Numeric {
+    fn elevation(&self) -> Numeric {
         Length::Meters(self.relative_position().y)
             .to_inches()
             .to_num()
