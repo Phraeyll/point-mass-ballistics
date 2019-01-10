@@ -33,9 +33,9 @@ impl<'p> SimulationBuilder<'p> {
     // Starting from flat fire pitch (0.0)
     pub fn zero_simulation(&self) -> Simulation {
         Simulation::new(
-            &self.projectile,
-            &self.scope,
-            &self.zero_conditions,
+            self.projectile,
+            self.scope,
+            self.zero_conditions,
             0.0,
             self.zero_distance,
             self.time_step,
@@ -46,9 +46,9 @@ impl<'p> SimulationBuilder<'p> {
     // Can be used for drop table, or eventually dialing in a specific distance
     pub fn solution_simulation(&self, tolerance: Numeric, offset: Numeric) -> Simulation {
         Simulation::new(
-            &self.projectile,
-            &self.scope,
-            &self.solve_conditions,
+            self.projectile,
+            self.scope,
+            self.solve_conditions,
             match self.zero_simulation().zero(tolerance) {
                 Ok(muzzle_pitch) => muzzle_pitch + (offset / 60.0).to_radians(),
                 Err(err) => panic!(err),
