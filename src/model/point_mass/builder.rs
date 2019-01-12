@@ -53,7 +53,7 @@ impl<'p> SimulationBuilder<'p> {
         let zero_offset = Length::Inches(zero_offset).to_meters().to_num();
         let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
         let pitch_offset = (pitch_offset / 60.0).to_radians();
-        let yaw_offset = (yaw_offset / 60.0).to_radians();
+        let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
             self.projectile,
             self.scope,
