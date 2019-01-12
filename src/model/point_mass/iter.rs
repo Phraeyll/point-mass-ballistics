@@ -139,8 +139,8 @@ impl Packet<'_> {
     // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .yaw(-self.simulation.conditions.other.azimuth())
-            .pitch(-self.simulation.conditions.other.line_of_sight())
+            .pivot_y(-self.simulation.conditions.other.azimuth())
+            .pivot_z(-self.simulation.conditions.other.line_of_sight())
             .add(-self.simulation.scope.height())
     }
 }

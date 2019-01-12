@@ -53,8 +53,8 @@ impl<'p> Simulation<'p> {
     fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity()
-            .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch)
-            .yaw(self.conditions.other.azimuth() + self.muzzle_yaw)
+            .pivot_z(self.conditions.other.line_of_sight() + self.muzzle_pitch)
+            .pivot_y(self.conditions.other.azimuth() + self.muzzle_yaw)
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components
@@ -62,7 +62,7 @@ impl<'p> Simulation<'p> {
         self.conditions
             .wind
             .velocity()
-            .yaw(self.conditions.wind.yaw() + self.conditions.other.azimuth())
+            .pivot_y(self.conditions.wind.yaw() + self.conditions.other.azimuth())
     }
 }
 
@@ -299,6 +299,6 @@ impl Other {
     pub(crate) fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
-            .pitch(self.lattitude())
+            .pivot_z(self.lattitude())
     }
 }
