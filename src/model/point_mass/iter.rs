@@ -153,6 +153,8 @@ pub trait Output {
     fn elevation(&self) -> Numeric;
     fn windage(&self) -> Numeric;
     fn moa(&self) -> Numeric;
+    fn vertical_moa(&self) -> Numeric;
+    fn horizontal_moa(&self) -> Numeric;
 }
 
 // Hard coded Imperial units for now - need to use better library for this eventually
@@ -189,5 +191,17 @@ impl Output for Packet<'_> {
             .angle(&Vector3::x_axis())
             .to_degrees()
             * 60.0
+    }
+    fn vertical_moa(&self) -> Numeric {
+        let y = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
+        y.angle(&Vector3::x_axis())
+        .to_degrees()
+        * 60.0
+    }
+    fn horizontal_moa(&self) -> Numeric {
+        let y = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
+        y.angle(&Vector3::x_axis())
+        .to_degrees()
+        * 60.0
     }
 }
