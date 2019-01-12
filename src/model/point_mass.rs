@@ -62,7 +62,7 @@ impl<'p> Simulation<'p> {
         self.conditions
             .wind
             .velocity()
-            .pivot_y(self.conditions.wind.yaw() + self.conditions.other.azimuth())
+            .pivot_y(self.conditions.wind.yaw() + self.conditions.other.azimuth() + self.muzzle_yaw)
     }
 }
 
@@ -253,11 +253,10 @@ impl Other {
         gravity: Option<Numeric>,
     ) -> Self {
         Self {
-            gravity: match gravity {
-                Some(gravity) => Acceleration::Fps2(gravity),
-                None => Acceleration::Mps2(GRAVITY),
-            },
-            line_of_sight,
+            gravity: gravity.map_or(Acceleration::Mps2(GRAVITY), |gravity| {
+                Acceleration::Fps2(gravity)
+            }),
+            line_of_sight, // degrees
             lattitude,
             azimuth,
         }
