@@ -64,10 +64,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
             .find(|p| p.relative_position().x >= self.zero_distance)
         {
             self.elevation = p.relative_position().y;
-            Some((
-                self.sim.muzzle_pitch,
-                self.elevation,
-            ))
+            Some((self.sim.muzzle_pitch, self.elevation))
         } else {
             // Terminal velocity reached
             println!("count: {}", count);
@@ -89,7 +86,11 @@ impl<'s> Iterator for IterFindElevation<'s> {
 //              found &mut model::point_mass::Simulation<'_>
 //
 impl<'s> super::Simulation<'s> {
-    fn find_elevation(&'s mut self, zero_distance: Numeric, zero_offset: Numeric) -> IterFindElevation {
+    fn find_elevation(
+        &'s mut self,
+        zero_distance: Numeric,
+        zero_offset: Numeric,
+    ) -> IterFindElevation {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         // Start with maximum angle to allow for zeroing at longer distances
         IterFindElevation {
@@ -110,7 +111,8 @@ impl<'s> super::Simulation<'s> {
     ) -> Result<Numeric, &'static str> {
         self.find_elevation(zero_distance, zero_offset)
             .find(|&(_, elevation)| {
-                elevation > (zero_offset - zero_tolerance) && elevation < (zero_offset + zero_tolerance)
+                elevation > (zero_offset - zero_tolerance)
+                    && elevation < (zero_offset + zero_tolerance)
             })
             .map(|(pitch, _)| Ok(pitch))
             .expect("Cannot zero for this range")

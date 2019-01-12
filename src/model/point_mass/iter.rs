@@ -193,15 +193,11 @@ impl Output for Packet<'_> {
             * 60.0
     }
     fn vertical_moa(&self) -> Numeric {
-        let y = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
-        y.angle(&Vector3::x_axis())
-        .to_degrees()
-        * 60.0
+        let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
+        pos.angle(&Vector3::x_axis()).to_degrees() * 60.0
     }
     fn horizontal_moa(&self) -> Numeric {
-        let y = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
-        y.angle(&Vector3::x_axis())
-        .to_degrees()
-        * 60.0
+        let pos = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
+        pos.angle(&Vector3::x_axis()).to_degrees() * 60.0
     }
 }
