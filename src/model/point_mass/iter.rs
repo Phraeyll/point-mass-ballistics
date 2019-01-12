@@ -93,8 +93,7 @@ impl IterSimulation<'_> {
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
         let omega = self.simulation.conditions.other.omega().pivot_z(
             self.simulation.conditions.other.lattitude()
-                + self.simulation.conditions.other.line_of_sight()
-                + self.simulation.muzzle_pitch,
+                + self.simulation.conditions.other.line_of_sight(),
         );
         -2.0 * omega.cross(&self.velocity)
     }
