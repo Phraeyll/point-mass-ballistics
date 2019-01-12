@@ -27,9 +27,7 @@ pub struct Simulation<'p> {
     scope: &'p Scope,
     conditions: &'p Conditions<'p>,
     muzzle_pitch: Numeric,
-    zero_distance: Length,
     time_step: Time,
-    zero: Numeric,
 }
 impl<'p> Simulation<'p> {
     pub(crate) fn new(
@@ -37,18 +35,14 @@ impl<'p> Simulation<'p> {
         scope: &'p Scope,
         conditions: &'p Conditions<'p>,
         muzzle_pitch: Numeric,
-        zero_distance: Numeric,
         time_step: Numeric,
-        zero: Numeric,
     ) -> Self {
         Self {
             projectile,
             scope,
             conditions,
             muzzle_pitch,
-            zero_distance: Length::Yards(zero_distance),
             time_step: Time::Seconds(time_step),
-            zero,
         }
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)

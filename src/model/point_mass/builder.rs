@@ -8,7 +8,6 @@ pub struct SimulationBuilder<'p> {
     pub scope: &'p Scope,           // Model variables, mostly projectile properties
     pub zero_conditions: &'p Conditions<'p>,
     pub solve_conditions: &'p Conditions<'p>,
-    pub zero_distance: Numeric,
     pub time_step: Numeric,
 }
 impl<'p> SimulationBuilder<'p> {
@@ -17,7 +16,6 @@ impl<'p> SimulationBuilder<'p> {
         scope: &'p Scope,
         zero_conditions: &'p Conditions,
         solve_conditions: &'p Conditions,
-        zero_distance: Numeric,
         time_step: Numeric,
     ) -> Self {
         Self {
@@ -25,43 +23,43 @@ impl<'p> SimulationBuilder<'p> {
             scope,
             zero_conditions,
             solve_conditions,
-            zero_distance,
             time_step,
         }
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn zero_simulation(&self, zero: Numeric) -> Simulation {
+    pub fn flat_simulation(&self) -> Simulation {
         Simulation::new(
             self.projectile,
             self.scope,
             self.zero_conditions,
             0.0,
-            self.zero_distance,
             self.time_step,
-            zero,
         )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    pub fn solution_simulation(
+    pub fn solve_for(
         &self,
-        tolerance: Numeric,
-        zero: Numeric,
-        offset: Numeric,
+        zero_distance: Numeric,
+        zero_offset: Numeric,
+        zero_tolerance: Numeric,
+        angle_offset: Numeric,
     ) -> Simulation {
+        let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
+        let zero_offset = Length::Inches(zero_offset).to_meters().to_num();
+        let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
+        let angle_offset = (angle_offset / 60.0).to_radians();
         Simulation::new(
             self.projectile,
             self.scope,
             self.solve_conditions,
-            match self.zero_simulation(zero).zero(tolerance) {
-                Ok(muzzle_pitch) => muzzle_pitch + (offset / 60.0).to_radians(),
-                Err(err) => panic!(err),
-            },
-            self.zero_distance,
+            self.flat_simulation()
+                .zero(zero_distance, zero_offset, zero_tolerance)
+                .map(|muzzle_pitch| muzzle_pitch + angle_offset)
+                .expect("Zeroing Failed"),
             self.time_step,
-            zero,
         )
     }
 }

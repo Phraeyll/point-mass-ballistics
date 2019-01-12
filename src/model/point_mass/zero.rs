@@ -7,6 +7,8 @@ struct IterFindElevation<'s> {
     sim: &'s mut super::Simulation<'s>,
     angle: Numeric,
     elevation: Numeric,
+    zero_distance: Numeric,
+    zero_offset: Numeric,
     count: u64,
 }
 
@@ -16,9 +18,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
         self.count += 1;
         // Keep previous value to check if pitch changes
         let &mut Self {
-            sim: &mut super::Simulation {
-                muzzle_pitch, zero, ..
-            },
+            sim: &mut super::Simulation { muzzle_pitch, .. },
             count,
             elevation,
             ..
@@ -28,7 +28,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
         // Change direction if
         // above(positive drop) and going   up(positive angle) or
         // below(negative drop) and going down(negative angle)
-        if self.angle.is_sign_positive() ^ (elevation < zero) {
+        if self.angle.is_sign_positive() ^ (self.elevation < self.zero_offset) {
             self.angle *= -1.0;
         }
         // Always reduce angle on next iteration, converging towards either max(45) or min(0) degrees
@@ -61,12 +61,12 @@ impl<'s> Iterator for IterFindElevation<'s> {
             // Find height in meters relative to zero, given pitch
             .sim
             .iter()
-            .find(|p| p.relative_position().x >= self.sim.zero_distance.to_meters().to_num())
+            .find(|p| p.relative_position().x >= self.zero_distance)
         {
             self.elevation = p.relative_position().y;
             Some((
                 self.sim.muzzle_pitch,
-                Length::Meters(self.elevation).to_inches().to_num(),
+                self.elevation,
             ))
         } else {
             // Terminal velocity reached
@@ -89,24 +89,30 @@ impl<'s> Iterator for IterFindElevation<'s> {
 //              found &mut model::point_mass::Simulation<'_>
 //
 impl<'s> super::Simulation<'s> {
-    fn find_elevation(&'s mut self) -> IterFindElevation {
+    fn find_elevation(&'s mut self, zero_distance: Numeric, zero_offset: Numeric) -> IterFindElevation {
         // This angle will trace the longest possible trajectory for a projectile (45 degrees)
         // Start with maximum angle to allow for zeroing at longer distances
         IterFindElevation {
             sim: self,
             angle: FRAC_PI_2,
             elevation: -1.0,
+            zero_distance,
+            zero_offset,
             count: 0u64,
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub(crate) fn zero(&'s mut self, tolerance: Numeric) -> Result<Numeric, &'static str> {
-        let zero = self.zero;
-        self.find_elevation()
+    pub(crate) fn zero(
+        &'s mut self,
+        zero_distance: Numeric,
+        zero_offset: Numeric,
+        zero_tolerance: Numeric,
+    ) -> Result<Numeric, &'static str> {
+        self.find_elevation(zero_distance, zero_offset)
             .find(|&(_, elevation)| {
-                elevation > (zero - tolerance) && elevation < (zero + tolerance)
+                elevation > (zero_offset - zero_tolerance) && elevation < (zero_offset + zero_tolerance)
             })
-            .map(|(p, _)| Ok(p))
+            .map(|(pitch, _)| Ok(pitch))
             .expect("Cannot zero for this range")
     }
 }
