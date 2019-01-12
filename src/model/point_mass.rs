@@ -297,5 +297,6 @@ impl Other {
     pub(crate) fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
+            .pivot_z(self.lattitude())
     }
 }

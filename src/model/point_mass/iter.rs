@@ -91,11 +91,12 @@ impl IterSimulation<'_> {
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        let omega = self.simulation.conditions.other.omega().pivot_z(
-            self.simulation.conditions.other.lattitude()
-                + self.simulation.conditions.other.line_of_sight(),
-        );
-        -2.0 * omega.cross(&self.velocity)
+        -2.0 * self
+            .simulation
+            .conditions
+            .other
+            .omega()
+            .cross(&self.velocity)
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {

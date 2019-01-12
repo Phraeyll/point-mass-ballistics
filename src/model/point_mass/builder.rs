@@ -28,7 +28,7 @@ impl<'p> SimulationBuilder<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn flat_simulation(&self) -> Simulation {
+    pub fn flat(&self) -> Simulation {
         Simulation::new(
             self.projectile,
             self.scope,
@@ -58,7 +58,7 @@ impl<'p> SimulationBuilder<'p> {
             self.projectile,
             self.scope,
             self.solve_conditions,
-            self.flat_simulation()
+            self.flat()
                 .zero(zero_distance, zero_offset, zero_tolerance)
                 .map(|muzzle_pitch| muzzle_pitch + pitch_offset)
                 .expect("Zeroing Failed"),
