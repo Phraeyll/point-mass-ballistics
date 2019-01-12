@@ -27,6 +27,7 @@ pub struct Simulation<'p> {
     scope: &'p Scope,
     conditions: &'p Conditions<'p>,
     muzzle_pitch: Numeric,
+    muzzle_yaw: Numeric,
     time_step: Time,
 }
 impl<'p> Simulation<'p> {
@@ -35,6 +36,7 @@ impl<'p> Simulation<'p> {
         scope: &'p Scope,
         conditions: &'p Conditions<'p>,
         muzzle_pitch: Numeric,
+        muzzle_yaw: Numeric,
         time_step: Numeric,
     ) -> Self {
         Self {
@@ -42,6 +44,7 @@ impl<'p> Simulation<'p> {
             scope,
             conditions,
             muzzle_pitch,
+            muzzle_yaw,
             time_step: Time::Seconds(time_step),
         }
     }
@@ -51,7 +54,7 @@ impl<'p> Simulation<'p> {
         self.projectile
             .velocity()
             .pitch(self.conditions.other.line_of_sight() + self.muzzle_pitch)
-            .yaw(self.conditions.other.azimuth())
+            .yaw(self.conditions.other.azimuth() + self.muzzle_yaw)
     }
     // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
     // factor, wind_pitch, to consider vertical wind components

@@ -34,6 +34,7 @@ impl<'p> SimulationBuilder<'p> {
             self.scope,
             self.zero_conditions,
             0.0,
+            0.0,
             self.time_step,
         )
     }
@@ -45,20 +46,23 @@ impl<'p> SimulationBuilder<'p> {
         zero_distance: Numeric,
         zero_offset: Numeric,
         zero_tolerance: Numeric,
-        angle_offset: Numeric,
+        pitch_offset: Numeric,
+        yaw_offset: Numeric,
     ) -> Simulation {
         let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
         let zero_offset = Length::Inches(zero_offset).to_meters().to_num();
         let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
-        let angle_offset = (angle_offset / 60.0).to_radians();
+        let pitch_offset = (pitch_offset / 60.0).to_radians();
+        let yaw_offset = (yaw_offset / 60.0).to_radians();
         Simulation::new(
             self.projectile,
             self.scope,
             self.solve_conditions,
             self.flat_simulation()
                 .zero(zero_distance, zero_offset, zero_tolerance)
-                .map(|muzzle_pitch| muzzle_pitch + angle_offset)
+                .map(|muzzle_pitch| muzzle_pitch + pitch_offset)
                 .expect("Zeroing Failed"),
+            yaw_offset,
             self.time_step,
         )
     }
