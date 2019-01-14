@@ -28,13 +28,18 @@ impl<'p> SimulationBuilder<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn flat(&self) -> Simulation {
+    pub fn flat(&self,
+        pitch_offset: Numeric,
+        yaw_offset: Numeric,
+    ) -> Simulation {
+        let pitch_offset = (pitch_offset / 60.0).to_radians();
+        let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
             self.projectile,
             self.scope,
             self.zero_conditions,
-            0.0,
-            0.0,
+            pitch_offset,
+            yaw_offset,
             self.time_step,
         )
     }
@@ -58,7 +63,7 @@ impl<'p> SimulationBuilder<'p> {
             self.projectile,
             self.scope,
             self.solve_conditions,
-            self.flat()
+            self.flat(0.0, 0.0)
                 .zero(zero_distance, zero_offset, zero_tolerance)
                 .map(|muzzle_pitch| muzzle_pitch + pitch_offset)
                 .expect("Zeroing Failed"),
