@@ -62,21 +62,33 @@ impl<'s> Iterator for IterSimulation<'s> {
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
+        // Save packet for debugging purposes for now
         let packet = Self::Item {
             simulation: &self.simulation,
             time,
             position,
             velocity,
         };
-        // Only continue iteration for non terminal velocity, may change later
-        if self.velocity.norm() != velocity.norm() {
+
+        // Only continue iteration for changing 'forward' positions
+        // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
+        // that are changing direction, but could still be traversion forward - norm loses information
+        // It is only a magnitude.  It could be that the norm is the same for two different velocities
+        // that are still moving forward, just at different angles
+        //
+        // This position check is still bad, however, as position may take a few ticks to change.
+        // For practical purposes, this still may suffice.  I want to take this check out eventually, and
+        // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
+        // how to check previous iteration values in standard iterator adaptors.
+        if self.position.x != position.x {
             Some(packet)
         } else {
             println!(
-                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards at angle: {:.2}",
+                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards at angle: {:.2}, position: {}",
                 packet.velocity(),
                 packet.distance(),
                 packet.simulation.muzzle_pitch.to_degrees(),
+                packet.position.x,
             );
             None
         }
