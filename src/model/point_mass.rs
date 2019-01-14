@@ -293,7 +293,8 @@ impl Other {
         -self.azimuth.to_radians()
     }
     // Angular velocity vector of earth, at current lattitude
-    // Actually, this vector is point along direction of movement (x axis)
+    // Can be thought of as vector from center of earth, pointing
+    // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
     pub(crate) fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
