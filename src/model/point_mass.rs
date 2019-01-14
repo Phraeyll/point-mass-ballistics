@@ -67,9 +67,9 @@ impl<'p> Simulation<'p> {
 }
 
 pub struct Conditions<'c> {
-    pub(crate) wind: &'c Wind,
-    pub(crate) atmosphere: &'c Atmosphere,
-    pub(crate) other: &'c Other,
+    wind: &'c Wind,
+    atmosphere: &'c Atmosphere,
+    other: &'c Other,
 }
 impl<'c> Conditions<'c> {
     pub fn new(wind: &'c Wind, atmosphere: &'c Atmosphere, other: &'c Other) -> Self {
@@ -82,11 +82,11 @@ impl<'c> Conditions<'c> {
 }
 
 pub struct Projectile {
-    weight: WeightMass,                       // Weight (grains)
-    caliber: Length,                          // Caliber (inches)
-    bc: BallisticCoefficient,                 // Ballistic Coefficient
-    pub(crate) drag_table: FloatMap<Numeric>, // Drag Function DragTable
-    pub(crate) velocity: Velocity,            // Initial velocity (ft/s)
+    weight: WeightMass,            // Weight (grains)
+    caliber: Length,               // Caliber (inches)
+    bc: BallisticCoefficient,      // Ballistic Coefficient
+    drag_table: FloatMap<Numeric>, // Drag Function DragTable
+    velocity: Velocity,            // Initial velocity (ft/s)
 }
 impl Projectile {
     pub fn new(
@@ -104,15 +104,15 @@ impl Projectile {
         }
     }
     // Radius of projectile cross section in meters
-    pub(crate) fn radius(&self) -> Numeric {
+    fn radius(&self) -> Numeric {
         self.caliber.to_meters().to_num() / 2.0
     }
     // Area of projectile in meters, used during drag force calculation
-    pub(crate) fn area(&self) -> Numeric {
+    fn area(&self) -> Numeric {
         PI * self.radius().powf(2.0)
     }
     // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
-    pub(crate) fn mass(&self) -> Numeric {
+    fn mass(&self) -> Numeric {
         self.weight.to_kgs().into()
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
@@ -120,10 +120,10 @@ impl Projectile {
         self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
-    pub(crate) fn i(&self) -> Numeric {
+    fn i(&self) -> Numeric {
         self.sd() / self.bc.to_num()
     }
-    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
+    fn velocity(&self) -> Vector3<Numeric> {
         self.velocity.to_mps().to_num() * Vector3::x()
     }
 }
@@ -137,7 +137,7 @@ impl Scope {
             height: Length::Inches(height),
         }
     }
-    pub(crate) fn height(&self) -> Vector3<Numeric> {
+    fn height(&self) -> Vector3<Numeric> {
         self.height.to_meters().to_num() * Vector3::y()
     }
 }
@@ -184,10 +184,10 @@ impl Wind {
     //         |
     //         v
     //        (0)
-    pub(crate) fn yaw(&self) -> Numeric {
+    fn yaw(&self) -> Numeric {
         -(self.yaw.to_radians() + PI)
     }
-    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
+    fn velocity(&self) -> Vector3<Numeric> {
         self.velocity.to_mps().to_num() * Vector3::x()
     }
 }
@@ -207,11 +207,11 @@ impl Atmosphere {
         }
     }
     // Density of air, using pressure, humidity, and temperature
-    pub(crate) fn rho(&self) -> Numeric {
+    fn rho(&self) -> Numeric {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
     }
     // Speed of sound at given air density and pressure
-    pub(crate) fn speed_of_sound(&self) -> Numeric {
+    fn speed_of_sound(&self) -> Numeric {
         (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
@@ -261,13 +261,13 @@ impl Other {
             azimuth,
         }
     }
-    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
+    fn gravity(&self) -> Vector3<Numeric> {
         self.gravity.to_mps2().to_num() * Vector3::y()
     }
     fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()
     }
-    pub(crate) fn line_of_sight(&self) -> Numeric {
+    fn line_of_sight(&self) -> Numeric {
         self.line_of_sight.to_radians()
     }
     // Flip, since circle functions rotate counter-clockwise,
@@ -289,13 +289,13 @@ impl Other {
     //         |
     //         v
     //       (180)
-    pub(crate) fn azimuth(&self) -> Numeric {
+    fn azimuth(&self) -> Numeric {
         -self.azimuth.to_radians()
     }
     // Angular velocity vector of earth, at current lattitude
     // Can be thought of as vector from center of earth, pointing
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
-    pub(crate) fn omega(&self) -> Vector3<Numeric> {
+    fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
             .pivot_z(self.lattitude())
