@@ -23,6 +23,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
             elevation,
             ..
         } = self;
+        // Used for debug output only
         let elevation = Length::Meters(elevation).to_inches().to_num();
 
         // Change direction if
@@ -36,26 +37,28 @@ impl<'s> Iterator for IterFindElevation<'s> {
 
         // Increment/decrement pitch before iteration below
         self.sim.muzzle_pitch += self.angle;
+
+        // Used for debug output only
         let deg = self.sim.muzzle_pitch.to_degrees();
 
         if self.sim.muzzle_pitch > MAX_ANGLE {
             // This only can happen on second iteration, starting at 45 degrees
             // If switched to 45/2 degrees, algorithm will converge to either 45 or 0
             // Switched back to starting at 45 degrees to allow quick break if possible
-            println!(
-                "Greater than MAX_ANGLE: {} at iteration: {} at pitch: {:.2}",
-                MAX_ANGLE.to_degrees(),
-                count,
-                deg
-            );
+            dbg!((MAX_ANGLE.to_degrees(), count, deg));
             None
         } else if self.sim.muzzle_pitch == muzzle_pitch {
-            // muzzle_pitch not changing due to very small angle (floating point limitation)
-            // This should probably not happen in practice, only for very small values close to 0
-            println!(
-                "Floating Point Err\nbfore: {:+.64}\nangle: {:+.64}\nafter: {:+.64}\nelevation: {:+.64}\ncount: {}\npitch: {:.2}",
-                muzzle_pitch, self.angle, self.sim.muzzle_pitch, elevation, count, deg
-            );
+            // This only can happen on second iteration, starting at 45 degrees
+            // If switched to 45/2 degrees, algorithm will converge to either 45 or 0
+            // Switched back to starting at 45 degrees to allow quick break if possible
+            dbg!((
+                muzzle_pitch,
+                self.angle,
+                self.sim.muzzle_pitch,
+                elevation,
+                count,
+                deg
+            ));
             None
         } else if let Some(p) = self
             // Find height in meters relative to zero, given pitch
@@ -67,7 +70,7 @@ impl<'s> Iterator for IterFindElevation<'s> {
             Some((self.sim.muzzle_pitch, self.elevation))
         } else {
             // Terminal velocity reached
-            println!("count: {}", count);
+            dbg!(count);
             None
         }
     }

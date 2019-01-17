@@ -83,13 +83,12 @@ impl<'s> Iterator for IterSimulation<'s> {
         if self.position.x != position.x {
             Some(packet)
         } else {
-            println!(
-                "Terminal velocity ({:.3} ft/s) reached at: {:.1} yards at angle: {:.2}, position: {}",
+            dbg!((
                 packet.velocity(),
                 packet.distance(),
                 packet.simulation.muzzle_pitch.to_degrees(),
                 packet.position.x,
-            );
+            ));
             None
         }
     }
