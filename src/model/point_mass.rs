@@ -82,10 +82,10 @@ impl<'c> Conditions<'c> {
 }
 
 pub struct Projectile {
-    weight: WeightMass,            // Weight (grains)
-    caliber: Length,               // Caliber (inches)
-    bc: BallisticCoefficient,      // Ballistic Coefficient
-    velocity: Velocity,            // Initial velocity (ft/s)
+    weight: WeightMass,       // Weight (grains)
+    caliber: Length,          // Caliber (inches)
+    bc: BallisticCoefficient, // Ballistic Coefficient
+    velocity: Velocity,       // Initial velocity (ft/s)
 }
 impl Projectile {
     pub fn new(
@@ -122,7 +122,7 @@ impl Projectile {
         self.sd() / self.bc.value()
     }
     fn velocity(&self) -> Vector3<Numeric> {
-        self.velocity.to_mps().to_num() * Vector3::x()
+        self.velocity.to_mps().to_num().mul(Vector3::x())
     }
 }
 
@@ -136,7 +136,7 @@ impl Scope {
         }
     }
     fn height(&self) -> Vector3<Numeric> {
-        self.height.to_meters().to_num() * Vector3::y()
+        self.height.to_meters().to_num().mul(Vector3::y())
     }
 }
 
@@ -186,7 +186,7 @@ impl Wind {
         -(self.yaw.to_radians() + PI)
     }
     fn velocity(&self) -> Vector3<Numeric> {
-        self.velocity.to_mps().to_num() * Vector3::x()
+        self.velocity.to_mps().to_num().mul(Vector3::x())
     }
 }
 
@@ -260,7 +260,7 @@ impl Other {
         }
     }
     fn gravity(&self) -> Vector3<Numeric> {
-        self.gravity.to_mps2().to_num() * Vector3::y()
+        self.gravity.to_mps2().to_num().mul(Vector3::y())
     }
     fn lattitude(&self) -> Numeric {
         self.lattitude.to_radians()
