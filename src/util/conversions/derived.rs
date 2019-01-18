@@ -1,4 +1,4 @@
-use self::{Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
+use {Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
 use super::{length::*, time::*, weight_mass::*};
 use crate::util::Numeric;
 

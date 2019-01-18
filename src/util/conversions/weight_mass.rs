@@ -1,4 +1,4 @@
-use self::WeightMass::*;
+use WeightMass::*;
 use crate::util::Numeric;
 
 pub const LBS_TO_GRAINS: Numeric = 7_000.0;

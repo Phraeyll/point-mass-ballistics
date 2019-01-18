@@ -1,4 +1,4 @@
-use self::Time::*;
+use Time::*;
 use crate::util::Numeric;
 
 pub const HOURS_TO_MINUTES: Numeric = 60.0;

@@ -1,4 +1,4 @@
-use crate::util::{conversions::*, Numeric, FRAC_PI_2, FRAC_PI_4};
+use crate::util::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const MAX_ANGLE: Numeric = FRAC_PI_4;

@@ -34,7 +34,7 @@ pub struct Simulation<'p> {
     time_step: Time,
 }
 impl<'p> Simulation<'p> {
-    pub(crate) fn new(
+    pub fn new(
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions<'p>,

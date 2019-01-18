@@ -1,6 +1,6 @@
 pub use BallisticCoefficientVariant::*;
 
-use crate::util::{FloatMap, Numeric};
+use crate::util::*;
 
 mod g1;
 mod g2;

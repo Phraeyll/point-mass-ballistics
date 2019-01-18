@@ -10,11 +10,11 @@ pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
-pub use self::conversions::*;
-pub use self::float_map::*;
-pub use self::nalgebra_helpers::*;
+pub use conversions::*;
+pub use float_map::*;
+pub use nalgebra_helpers::*;
 
 #[macro_use]
-pub mod float_map;
-pub mod conversions;
-pub mod nalgebra_helpers;
+mod float_map;
+mod conversions;
+mod nalgebra_helpers;

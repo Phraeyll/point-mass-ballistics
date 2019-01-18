@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 
-use super::Numeric;
+use crate::util::*;
 
 use std::{
     collections::{btree_map, BTreeMap},

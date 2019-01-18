@@ -1,4 +1,4 @@
-use self::Temperature::*;
+use Temperature::*;
 use crate::util::Numeric;
 
 pub const F_TO_CK: Numeric = 5.0 / 9.0;

@@ -1,4 +1,4 @@
-use self::Length::*;
+use Length::*;
 use crate::util::Numeric;
 
 pub const MILES_TO_YARDS: Numeric = 1_760.0;
