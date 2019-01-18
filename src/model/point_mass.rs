@@ -85,7 +85,6 @@ pub struct Projectile {
     weight: WeightMass,            // Weight (grains)
     caliber: Length,               // Caliber (inches)
     bc: BallisticCoefficient,      // Ballistic Coefficient
-    drag_table: FloatMap<Numeric>, // Drag Function DragTable
     velocity: Velocity,            // Initial velocity (ft/s)
 }
 impl Projectile {
@@ -99,7 +98,6 @@ impl Projectile {
             weight: WeightMass::Grains(weight),
             caliber: Length::Inches(caliber),
             bc,
-            drag_table: bc.table(),
             velocity: Velocity::Fps(velocity),
         }
     }
@@ -121,7 +119,7 @@ impl Projectile {
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> Numeric {
-        self.sd() / self.bc.to_num()
+        self.sd() / self.bc.value()
     }
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity.to_mps().to_num() * Vector3::x()

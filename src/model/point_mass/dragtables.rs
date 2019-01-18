@@ -1,4 +1,4 @@
-pub use self::BallisticCoefficient::*;
+pub use BallisticCoefficientVariant::*;
 
 use crate::util::{FloatMap, Numeric};
 
@@ -13,47 +13,48 @@ mod gs;
 
 // Type of BC used, implies which drag table to use
 #[derive(Copy, Clone)]
-pub enum BallisticCoefficient {
-    G1(Numeric),
-    G2(Numeric),
-    G5(Numeric),
-    G6(Numeric),
-    G7(Numeric),
-    G8(Numeric),
-    GI(Numeric),
-    GS(Numeric),
+pub enum BallisticCoefficientVariant {
+    G1,
+    G2,
+    G5,
+    G6,
+    G7,
+    G8,
+    GI,
+    GS,
+}
+
+pub struct BallisticCoefficient {
+    value: Numeric,
+    variant: BallisticCoefficientVariant,
+    table: FloatMap<Numeric>,
 }
 
 // Unwrap BC and create associated drag table
 impl BallisticCoefficient {
-    pub(crate) fn to_num(self) -> Numeric {
-        Numeric::from(self)
-    }
-    pub(crate) fn table(self) -> FloatMap<Numeric> {
-        match self {
-            G1(_) => g1::init(),
-            G2(_) => g2::init(),
-            G5(_) => g5::init(),
-            G6(_) => g6::init(),
-            G7(_) => g7::init(),
-            G8(_) => g8::init(),
-            GI(_) => gi::init(),
-            GS(_) => gs::init(),
+    pub fn new(value: Numeric, variant: BallisticCoefficientVariant) -> Self {
+        Self {
+            value,
+            variant,
+            table: match variant {
+                G1 => g1::init(),
+                G2 => g2::init(),
+                G5 => g5::init(),
+                G6 => g6::init(),
+                G7 => g7::init(),
+                G8 => g8::init(),
+                GI => gi::init(),
+                GS => gs::init(),
+            },
         }
     }
-}
-
-impl From<BallisticCoefficient> for Numeric {
-    fn from(u: BallisticCoefficient) -> Numeric {
-        match u {
-            G1(u) => u,
-            G2(u) => u,
-            G5(u) => u,
-            G6(u) => u,
-            G7(u) => u,
-            G8(u) => u,
-            GI(u) => u,
-            GS(u) => u,
-        }
+    pub fn value(&self) -> Numeric {
+        self.value
+    }
+    pub fn table(&self) -> &FloatMap<Numeric> {
+        &self.table
+    }
+    pub fn variant(&self) -> BallisticCoefficientVariant {
+        self.variant
     }
 }
