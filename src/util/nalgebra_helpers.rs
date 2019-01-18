@@ -1,6 +1,6 @@
 use nalgebra::{Rotation3, Vector3};
 
-use crate::util::*;
+use crate::util::Numeric;
 
 pub trait PitchYawRoll {
     fn pivot_z(&self, angle: Numeric) -> Self;
