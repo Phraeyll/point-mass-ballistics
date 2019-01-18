@@ -106,7 +106,7 @@ impl<'s> super::Simulation<'s> {
         }
     }
     // Find muzzle angle to achieve 0 drop at specified distance, relative to scope height
-    pub(crate) fn zero(
+    pub fn zero(
         &'s mut self,
         zero_distance: Numeric,
         zero_offset: Numeric,
