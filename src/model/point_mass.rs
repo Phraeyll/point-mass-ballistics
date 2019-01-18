@@ -81,21 +81,6 @@ impl<'p> Simulation<'p> {
     }
 }
 
-pub struct Conditions<'c> {
-    wind: &'c Wind,
-    atmosphere: &'c Atmosphere,
-    other: &'c Other,
-}
-impl<'c> Conditions<'c> {
-    pub fn new(wind: &'c Wind, atmosphere: &'c Atmosphere, other: &'c Other) -> Self {
-        Self {
-            wind,
-            atmosphere,
-            other,
-        }
-    }
-}
-
 pub struct Projectile {
     weight: WeightMass,       // Weight (grains)
     caliber: Length,          // Caliber (inches)
@@ -152,6 +137,21 @@ impl Scope {
     }
     fn height(&self) -> Vector3<Numeric> {
         self.height.to_meters().to_num().mul(Vector3::y())
+    }
+}
+
+pub struct Conditions<'c> {
+    wind: &'c Wind,
+    atmosphere: &'c Atmosphere,
+    other: &'c Other,
+}
+impl<'c> Conditions<'c> {
+    pub fn new(wind: &'c Wind, atmosphere: &'c Atmosphere, other: &'c Other) -> Self {
+        Self {
+            wind,
+            atmosphere,
+            other,
+        }
     }
 }
 
