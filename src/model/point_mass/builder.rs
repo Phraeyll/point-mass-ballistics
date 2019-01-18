@@ -1,5 +1,3 @@
-pub use crate::model::BallisticCoefficient;
-
 use super::*;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
@@ -28,10 +26,7 @@ impl<'p> SimulationBuilder<'p> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn flat(&self,
-        pitch_offset: Numeric,
-        yaw_offset: Numeric,
-    ) -> Simulation {
+    pub fn flat(&self, pitch_offset: Numeric, yaw_offset: Numeric) -> Simulation {
         let pitch_offset = (pitch_offset / 60.0).to_radians();
         let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
         Simulation::new(

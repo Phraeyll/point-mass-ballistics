@@ -1,4 +1,8 @@
-pub use self::dragtables::*;
+pub use crate::util::Numeric;
+pub use builder::*;
+pub use dragtables::*;
+pub use iter::*;
+pub use zero::*;
 
 use nalgebra::Vector3;
 
@@ -6,14 +10,13 @@ use crate::util::*;
 
 use std::ops::Mul;
 
-pub mod builder;
+mod builder;
 #[allow(clippy::approx_constant)]
 mod dragtables;
 #[allow(clippy::float_cmp)]
-pub mod iter;
-pub mod table;
+mod iter;
 #[allow(clippy::float_cmp)]
-pub(crate) mod zero;
+mod zero;
 
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
@@ -47,6 +50,18 @@ impl<'p> Simulation<'p> {
             muzzle_yaw,
             time_step: Time::Seconds(time_step),
         }
+    }
+    // Produce a drop table using specified range and step size
+    pub fn table(&self, step: u32, range_start: u32, range_end: u32) -> FloatMap<Packet<'_>> {
+        let mut iter = self.iter().fuse();
+        (range_start..=range_end)
+            .step_by(step as usize)
+            .filter_map(|current_step| {
+                iter.by_ref()
+                    .find(|p| p.distance() >= Numeric::from(current_step))
+                    .map(|p| (p.distance(), p))
+            })
+            .collect::<FloatMap<_>>()
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
