@@ -1,28 +1,47 @@
 use super::*;
 
 // Distance => (drop, windage, velocity, energy, moa, time)
-pub struct SimulationBuilder<'p> {
-    pub projectile: &'p Projectile, // Model variables, mostly projectile properties
-    pub scope: &'p Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: &'p Conditions<'p>,
-    pub solve_conditions: &'p Conditions<'p>,
+pub struct SimulationBuilder {
+    pub projectile: Projectile, // Model variables, mostly projectile properties
+    pub scope: Scope,           // Model variables, mostly projectile properties
+    pub zero_conditions: Conditions,
+    pub solve_conditions: Conditions,
     pub time_step: Numeric,
 }
-impl<'p> SimulationBuilder<'p> {
-    pub fn new(
-        projectile: &'p Projectile,
-        scope: &'p Scope,
-        zero_conditions: &'p Conditions,
-        solve_conditions: &'p Conditions,
-        time_step: Numeric,
-    ) -> Self {
+impl Default for SimulationBuilder {
+    fn default() -> Self {
         Self {
-            projectile,
-            scope,
-            zero_conditions,
-            solve_conditions,
-            time_step,
+            projectile: Projectile::default(),
+            scope: Scope::default(),
+            zero_conditions: Conditions::default(),
+            solve_conditions: Conditions::default(),
+            time_step: 0.000_1,
         }
+    }
+}
+impl SimulationBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn projectile(mut self, projectile: Projectile) -> Self {
+        self.projectile = projectile;
+        self
+    }
+    pub fn scope(mut self, scope: Scope) -> Self {
+        self.scope = scope;
+        self
+    }
+    pub fn zero_conditions(mut self, conditions: Conditions) -> Self {
+        self.zero_conditions = conditions;
+        self
+    }
+    pub fn solve_conditions(mut self, conditions: Conditions) -> Self {
+        self.solve_conditions = conditions;
+        self
+    }
+    pub fn time_step(mut self, time_step: Numeric) -> Self {
+        self.time_step = time_step;
+        self
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
@@ -30,9 +49,9 @@ impl<'p> SimulationBuilder<'p> {
         let pitch_offset = (pitch_offset / 60.0).to_radians();
         let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
-            self.projectile,
-            self.scope,
-            self.zero_conditions,
+            &self.projectile,
+            &self.scope,
+            &self.zero_conditions,
             self.time_step,
             pitch_offset,
             yaw_offset,
@@ -55,9 +74,9 @@ impl<'p> SimulationBuilder<'p> {
         let pitch_offset = (pitch_offset / 60.0).to_radians();
         let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
-            self.projectile,
-            self.scope,
-            self.solve_conditions,
+            &self.projectile,
+            &self.scope,
+            &self.solve_conditions,
             self.time_step,
             self.flat(0.0, 0.0)
                 .zero(zero_distance, zero_offset, zero_tolerance)
