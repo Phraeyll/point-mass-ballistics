@@ -1,5 +1,5 @@
-use Time::*;
 use crate::util::Numeric;
+use Time::*;
 
 pub const HOURS_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
