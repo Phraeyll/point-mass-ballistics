@@ -111,7 +111,7 @@ impl<'s> super::Simulation<'s> {
         zero_distance: Numeric,
         zero_offset: Numeric,
         zero_tolerance: Numeric,
-    ) -> Result<Numeric, &'static str> {
+    ) -> Result<Numeric, &str> {
         self.find_elevation(zero_distance, zero_offset)
             .find(|&(_, elevation)| {
                 elevation > (zero_offset - zero_tolerance)
