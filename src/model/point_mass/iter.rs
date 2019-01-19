@@ -2,8 +2,6 @@ use nalgebra::Vector3;
 
 use crate::util::*;
 
-use std::ops::Add;
-
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Output Item has this same reference
@@ -29,7 +27,7 @@ impl super::Simulation<'_> {
         IterSimulation {
             simulation: self,
             position: Vector3::zeros(),
-            velocity: self.muzzle_velocity_vector(),
+            velocity: self.absolute_projectile_velocity(),
             time: 0.0,
         }
     }
@@ -120,7 +118,7 @@ impl IterSimulation<'_> {
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
-        self.velocity - self.simulation.wind_velocity_vector()
+        self.velocity - self.simulation.absolute_wind_velocity()
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
@@ -150,9 +148,9 @@ impl Packet<'_> {
     // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .pivot_y(-self.simulation.conditions.other.azimuth())
             .pivot_z(-self.simulation.conditions.other.line_of_sight())
-            .add(-self.simulation.scope.height())
+            .pivot_y(-self.simulation.conditions.other.azimuth())
+            - self.simulation.scope.height()
     }
 }
 

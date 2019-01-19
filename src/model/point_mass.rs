@@ -29,26 +29,26 @@ pub struct Simulation<'p> {
     projectile: &'p Projectile,
     scope: &'p Scope,
     conditions: &'p Conditions<'p>,
+    time_step: Time,
     muzzle_pitch: Numeric,
     muzzle_yaw: Numeric,
-    time_step: Time,
 }
 impl<'p> Simulation<'p> {
     pub fn new(
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions<'p>,
+        time_step: Numeric,
         muzzle_pitch: Numeric,
         muzzle_yaw: Numeric,
-        time_step: Numeric,
     ) -> Self {
         Self {
             projectile,
             scope,
             conditions,
+            time_step: Time::Seconds(time_step),
             muzzle_pitch,
             muzzle_yaw,
-            time_step: Time::Seconds(time_step),
         }
     }
     // Produce a drop table using specified range and step size
@@ -65,19 +65,21 @@ impl<'p> Simulation<'p> {
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
-    fn muzzle_velocity_vector(&self) -> Vector3<Numeric> {
+    fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
-            .velocity()
-            .pivot_z(self.conditions.other.line_of_sight() + self.muzzle_pitch)
-            .pivot_y(self.conditions.other.azimuth() + self.muzzle_yaw)
+            .velocity(self.muzzle_pitch, self.muzzle_yaw)
+            .pivot_z(self.conditions.other.line_of_sight())
+            .pivot_y(self.conditions.other.azimuth())
     }
-    // Velocity vector of wind, right now calculated only for horizontal winds.  Can add another
-    // factor, wind_pitch, to consider vertical wind components
-    fn wind_velocity_vector(&self) -> Vector3<Numeric> {
+    // Velocity vector of wind, only horizontal at the moment
+    // Does not adjust according to line of sight, since most would measure wind
+    // along relative bearing - I don't think many would factor in a 'downhill' wind for example
+    // This would be interresting to think of, however.
+    fn absolute_wind_velocity(&self) -> Vector3<Numeric> {
         self.conditions
             .wind
             .velocity()
-            .pivot_y(self.conditions.wind.yaw() + self.conditions.other.azimuth() + self.muzzle_yaw)
+            .pivot_y(self.conditions.other.azimuth())
     }
 }
 
@@ -121,8 +123,13 @@ impl Projectile {
     fn i(&self) -> Numeric {
         self.sd() / self.bc.value()
     }
-    fn velocity(&self) -> Vector3<Numeric> {
-        self.velocity.to_mps().to_num().mul(Vector3::x())
+    fn velocity(&self, muzzle_pitch: Numeric, muzzle_yaw: Numeric) -> Vector3<Numeric> {
+        self.velocity
+            .to_mps()
+            .to_num()
+            .mul(Vector3::x())
+            .pivot_z(muzzle_pitch)
+            .pivot_y(muzzle_yaw)
     }
 }
 
@@ -201,7 +208,11 @@ impl Wind {
         -(self.yaw.to_radians() + PI)
     }
     fn velocity(&self) -> Vector3<Numeric> {
-        self.velocity.to_mps().to_num().mul(Vector3::x())
+        self.velocity
+            .to_mps()
+            .to_num()
+            .mul(Vector3::x())
+            .pivot_y(self.yaw())
     }
 }
 

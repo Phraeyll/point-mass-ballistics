@@ -33,9 +33,9 @@ impl<'p> SimulationBuilder<'p> {
             self.projectile,
             self.scope,
             self.zero_conditions,
+            self.time_step,
             pitch_offset,
             yaw_offset,
-            self.time_step,
         )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
@@ -58,12 +58,12 @@ impl<'p> SimulationBuilder<'p> {
             self.projectile,
             self.scope,
             self.solve_conditions,
+            self.time_step,
             self.flat(0.0, 0.0)
                 .zero(zero_distance, zero_offset, zero_tolerance)
                 .map(|muzzle_pitch| muzzle_pitch + pitch_offset)
                 .expect("Zeroing Failed"),
             yaw_offset,
-            self.time_step,
         )
     }
 }
