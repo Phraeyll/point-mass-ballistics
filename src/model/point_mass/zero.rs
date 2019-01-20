@@ -202,8 +202,8 @@ impl<'s> super::Simulation<'s> {
             {
                 break Ok((self.muzzle_pitch, self.muzzle_yaw));
             } else {
-                elevation_adjustment = Angle::Radians(vertical_moa.to_radians().to_num());
-                windage_adjustment = Angle::Radians(horizontal_moa.to_radians().to_num());
+                elevation_adjustment = vertical_moa;
+                windage_adjustment = horizontal_moa;
             }
         }
     }
