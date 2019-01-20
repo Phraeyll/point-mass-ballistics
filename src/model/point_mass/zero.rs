@@ -48,7 +48,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             && self.sim.muzzle_pitch.to_radians().to_num() == muzzle_pitch.to_radians().to_num()
             && self.sim.muzzle_yaw.to_radians().to_num() == muzzle_yaw.to_radians().to_num()
             && self.sim.muzzle_pitch.to_radians().to_num() != 0.0 // Ignore first time
-            && self.sim.muzzle_yaw.to_radians().to_num() != 0.0 // Ignore first time
+            && self.sim.muzzle_yaw.to_radians().to_num() != 0.0
+        // Ignore first time
         {
             // dbg!((
             //     self.count,
@@ -138,28 +139,26 @@ impl<'s> super::Simulation<'s> {
             zero_windage_offset,
             zero_tolerance,
         )
-        .find_map(|result| {
-            match result {
-                Ok((pitch, yaw, elevation, windage)) => {
-                    let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
-                    let zero_windage_offset = zero_windage_offset.to_meters().to_num();
-                    let zero_tolerance = zero_tolerance.to_meters().to_num();
-                    let elevation = elevation.to_meters().to_num();
-                    let windage = windage.to_meters().to_num();
+        .find_map(|result| match result {
+            Ok((pitch, yaw, elevation, windage)) => {
+                let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
+                let zero_windage_offset = zero_windage_offset.to_meters().to_num();
+                let zero_tolerance = zero_tolerance.to_meters().to_num();
+                let elevation = elevation.to_meters().to_num();
+                let windage = windage.to_meters().to_num();
 
-                    if true
-                        && elevation > (zero_elevation_offset - zero_tolerance)
-                        && elevation < (zero_elevation_offset + zero_tolerance)
-                        && windage > (zero_windage_offset - zero_tolerance)
-                        && windage < (zero_windage_offset + zero_tolerance)
-                    {
-                        Some(Ok((pitch, yaw)))
-                    } else {
-                        None
-                    }
-                },
-                Err(err) => Some(Err(err)),
+                if true
+                    && elevation > (zero_elevation_offset - zero_tolerance)
+                    && elevation < (zero_elevation_offset + zero_tolerance)
+                    && windage > (zero_windage_offset - zero_tolerance)
+                    && windage < (zero_windage_offset + zero_tolerance)
+                {
+                    Some(Ok((pitch, yaw)))
+                } else {
+                    None
+                }
             }
+            Err(err) => Some(Err(err)),
         })
         .unwrap_or(Err("Can this ever be reached?"))
     }

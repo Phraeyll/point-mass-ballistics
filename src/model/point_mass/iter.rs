@@ -113,7 +113,12 @@ impl IterSimulation<'_> {
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation.projectile.bc.table().lerp(self.mach()).expect("cd")
+        self.simulation
+            .projectile
+            .bc
+            .table()
+            .lerp(self.mach())
+            .expect("cd")
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
