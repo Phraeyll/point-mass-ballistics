@@ -109,21 +109,25 @@ impl<'s> super::Simulation<'s> {
             zero_windage_offset,
             zero_tolerance,
         )
-        .find(|&(_, _, elevation, windage)| {
+        .find_map(|(pitch, yaw, elevation, windage)| {
             let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
             let zero_windage_offset = zero_windage_offset.to_meters().to_num();
             let zero_tolerance = zero_tolerance.to_meters().to_num();
             let elevation = elevation.to_meters().to_num();
             let windage = windage.to_meters().to_num();
 
-            elevation > (zero_elevation_offset - zero_tolerance)
+            if true
+                && elevation > (zero_elevation_offset - zero_tolerance)
                 && elevation < (zero_elevation_offset + zero_tolerance)
                 && windage > (zero_windage_offset - zero_tolerance)
                 && windage < (zero_windage_offset + zero_tolerance)
+            {
+                Some(Ok((pitch, yaw)))
+            } else {
+                Some(Err("Cannot zero for this range"))
+            }
         })
-        .map_or(Err("Cannot zero for this range"), |(pitch, yaw, _, _)| {
-            Ok((pitch, yaw))
-        })
+        .unwrap()
     }
 }
 
