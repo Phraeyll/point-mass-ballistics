@@ -1,12 +1,11 @@
 use super::*;
 
-// Distance => (drop, windage, velocity, energy, moa, time)
 pub struct Solver {
-    pub projectile: Projectile, // Model variables, mostly projectile properties
-    pub scope: Scope,           // Model variables, mostly projectile properties
-    pub zero_conditions: Conditions,
-    pub solve_conditions: Conditions,
-    pub time_step: Time,
+    pub projectile: Projectile, // Use same projectile for zeroing and solving
+    pub scope: Scope,           // Use same scope for zeroing and solving
+    pub zero_conditions: Conditions, // Different conditions during zeroing
+    pub solve_conditions: Conditions, // Different conditions during solving
+    pub time_step: Time, // Use same timestep for zeroing and solving
 }
 impl Default for Solver {
     fn default() -> Self {
@@ -81,6 +80,10 @@ impl<'a> SimulationBuilder<'a> for Solver {
         let zero_tolerance = Length::Inches(zero_tolerance);
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
+
+        // Attempt to zero to given parameters, accounting for different conditions
+        // Start with 0.0 pitch and 0.0 yaw
+        // Then use found pitch/yaw for this simulation
         let (found_pitch, found_yaw) = self
             .using_zero_conditions(0.0, 0.0)
             .zero(
@@ -100,6 +103,7 @@ impl<'a> SimulationBuilder<'a> for Solver {
                 )
             })
             .expect("solve_for");
+
         Simulation::new(
             &self.projectile,
             &self.scope,
