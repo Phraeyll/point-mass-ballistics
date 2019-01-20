@@ -75,14 +75,6 @@ impl SimulationBuilder {
         let zero_tolerance = Length::Inches(zero_tolerance);
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
-                                                      // let found_pitch = self
-                                                      //     .flat(0.0, 0.0)
-                                                      //     .zero(zero_distance, zero_offset, zero_tolerance)
-                                                      //     .map(|muzzle_pitch| Angle::Radians(
-                                                      //         muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
-                                                      //     ))
-                                                      //     .expect("Zeroing Failed");
-                                                      // dbg!(found_pitch.to_minutes());
         let (found_pitch, found_yaw) = self
             .flat(0.0, 0.0)
             .new_zero(
@@ -91,13 +83,13 @@ impl SimulationBuilder {
                 zero_windage_offset,
                 zero_tolerance,
             )
-            .map(|(muzzle_pitch, muzzle_yaw)| {
+            .map(|(found_pitch, found_yaw)| {
                 (
                     Angle::Radians(
-                        muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+                        found_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
                     ),
                     Angle::Radians(
-                        muzzle_yaw.to_radians().to_num() + yaw_offset.to_radians().to_num(),
+                        found_yaw.to_radians().to_num() + yaw_offset.to_radians().to_num(),
                     ),
                 )
             })
