@@ -124,10 +124,10 @@ impl<'s> super::Simulation<'s> {
             {
                 Some(Ok((pitch, yaw)))
             } else {
-                Some(Err("Cannot zero for this range"))
+                None
             }
         })
-        .unwrap()
+        .unwrap_or(Err("Cannot zero for this range"))
     }
 }
 
