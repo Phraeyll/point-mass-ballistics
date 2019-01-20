@@ -19,10 +19,32 @@ impl Default for Solver {
         }
     }
 }
-impl Solver {
+
+pub trait SimulationBuilder<'a> {
+    type Sim;
+    fn new() -> Self;
+    fn projectile(self, projectile: Projectile) -> Self;
+    fn scope(self, scope: Scope) -> Self;
+    fn zero_conditions(self, conditions: Conditions) -> Self;
+    fn solve_conditions(self, conditions: Conditions) -> Self;
+    fn time_step(self, time_step: Numeric) -> Self;
+    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Sim;
+    fn solve_for(
+        &'a self,
+        zero_distance: Numeric,
+        zero_elevation_offset: Numeric,
+        zero_windage_offset: Numeric,
+        zero_tolerance: Numeric,
+        pitch_offset: Numeric,
+        yaw_offset: Numeric,
+    ) -> Self::Sim;
+
+}
+impl<'a> SimulationBuilder<'a> for Solver {
+    type Sim = Simulation<'a>;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn using_zero_conditions(&self, pitch_offset: Numeric, yaw_offset: Numeric) -> Simulation {
+    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Sim {
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
@@ -37,8 +59,8 @@ impl Solver {
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
     // Then solve for current conditions
     // Can be used for drop table, or eventually dialing in a specific distance
-    pub fn solve_for(
-        &self,
+    fn solve_for(
+        &'a self,
         zero_distance: Numeric,
         zero_elevation_offset: Numeric,
         zero_windage_offset: Numeric,
@@ -80,17 +102,6 @@ impl Solver {
             found_yaw,
         )
     }
-}
-
-pub trait SimulationBuilder {
-    fn new() -> Self;
-    fn projectile(self, projectile: Projectile) -> Self;
-    fn scope(self, scope: Scope) -> Self;
-    fn zero_conditions(self, conditions: Conditions) -> Self;
-    fn solve_conditions(self, conditions: Conditions) -> Self;
-    fn time_step(self, time_step: Numeric) -> Self;
-}
-impl SimulationBuilder for Solver {
     fn new() -> Self {
         Self::default()
     }

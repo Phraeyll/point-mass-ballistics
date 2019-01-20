@@ -10,11 +10,11 @@ use crate::util::*;
 
 use std::ops::Mul;
 
-mod builder;
+pub mod builder;
 #[allow(clippy::approx_constant)]
 mod dragtables;
 #[allow(clippy::float_cmp)]
-mod iter;
+pub mod iter;
 #[allow(clippy::float_cmp)]
 #[allow(clippy::nonminimal_bool)]
 mod zero;
