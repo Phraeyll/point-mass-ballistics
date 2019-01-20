@@ -155,10 +155,10 @@ impl Packet<'_> {
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
         let offset = offset.to_meters().to_num();
         let tolerance = tolerance.to_meters().to_num();
-        let sign = if self.relative_position().x > (offset - tolerance) {
-            1.0
-        } else {
+        let sign = if self.relative_position().y > (offset - tolerance) {
             -1.0
+        } else {
+            1.0
         };
         let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
         Angle::Radians(sign * pos.angle(&Vector3::new(self.relative_position().x, offset, 0.0)))
