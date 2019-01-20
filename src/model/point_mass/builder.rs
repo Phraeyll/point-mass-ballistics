@@ -73,19 +73,29 @@ impl SimulationBuilder {
         let zero_tolerance = Length::Inches(zero_tolerance);
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
+                                                      // let found_pitch = self
+                                                      //     .flat(0.0, 0.0)
+                                                      //     .zero(zero_distance, zero_offset, zero_tolerance)
+                                                      //     .map(|muzzle_pitch| Angle::Radians(
+                                                      //         muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+                                                      //     ))
+                                                      //     .expect("Zeroing Failed");
+                                                      // dbg!(found_pitch.to_minutes());
+        let found_pitch = self
+            .flat(0.0, 0.0)
+            .new_zero(zero_distance, zero_offset, zero_tolerance)
+            .map(|muzzle_pitch| {
+                Angle::Radians(
+                    muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+                )
+            })
+            .expect("");
         Simulation::new(
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
             self.time_step,
-            self.flat(0.0, 0.0)
-                .zero(zero_distance, zero_offset, zero_tolerance)
-                .map(|muzzle_pitch| {
-                    Angle::Radians(
-                        muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
-                    )
-                })
-                .expect("Zeroing Failed"),
+            found_pitch,
             yaw_offset,
         )
     }

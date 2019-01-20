@@ -226,7 +226,7 @@ impl Conditions {
 
 pub struct Wind {
     velocity: Velocity, // Wind Velocity (miles/hour)
-    yaw: Angle,       // Wind Angle (degrees)
+    yaw: Angle,         // Wind Angle (degrees)
 }
 impl Default for Wind {
     fn default() -> Self {
@@ -336,10 +336,10 @@ impl Atmosphere {
 }
 
 pub struct Other {
-    line_of_sight: Angle, // Line of Sight angle (degrees)
-    azimuth: Angle,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    lattitude: Angle,     // Lattitude (Coriolis/Eotvos Effect)
-    gravity: Acceleration,  // Gravity (m/s^2)
+    line_of_sight: Angle,  // Line of Sight angle (degrees)
+    azimuth: Angle,        // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    lattitude: Angle,      // Lattitude (Coriolis/Eotvos Effect)
+    gravity: Acceleration, // Gravity (m/s^2)
 }
 impl Default for Other {
     fn default() -> Self {

@@ -41,7 +41,9 @@ impl Angle {
             u @ Minutes(_) => u,
             Degrees(u) => Minutes(u * DEGREES_TO_MINUTES),
             Radians(u) => Minutes(u.to_degrees() * DEGREES_TO_MINUTES),
-            Miliradians(u) => Minutes((u * MILIRADIANS_TO_RADIANS).to_degrees() * DEGREES_TO_MINUTES),
+            Miliradians(u) => {
+                Minutes((u * MILIRADIANS_TO_RADIANS).to_degrees() * DEGREES_TO_MINUTES)
+            }
         }
     }
     pub fn to_radians(self) -> Self {
@@ -55,7 +57,9 @@ impl Angle {
     pub fn to_miliradians(self) -> Self {
         match self {
             u @ Miliradians(_) => u,
-            Minutes(u) => Miliradians((u * MINUTES_TO_DEGREES).to_radians() * RADIANS_TO_MILIRADIANS),
+            Minutes(u) => {
+                Miliradians((u * MINUTES_TO_DEGREES).to_radians() * RADIANS_TO_MILIRADIANS)
+            }
             Radians(u) => Miliradians(u * RADIANS_TO_MILIRADIANS),
             Degrees(u) => Miliradians(u.to_radians() * RADIANS_TO_MILIRADIANS),
         }

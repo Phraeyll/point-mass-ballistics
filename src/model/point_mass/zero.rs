@@ -1,5 +1,7 @@
 use crate::util::*;
 
+use super::*;
+
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const MAX_ANGLE: Angle = Angle::Radians(FRAC_PI_4);
 
@@ -140,5 +142,52 @@ impl<'s> super::Simulation<'s> {
             })
             .map(|(pitch, _)| Ok(pitch))
             .expect("Cannot zero for this range")
+    }
+    // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
+    // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
+    // ran once for most practical inputs.  Can also handle larger ranges, and will just continue to re-adjust
+    // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
+    // right now - need a way to calculate whether adjustment needed is positive or negative, will also need
+    // this for adjusting windage as well.
+    // This should also work for windage adjustments as well
+    pub fn new_zero(
+        &'s mut self,
+        zero_distance: Length,
+        zero_offset: Length,
+        zero_tolerance: Length,
+    ) -> Result<Angle, &str> {
+        let zero_distance = zero_distance.to_meters().to_num();
+        let zero_tolerance = zero_tolerance.to_meters().to_num();
+
+        let mut adjustment = Angle::Radians(0.0);
+        let mut count = 0;
+        loop {
+            count += 1;
+            if adjustment.to_radians().to_num() >= max_angle() {
+                dbg!((count, adjustment.to_degrees()));
+                break Err("Can neve zero at this range");
+            }
+            self.muzzle_pitch = Angle::Radians(
+                self.muzzle_pitch.to_radians().to_num() + adjustment.to_radians().to_num(),
+            );
+            let (pitch, elevation) = self
+                .iter()
+                .find(|p| p.relative_position().x >= zero_distance)
+                .map(|p| {
+                    (
+                        Angle::Minutes(p.offset_vertical_moa(zero_offset)),
+                        p.relative_position().y,
+                    )
+                })
+                .expect("Terminal Velocity Reached");
+            let zero_offset = zero_offset.to_meters().to_num();
+            if elevation > (zero_offset - zero_tolerance)
+                && elevation < (zero_offset + zero_tolerance)
+            {
+                break Ok(self.muzzle_pitch);
+            } else {
+                adjustment = pitch;
+            }
+        }
     }
 }
