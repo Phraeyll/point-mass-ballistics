@@ -77,7 +77,7 @@ impl SimulationBuilder {
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         let (found_pitch, found_yaw) = self
             .flat(0.0, 0.0)
-            .new_zero(
+            .zero(
                 zero_distance,
                 zero_elevation_offset,
                 zero_windage_offset,
