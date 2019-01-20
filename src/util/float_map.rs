@@ -16,6 +16,14 @@ impl<V> Default for FloatMap<V> {
     }
 }
 
+impl<V> IntoIterator for FloatMap<V> {
+    type Item = (OrderedFloat<Numeric>, V);
+    type IntoIter = std::collections::btree_map::IntoIter<OrderedFloat<Numeric>, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl<V> FromIterator<(Numeric, V)> for FloatMap<V> {
     fn from_iter<I>(iter: I) -> Self
     where
