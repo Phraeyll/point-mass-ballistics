@@ -146,28 +146,32 @@ impl<'s> super::Simulation<'s> {
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
     // ran once for most practical inputs.  Can also handle larger ranges, and will just continue to re-adjust
     // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
-    // right now - need a way to calculate whether adjustment needed is positive or negative, will also need
-    // this for adjusting windage as well.
     // This should also work for windage adjustments as well
     pub fn new_zero(
         &'s mut self,
         zero_distance: Length,
-        zero_offset: Length,
+        zero_elevation_offset: Length,
+        zero_windage_offset: Length,
         zero_tolerance: Length,
-    ) -> Result<Angle, &str> {
+    ) -> Result<(Angle, Angle), &str> {
         let zero_distance = zero_distance.to_meters().to_num();
         let zero_tolerance = zero_tolerance.to_meters().to_num();
 
-        let mut adjustment = Angle::Radians(0.0);
+        let mut elevation_adjustment = Angle::Radians(0.0);
+        let mut windage_adjustment = Angle::Radians(0.0);
         let mut count = 0;
         loop {
             count += 1;
-            if adjustment.to_radians().to_num() >= max_angle() {
-                dbg!((count, adjustment.to_degrees()));
+            if elevation_adjustment.to_radians().to_num() >= max_angle() {
+                dbg!((count, elevation_adjustment.to_degrees()));
                 break Err("Maximum angle reached, cannot zero at this range");
             }
             self.muzzle_pitch = Angle::Radians(
-                self.muzzle_pitch.to_radians().to_num() + adjustment.to_radians().to_num(),
+                self.muzzle_pitch.to_radians().to_num()
+                    + elevation_adjustment.to_radians().to_num(),
+            );
+            self.muzzle_yaw = Angle::Radians(
+                self.muzzle_yaw.to_radians().to_num() + windage_adjustment.to_radians().to_num(),
             );
             let result = self
                 .iter()
@@ -175,24 +179,46 @@ impl<'s> super::Simulation<'s> {
                 .find(|p| p.relative_position().x >= zero_distance)
                 .map(|p| {
                     (
-                        Angle::Minutes(p.offset_vertical_moa(zero_offset)),
+                        p.offset_vertical_moa(zero_elevation_offset),
+                        p.offset_horizontal_moa(zero_windage_offset),
                         p.relative_position().y,
+                        p.relative_position().z,
                     )
                 });
-            let (pitch, elevation) = match result {
-                Some((pitch, elevation)) => (pitch, elevation),
+            let (vertical_moa, horizontal_moa, elevation, windage) = match result {
+                Some((vertical_moa, horizontal_moa, elevation, windage)) => {
+                    (vertical_moa, horizontal_moa, elevation, windage)
+                }
                 None => {
-                    dbg!((count, adjustment.to_degrees()));
+                    dbg!((count, elevation_adjustment.to_degrees()));
                     break Err("Terminal velocity reached, cannot zero at this range");
                 }
             };
-            let zero_offset = zero_offset.to_meters().to_num();
-            if elevation > (zero_offset - zero_tolerance)
-                && elevation < (zero_offset + zero_tolerance)
+            let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
+            let zero_windage_offset = zero_windage_offset.to_meters().to_num();
+
+            if true
+                && elevation > (zero_elevation_offset - zero_tolerance)
+                && elevation < (zero_elevation_offset + zero_tolerance)
+                && windage > (zero_windage_offset - zero_tolerance)
+                && windage < (zero_windage_offset + zero_tolerance)
             {
-                break Ok(self.muzzle_pitch);
+                break Ok((self.muzzle_pitch, self.muzzle_yaw));
             } else {
-                adjustment = pitch;
+                let elevation_direction = if elevation > (zero_elevation_offset - zero_tolerance) {
+                    -1.0
+                } else {
+                    1.0
+                };
+                elevation_adjustment =
+                    Angle::Radians(vertical_moa.to_radians().to_num() * elevation_direction);
+                let windage_direction = if windage > (zero_windage_offset - zero_tolerance) {
+                    1.0
+                } else {
+                    -1.0
+                };
+                windage_adjustment =
+                    Angle::Radians(horizontal_moa.to_radians().to_num() * windage_direction);
             }
         }
     }

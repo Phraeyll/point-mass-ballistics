@@ -16,6 +16,7 @@ mod dragtables;
 #[allow(clippy::float_cmp)]
 mod iter;
 #[allow(clippy::float_cmp)]
+#[allow(clippy::nonminimal_bool)]
 mod zero;
 
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s

@@ -152,12 +152,15 @@ impl Packet<'_> {
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
             - self.simulation.scope.height()
     }
-    pub(crate) fn offset_vertical_moa(&self, offset: Length) -> Numeric {
+    pub(crate) fn offset_vertical_moa(&self, offset: Length) -> Angle {
         let offset = offset.to_meters().to_num();
         let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
         Angle::Radians(pos.angle(&Vector3::new(self.relative_position().x, offset, 0.0)))
-            .to_minutes()
-            .to_num()
+    }
+    pub(crate) fn offset_horizontal_moa(&self, offset: Length) -> Angle {
+        let offset = offset.to_meters().to_num();
+        let pos = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
+        Angle::Radians(pos.angle(&Vector3::new(self.relative_position().x, 0.0, offset)))
     }
 }
 

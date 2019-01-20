@@ -63,13 +63,15 @@ impl SimulationBuilder {
     pub fn solve_for(
         &self,
         zero_distance: Numeric,
-        zero_offset: Numeric,
+        zero_elevation_offset: Numeric,
+        zero_windage_offset: Numeric,
         zero_tolerance: Numeric,
         pitch_offset: Numeric,
         yaw_offset: Numeric,
     ) -> Simulation {
         let zero_distance = Length::Yards(zero_distance);
-        let zero_offset = Length::Inches(zero_offset);
+        let zero_elevation_offset = Length::Inches(zero_elevation_offset);
+        let zero_windage_offset = Length::Inches(zero_windage_offset);
         let zero_tolerance = Length::Inches(zero_tolerance);
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
@@ -81,12 +83,17 @@ impl SimulationBuilder {
                                                       //     ))
                                                       //     .expect("Zeroing Failed");
                                                       // dbg!(found_pitch.to_minutes());
-        let found_pitch = self
+        let (found_pitch, found_yaw) = self
             .flat(0.0, 0.0)
-            .new_zero(zero_distance, zero_offset, zero_tolerance)
-            .map(|muzzle_pitch| {
-                Angle::Radians(
-                    muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+            .new_zero(zero_distance, zero_elevation_offset, zero_windage_offset, zero_tolerance)
+            .map(|(muzzle_pitch, muzzle_yaw)| {
+                (
+                    Angle::Radians(
+                        muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+                    ),
+                    Angle::Radians(
+                        muzzle_yaw.to_radians().to_num() + yaw_offset.to_radians().to_num(),
+                    ),
                 )
             })
             .expect("solve_for");
@@ -96,7 +103,7 @@ impl SimulationBuilder {
             &self.solve_conditions,
             self.time_step,
             found_pitch,
-            yaw_offset,
+            found_yaw,
         )
     }
 }
