@@ -89,7 +89,7 @@ impl SimulationBuilder {
                     muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
                 )
             })
-            .expect("");
+            .expect("solve_for");
         Simulation::new(
             &self.projectile,
             &self.scope,

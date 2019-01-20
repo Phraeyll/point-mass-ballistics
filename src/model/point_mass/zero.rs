@@ -140,8 +140,7 @@ impl<'s> super::Simulation<'s> {
                 elevation > (zero_offset - zero_tolerance)
                     && elevation < (zero_offset + zero_tolerance)
             })
-            .map(|(pitch, _)| Ok(pitch))
-            .expect("Cannot zero for this range")
+            .map_or(Err("Cannot zero for this range"), |(pitch, _)| Ok(pitch))
     }
     // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
@@ -165,21 +164,28 @@ impl<'s> super::Simulation<'s> {
             count += 1;
             if adjustment.to_radians().to_num() >= max_angle() {
                 dbg!((count, adjustment.to_degrees()));
-                break Err("Can neve zero at this range");
+                break Err("Maximum angle reached, cannot zero at this range");
             }
             self.muzzle_pitch = Angle::Radians(
                 self.muzzle_pitch.to_radians().to_num() + adjustment.to_radians().to_num(),
             );
-            let (pitch, elevation) = self
+            let result = self
                 .iter()
+                .fuse()
                 .find(|p| p.relative_position().x >= zero_distance)
                 .map(|p| {
                     (
                         Angle::Minutes(p.offset_vertical_moa(zero_offset)),
                         p.relative_position().y,
                     )
-                })
-                .expect("Terminal Velocity Reached");
+                });
+            let (pitch, elevation) = match result {
+                Some((pitch, elevation)) => (pitch, elevation),
+                None => {
+                    dbg!((count, adjustment.to_degrees()));
+                    break Err("Terminal velocity reached, cannot zero at this range");
+                }
+            };
             let zero_offset = zero_offset.to_meters().to_num();
             if elevation > (zero_offset - zero_tolerance)
                 && elevation < (zero_offset + zero_tolerance)
