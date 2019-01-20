@@ -3,13 +3,10 @@ use crate::util::*;
 use super::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-fn max_pitch() -> Numeric {
-    Angle::Radians(FRAC_PI_4).to_radians().to_num()
-}
+const DEG_45: Numeric = FRAC_PI_4;
 // Should never try to yaw more than 90 degrees, probably not a necessary check
-fn max_yaw() -> Numeric {
-    Angle::Radians(FRAC_PI_2).to_radians().to_num()
-}
+// Also should never try to pitch this low - not sure if this ever happens in practice
+const DEG_90: Numeric = FRAC_PI_2;
 
 struct IterFindAdjustments<'s> {
     sim: &'s mut super::Simulation<'s>,
@@ -21,9 +18,26 @@ struct IterFindAdjustments<'s> {
     windage_adjustment: Angle,
     count: u64,
 }
+impl IterFindAdjustments<'_> {
+    fn muzzle_pitch(&self) -> Numeric {
+        self.sim.muzzle_pitch.to_radians().to_num()
+    }
+    fn muzzle_yaw(&self) -> Numeric {
+        self.sim.muzzle_yaw.to_radians().to_num()
+    }
+    fn elevation_adjustment(&self) -> Numeric {
+        self.elevation_adjustment.to_radians().to_num()
+    }
+    fn windage_adjustment(&self) -> Numeric {
+        self.windage_adjustment.to_radians().to_num()
+    }
+}
+// This never returns None - it returns Some(Result) which can indicate failure instead
+// This is just to capture reason why iteration stopped
 impl<'s> Iterator for IterFindAdjustments<'s> {
     type Item = Result<(Angle, Angle, Length, Length), &'static str>;
     fn next(&mut self) -> Option<Self::Item> {
+        // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
             sim:
                 &mut super::Simulation {
@@ -33,23 +47,20 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 },
             ..
         } = self;
+        let muzzle_pitch = muzzle_pitch.to_radians().to_num();
+        let muzzle_yaw = muzzle_yaw.to_radians().to_num();
 
         self.count += 1;
-        self.sim.muzzle_pitch = Angle::Radians(
-            self.sim.muzzle_pitch.to_radians().to_num()
-                + self.elevation_adjustment.to_radians().to_num(),
-        );
-        self.sim.muzzle_yaw = Angle::Radians(
-            self.sim.muzzle_yaw.to_radians().to_num()
-                + self.windage_adjustment.to_radians().to_num(),
-        );
+        self.sim.muzzle_pitch = Angle::Radians(self.muzzle_pitch() + self.elevation_adjustment());
+        self.sim.muzzle_yaw = Angle::Radians(self.muzzle_yaw() + self.windage_adjustment());
 
+        // Ensure angle is changing from previous value - may not for really small floats
         if true
-            && self.sim.muzzle_pitch.to_radians().to_num() == muzzle_pitch.to_radians().to_num()
-            && self.sim.muzzle_yaw.to_radians().to_num() == muzzle_yaw.to_radians().to_num()
-            && self.sim.muzzle_pitch.to_radians().to_num() != 0.0 // Ignore first time
-            && self.sim.muzzle_yaw.to_radians().to_num() != 0.0
-        // Ignore first time
+            && self.muzzle_pitch() == muzzle_pitch
+            && self.muzzle_yaw() == muzzle_yaw
+            && self.muzzle_pitch() != 0.0 // Ignore first time
+            && self.muzzle_yaw() != 0.0 // Ignore first time
+            && true
         {
             // dbg!((
             //     self.count,
@@ -59,9 +70,10 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             // ));
             Some(Err("Angle not changing, cannot zero at this range"))
         } else if true
-            && self.sim.muzzle_pitch.to_radians().to_num() >= max_pitch()
-            && self.sim.muzzle_yaw.to_radians().to_num() >= max_yaw()
-            && self.sim.muzzle_yaw.to_radians().to_num() <= -max_yaw()
+            && self.muzzle_pitch() >= DEG_45
+            && self.muzzle_pitch() <= -DEG_90
+            && self.muzzle_yaw() >= DEG_90
+            && self.muzzle_yaw() <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err("Maximum angle reached, cannot zero at this range"))
