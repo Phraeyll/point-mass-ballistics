@@ -152,6 +152,7 @@ impl Packet<'_> {
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
             - self.simulation.scope.height()
     }
+    // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
         let offset = offset.to_meters().to_num();
         let tolerance = tolerance.to_meters().to_num();
@@ -160,9 +161,11 @@ impl Packet<'_> {
         } else {
             1.0
         };
-        let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
-        Angle::Radians(sign * pos.angle(&Vector3::new(self.relative_position().x, offset, 0.0)))
+        let position = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
+        let desired = Vector3::new(self.relative_position().x, offset, 0.0);
+        Angle::Radians(sign * position.angle(&desired))
     }
+    // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_horizontal_moa(&self, offset: Length, tolerance: Length) -> Angle {
         let offset = offset.to_meters().to_num();
         let tolerance = tolerance.to_meters().to_num();
@@ -171,8 +174,9 @@ impl Packet<'_> {
         } else {
             -1.0
         };
-        let pos = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
-        Angle::Radians(sign * pos.angle(&Vector3::new(self.relative_position().x, 0.0, offset)))
+        let position = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
+        let desired = Vector3::new(self.relative_position().x, 0.0, offset);
+        Angle::Radians(sign * position.angle(&desired))
     }
 }
 
