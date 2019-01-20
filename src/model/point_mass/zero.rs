@@ -22,7 +22,7 @@ struct IterFindAdjustments<'s> {
     count: u64,
 }
 impl<'s> Iterator for IterFindAdjustments<'s> {
-    type Item = (Angle, Angle, Length, Length);
+    type Item = Result<(Angle, Angle, Length, Length), &'static str>;
     fn next(&mut self) -> Option<Self::Item> {
         let &mut Self {
             sim:
@@ -44,24 +44,26 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 + self.windage_adjustment.to_radians().to_num(),
         );
 
-        if self.sim.muzzle_pitch.to_radians().to_num() == muzzle_pitch.to_radians().to_num()
+        if true
+            && self.sim.muzzle_pitch.to_radians().to_num() == muzzle_pitch.to_radians().to_num()
             && self.sim.muzzle_yaw.to_radians().to_num() == muzzle_yaw.to_radians().to_num()
+            && self.sim.muzzle_pitch.to_radians().to_num() != 0.0 // Ignore first time
+            && self.sim.muzzle_yaw.to_radians().to_num() != 0.0 // Ignore first time
         {
-            dbg!((
-                self.count,
-                self.elevation_adjustment.to_degrees(),
-                muzzle_pitch.to_degrees(),
-                self.elevation_adjustment.to_degrees()
-            ));
-            dbg!("Angle not changing, cannot zero at this range");
-            None
-        } else if self.sim.muzzle_pitch.to_radians().to_num() >= max_pitch()
+            // dbg!((
+            //     self.count,
+            //     self.elevation_adjustment.to_degrees(),
+            //     muzzle_pitch.to_degrees(),
+            //     self.elevation_adjustment.to_degrees()
+            // ));
+            Some(Err("Angle not changing, cannot zero at this range"))
+        } else if true
+            && self.sim.muzzle_pitch.to_radians().to_num() >= max_pitch()
             && self.sim.muzzle_yaw.to_radians().to_num() >= max_yaw()
             && self.sim.muzzle_yaw.to_radians().to_num() <= -max_yaw()
         {
-            dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            dbg!("Maximum angle reached, cannot zero at this range");
-            None
+            // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
+            Some(Err("Maximum angle reached, cannot zero at this range"))
         } else if let Some(packet) = self
             .sim
             .iter()
@@ -72,16 +74,17 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 packet.offset_vertical_moa(self.zero_elevation_offset, self.zero_tolerance);
             self.windage_adjustment =
                 packet.offset_horizontal_moa(self.zero_windage_offset, self.zero_tolerance);
-            Some((
+            // dbg!((self.sim.muzzle_pitch, self.sim.muzzle_yaw));
+            // eprintln!("");
+            Some(Ok((
                 self.sim.muzzle_pitch,
                 self.sim.muzzle_yaw,
                 Length::Meters(packet.relative_position().y),
                 Length::Meters(packet.relative_position().z),
-            ))
+            )))
         } else {
-            dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            dbg!("Terminal velocity reached, cannot zero at this range");
-            None
+            // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
+            Some(Err("Terminal velocity reached, cannot zero at this range"))
         }
     }
 }
@@ -135,25 +138,30 @@ impl<'s> super::Simulation<'s> {
             zero_windage_offset,
             zero_tolerance,
         )
-        .find_map(|(pitch, yaw, elevation, windage)| {
-            let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
-            let zero_windage_offset = zero_windage_offset.to_meters().to_num();
-            let zero_tolerance = zero_tolerance.to_meters().to_num();
-            let elevation = elevation.to_meters().to_num();
-            let windage = windage.to_meters().to_num();
+        .find_map(|result| {
+            match result {
+                Ok((pitch, yaw, elevation, windage)) => {
+                    let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
+                    let zero_windage_offset = zero_windage_offset.to_meters().to_num();
+                    let zero_tolerance = zero_tolerance.to_meters().to_num();
+                    let elevation = elevation.to_meters().to_num();
+                    let windage = windage.to_meters().to_num();
 
-            if true
-                && elevation > (zero_elevation_offset - zero_tolerance)
-                && elevation < (zero_elevation_offset + zero_tolerance)
-                && windage > (zero_windage_offset - zero_tolerance)
-                && windage < (zero_windage_offset + zero_tolerance)
-            {
-                Some(Ok((pitch, yaw)))
-            } else {
-                None
+                    if true
+                        && elevation > (zero_elevation_offset - zero_tolerance)
+                        && elevation < (zero_elevation_offset + zero_tolerance)
+                        && windage > (zero_windage_offset - zero_tolerance)
+                        && windage < (zero_windage_offset + zero_tolerance)
+                    {
+                        Some(Ok((pitch, yaw)))
+                    } else {
+                        None
+                    }
+                },
+                Err(err) => Some(Err(err)),
             }
         })
-        .unwrap_or(Err("Cannot zero for this range"))
+        .unwrap_or(Err("Can this ever be reached?"))
     }
 }
 
