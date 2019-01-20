@@ -58,9 +58,11 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         if true
             && self.muzzle_pitch() == muzzle_pitch
             && self.muzzle_yaw() == muzzle_yaw
-            && self.muzzle_pitch() != 0.0 // Ignore first time
-            && self.muzzle_yaw() != 0.0 // Ignore first time
-            && true
+            && (
+                self.muzzle_pitch() != 0.0 // Ignore first time
+            || self.muzzle_yaw() != 0.0
+                // Ignore first time
+            )
         {
             // dbg!((
             //     self.count,
@@ -87,7 +89,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 packet.offset_vertical_moa(self.zero_elevation_offset, self.zero_tolerance);
             self.windage_adjustment =
                 packet.offset_horizontal_moa(self.zero_windage_offset, self.zero_tolerance);
-            // dbg!((self.sim.muzzle_pitch, self.sim.muzzle_yaw));
+            // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
             // eprintln!("");
             Some(Ok((
                 self.sim.muzzle_pitch,
@@ -160,10 +162,10 @@ impl<'s> super::Simulation<'s> {
                 let windage = windage.to_meters().to_num();
 
                 if true
-                    && elevation > (zero_elevation_offset - zero_tolerance)
-                    && elevation < (zero_elevation_offset + zero_tolerance)
-                    && windage > (zero_windage_offset - zero_tolerance)
-                    && windage < (zero_windage_offset + zero_tolerance)
+                    && elevation >= (zero_elevation_offset - zero_tolerance)
+                    && elevation <= (zero_elevation_offset + zero_tolerance)
+                    && windage >= (zero_windage_offset - zero_tolerance)
+                    && windage <= (zero_windage_offset + zero_tolerance)
                 {
                     Some(Ok((pitch, yaw)))
                 } else {

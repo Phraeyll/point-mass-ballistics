@@ -1,10 +1,17 @@
 #[macro_use]
 mod util {
     // Determine which type to use dynamically, accounts for f32/f64 consts as well.
+    // Can't use ident - need to check token to determine Natural type
     macro_rules! numeric {
-        ( $t:ident ) => {
-            use std::$t::consts;
-            pub type Numeric = $t;
+        ( f32 ) => {
+            use std::f32::consts;
+            pub type Numeric = f32;
+            pub type Natural = u16;
+        };
+        ( f64 ) => {
+            use std::f64::consts;
+            pub type Numeric = f64;
+            pub type Natural = u32;
         };
     }
     numeric!(f64);

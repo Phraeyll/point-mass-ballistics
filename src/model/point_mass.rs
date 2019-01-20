@@ -53,7 +53,7 @@ impl<'p> Simulation<'p> {
         }
     }
     // Produce a drop table using specified range and step size
-    pub fn table(&self, step: u32, range_start: u32, range_end: u32) -> FloatMap<Packet<'_>> {
+    pub fn table(&self, step: Natural, range_start: Natural, range_end: Natural) -> FloatMap<Packet<'_>> {
         let mut iter = self.into_iter().fuse();
         (range_start..=range_end)
             .step_by(step as usize)
