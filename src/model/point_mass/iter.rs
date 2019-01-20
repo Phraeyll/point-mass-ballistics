@@ -152,15 +152,27 @@ impl Packet<'_> {
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
             - self.simulation.scope.height()
     }
-    pub(crate) fn offset_vertical_moa(&self, offset: Length) -> Angle {
+    pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
         let offset = offset.to_meters().to_num();
+        let tolerance = tolerance.to_meters().to_num();
+        let sign = if self.relative_position().x > (offset - tolerance) {
+            1.0
+        } else {
+            -1.0
+        };
         let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
-        Angle::Radians(pos.angle(&Vector3::new(self.relative_position().x, offset, 0.0)))
+        Angle::Radians(sign * pos.angle(&Vector3::new(self.relative_position().x, offset, 0.0)))
     }
-    pub(crate) fn offset_horizontal_moa(&self, offset: Length) -> Angle {
+    pub(crate) fn offset_horizontal_moa(&self, offset: Length, tolerance: Length) -> Angle {
         let offset = offset.to_meters().to_num();
+        let tolerance = tolerance.to_meters().to_num();
+        let sign = if self.relative_position().z > (offset - tolerance) {
+            1.0
+        } else {
+            -1.0
+        };
         let pos = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
-        Angle::Radians(pos.angle(&Vector3::new(self.relative_position().x, 0.0, offset)))
+        Angle::Radians(sign * pos.angle(&Vector3::new(self.relative_position().x, 0.0, offset)))
     }
 }
 
@@ -172,8 +184,8 @@ pub trait Output {
     fn elevation(&self) -> Numeric;
     fn windage(&self) -> Numeric;
     fn moa(&self) -> Numeric;
-    fn vertical_moa(&self) -> Numeric;
-    fn horizontal_moa(&self) -> Numeric;
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric;
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
 }
 
 // Hard coded Imperial units for now - need to use better library for this eventually
@@ -210,15 +222,13 @@ impl Output for Packet<'_> {
             .to_minutes()
             .to_num()
     }
-    fn vertical_moa(&self) -> Numeric {
-        let pos = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
-        Angle::Radians(pos.angle(&Vector3::x_axis()))
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
+        self.offset_vertical_moa(Length::Inches(0.0), Length::Inches(tolerance))
             .to_minutes()
             .to_num()
     }
-    fn horizontal_moa(&self) -> Numeric {
-        let pos = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
-        Angle::Radians(pos.angle(&Vector3::x_axis()))
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
+        self.offset_horizontal_moa(Length::Inches(0.0), Length::Inches(tolerance))
             .to_minutes()
             .to_num()
     }

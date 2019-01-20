@@ -154,9 +154,6 @@ impl<'s> super::Simulation<'s> {
         zero_windage_offset: Length,
         zero_tolerance: Length,
     ) -> Result<(Angle, Angle), &str> {
-        let zero_distance = zero_distance.to_meters().to_num();
-        let zero_tolerance = zero_tolerance.to_meters().to_num();
-
         let mut elevation_adjustment = Angle::Radians(0.0);
         let mut windage_adjustment = Angle::Radians(0.0);
         let mut count = 0;
@@ -176,11 +173,11 @@ impl<'s> super::Simulation<'s> {
             let result = self
                 .iter()
                 .fuse()
-                .find(|p| p.relative_position().x >= zero_distance)
+                .find(|p| p.relative_position().x >= zero_distance.to_meters().to_num())
                 .map(|p| {
                     (
-                        p.offset_vertical_moa(zero_elevation_offset),
-                        p.offset_horizontal_moa(zero_windage_offset),
+                        p.offset_vertical_moa(zero_elevation_offset, zero_tolerance),
+                        p.offset_horizontal_moa(zero_windage_offset, zero_tolerance),
                         p.relative_position().y,
                         p.relative_position().z,
                     )
@@ -196,7 +193,7 @@ impl<'s> super::Simulation<'s> {
             };
             let zero_elevation_offset = zero_elevation_offset.to_meters().to_num();
             let zero_windage_offset = zero_windage_offset.to_meters().to_num();
-
+            let zero_tolerance = zero_tolerance.to_meters().to_num();
             if true
                 && elevation > (zero_elevation_offset - zero_tolerance)
                 && elevation < (zero_elevation_offset + zero_tolerance)
@@ -205,20 +202,8 @@ impl<'s> super::Simulation<'s> {
             {
                 break Ok((self.muzzle_pitch, self.muzzle_yaw));
             } else {
-                let elevation_direction = if elevation > (zero_elevation_offset - zero_tolerance) {
-                    -1.0
-                } else {
-                    1.0
-                };
-                elevation_adjustment =
-                    Angle::Radians(vertical_moa.to_radians().to_num() * elevation_direction);
-                let windage_direction = if windage > (zero_windage_offset - zero_tolerance) {
-                    1.0
-                } else {
-                    -1.0
-                };
-                windage_adjustment =
-                    Angle::Radians(horizontal_moa.to_radians().to_num() * windage_direction);
+                elevation_adjustment = Angle::Radians(vertical_moa.to_radians().to_num());
+                windage_adjustment = Angle::Radians(horizontal_moa.to_radians().to_num());
             }
         }
     }
