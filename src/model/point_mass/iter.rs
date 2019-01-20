@@ -23,7 +23,7 @@ impl<'s> IntoIterator for &'s super::Simulation<'s> {
 }
 
 impl super::Simulation<'_> {
-    pub fn iter(&self) -> IterSimulation {
+    fn iter(&self) -> IterSimulation {
         IterSimulation {
             simulation: self,
             position: Vector3::zeros(),
@@ -81,12 +81,12 @@ impl<'s> Iterator for IterSimulation<'s> {
         if self.position.x != position.x {
             Some(packet)
         } else {
-            dbg!((
-                packet.velocity(),
-                packet.distance(),
-                packet.simulation.muzzle_pitch.to_degrees(),
-                packet.position.x,
-            ));
+            // dbg!((
+            //     packet.velocity(),
+            //     packet.distance(),
+            //     packet.simulation.muzzle_pitch.to_degrees(),
+            //     packet.position.x,
+            // ));
             None
         }
     }
@@ -113,7 +113,7 @@ impl IterSimulation<'_> {
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation.projectile.bc.table().lerp(self.mach()) * self.simulation.projectile.i()
+        self.simulation.projectile.bc.table().lerp(self.mach()).expect("cd")
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
@@ -127,6 +127,7 @@ impl IterSimulation<'_> {
         -0.5 * self.simulation.conditions.atmosphere.rho()
             * self.simulation.projectile.area()
             * self.cd()
+            * self.simulation.projectile.i()
             * self.vv()
             * self.vv().norm()
     }
@@ -136,10 +137,10 @@ impl IterSimulation<'_> {
 // Basically same values used internally during iteration
 // Along with a ref to the simulation which was iterated over
 pub struct Packet<'s> {
-    simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
-    time: Numeric,                         // Position in time (s)
-    position: Vector3<Numeric>,            // Position (m)
-    velocity: Vector3<Numeric>,            // Velocity (m/s)
+    pub(crate) simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
+    pub(crate) time: Numeric,                         // Position in time (s)
+    pub(crate) position: Vector3<Numeric>,            // Position (m)
+    pub(crate) velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
 impl Packet<'_> {
     // During the simulation, the velocity of the projectile is rotated to allign with
@@ -177,63 +178,5 @@ impl Packet<'_> {
         let position = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
         let desired = Vector3::new(self.relative_position().x, 0.0, offset);
         Angle::Radians(sign * position.angle(&desired))
-    }
-}
-
-pub trait Output {
-    fn time(&self) -> Numeric;
-    fn velocity(&self) -> Numeric;
-    fn energy(&self) -> Numeric;
-    fn distance(&self) -> Numeric;
-    fn elevation(&self) -> Numeric;
-    fn windage(&self) -> Numeric;
-    fn moa(&self) -> Numeric;
-    fn vertical_moa(&self, tolerance: Numeric) -> Numeric;
-    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
-}
-
-// Hard coded Imperial units for now - need to use better library for this eventually
-impl Output for Packet<'_> {
-    fn time(&self) -> Numeric {
-        Time::Seconds(self.time).to_seconds().to_num()
-    }
-    fn velocity(&self) -> Numeric {
-        Velocity::Mps(self.velocity.norm()).to_fps().to_num()
-    }
-    fn energy(&self) -> Numeric {
-        Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
-            .to_ftlbs()
-            .to_num()
-    }
-    // Positions relative to line of sight (shooter_pitch)
-    fn distance(&self) -> Numeric {
-        Length::Meters(self.relative_position().x)
-            .to_yards()
-            .to_num()
-    }
-    fn elevation(&self) -> Numeric {
-        Length::Meters(self.relative_position().y)
-            .to_inches()
-            .to_num()
-    }
-    fn windage(&self) -> Numeric {
-        Length::Meters(self.relative_position().z)
-            .to_inches()
-            .to_num()
-    }
-    fn moa(&self) -> Numeric {
-        Angle::Radians(self.relative_position().angle(&Vector3::x_axis()))
-            .to_minutes()
-            .to_num()
-    }
-    fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_vertical_moa(Length::Inches(0.0), Length::Inches(tolerance))
-            .to_minutes()
-            .to_num()
-    }
-    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_horizontal_moa(Length::Inches(0.0), Length::Inches(tolerance))
-            .to_minutes()
-            .to_num()
     }
 }

@@ -35,7 +35,7 @@ pub struct Simulation<'p> {
     muzzle_yaw: Angle,
 }
 impl<'p> Simulation<'p> {
-    pub fn new(
+    pub(crate) fn new(
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions,
@@ -54,7 +54,7 @@ impl<'p> Simulation<'p> {
     }
     // Produce a drop table using specified range and step size
     pub fn table(&self, step: u32, range_start: u32, range_end: u32) -> FloatMap<Packet<'_>> {
-        let mut iter = self.iter().fuse();
+        let mut iter = self.into_iter().fuse();
         (range_start..=range_end)
             .step_by(step as usize)
             .filter_map(|current_step| {
@@ -90,36 +90,7 @@ pub struct Projectile {
     bc: BallisticCoefficient, // Ballistic Coefficient
     velocity: Velocity,       // Initial velocity (ft/s)
 }
-impl Default for Projectile {
-    fn default() -> Self {
-        Self {
-            weight: WeightMass::Grains(140.0),
-            caliber: Length::Inches(0.264),
-            bc: BallisticCoefficient::new(0.305, G7),
-            velocity: Velocity::Fps(2710.0),
-        }
-    }
-}
 impl Projectile {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    pub fn with_velocity(mut self, velocity: Numeric) -> Self {
-        self.velocity = Velocity::Fps(velocity);
-        self
-    }
-    pub fn with_grains(mut self, grains: Numeric) -> Self {
-        self.weight = WeightMass::Grains(grains);
-        self
-    }
-    pub fn with_caliber(mut self, caliber: Numeric) -> Self {
-        self.caliber = Length::Inches(caliber);
-        self
-    }
-    pub fn with_bc(mut self, bc: BallisticCoefficient) -> Self {
-        self.bc = bc;
-        self
-    }
     // Radius of projectile cross section in meters
     fn radius(&self) -> Numeric {
         self.caliber.to_meters().to_num() / 2.0
@@ -153,75 +124,9 @@ impl Projectile {
 pub struct Scope {
     height: Length, // Scope Height (inches)
 }
-impl Default for Scope {
-    fn default() -> Self {
-        Self {
-            height: Length::Inches(1.5),
-        }
-    }
-}
 impl Scope {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    pub fn with_height(mut self, height: Numeric) -> Self {
-        self.height = Length::Inches(height);
-        self
-    }
     fn height(&self) -> Vector3<Numeric> {
         self.height.to_meters().to_num().mul(Vector3::y())
-    }
-}
-
-pub struct Conditions {
-    wind: Wind,
-    atmosphere: Atmosphere,
-    other: Other,
-}
-impl Default for Conditions {
-    fn default() -> Self {
-        Self {
-            wind: Wind::default(),
-            atmosphere: Atmosphere::default(),
-            other: Other::default(),
-        }
-    }
-}
-impl Conditions {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    pub fn with_temperature(mut self, temperature: Numeric) -> Self {
-        self.atmosphere.temperature = Temperature::F(temperature);
-        self
-    }
-    pub fn with_pressure(mut self, pressure: Numeric) -> Self {
-        self.atmosphere.pressure = Pressure::Inhg(pressure);
-        self
-    }
-    pub fn with_humidity(mut self, humidity: Numeric) -> Self {
-        self.atmosphere.humidity = humidity;
-        self
-    }
-    pub fn with_wind_speed(mut self, velocity: Numeric) -> Self {
-        self.wind.velocity = Velocity::Mph(velocity);
-        self
-    }
-    pub fn with_wind_angle(mut self, yaw: Numeric) -> Self {
-        self.wind.yaw = Angle::Degrees(yaw);
-        self
-    }
-    pub fn with_shot_angle(mut self, line_of_sight: Numeric) -> Self {
-        self.other.line_of_sight = Angle::Degrees(line_of_sight);
-        self
-    }
-    pub fn with_lattitude(mut self, lattitude: Numeric) -> Self {
-        self.other.lattitude = Angle::Degrees(lattitude);
-        self
-    }
-    pub fn with_bearing(mut self, azimuth: Numeric) -> Self {
-        self.other.azimuth = Angle::Degrees(azimuth);
-        self
     }
 }
 
@@ -229,18 +134,7 @@ pub struct Wind {
     velocity: Velocity, // Wind Velocity (miles/hour)
     yaw: Angle,         // Wind Angle (degrees)
 }
-impl Default for Wind {
-    fn default() -> Self {
-        Self {
-            velocity: Velocity::Mph(0.0),
-            yaw: Angle::Radians(0.0),
-        }
-    }
-}
 impl Wind {
-    pub fn new() -> Self {
-        Self::default()
-    }
     // This vector indicates direction of wind flow, not source of wind
     // so rotate by PI (adding or subtraction should have the same affect)
     // Negative indicates 90 degree wind is from east=>west
@@ -290,19 +184,7 @@ pub struct Atmosphere {
     pressure: Pressure,       // Pressure (InHg)
     humidity: Numeric,        // Humidity (0-1)
 }
-impl Default for Atmosphere {
-    fn default() -> Self {
-        Self {
-            temperature: Temperature::F(68.0),
-            pressure: Pressure::Inhg(29.92),
-            humidity: 0.0,
-        }
-    }
-}
 impl Atmosphere {
-    pub fn new() -> Self {
-        Self::default()
-    }
     // Density of air, using pressure, humidity, and temperature
     fn rho(&self) -> Numeric {
         ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
@@ -342,20 +224,7 @@ pub struct Other {
     lattitude: Angle,      // Lattitude (Coriolis/Eotvos Effect)
     gravity: Acceleration, // Gravity (m/s^2)
 }
-impl Default for Other {
-    fn default() -> Self {
-        Self {
-            line_of_sight: Angle::Radians(0.0),
-            azimuth: Angle::Radians(0.0),
-            lattitude: Angle::Radians(0.0),
-            gravity: Acceleration::Mps2(GRAVITY),
-        }
-    }
-}
 impl Other {
-    pub fn new() -> Self {
-        Self::default()
-    }
     fn gravity(&self) -> Vector3<Numeric> {
         self.gravity.to_mps2().to_num().mul(Vector3::y())
     }
@@ -388,5 +257,65 @@ impl Other {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
             .pivot_z(self.lattitude)
+    }
+}
+
+pub struct Conditions {
+    wind: Wind,
+    atmosphere: Atmosphere,
+    other: Other,
+}
+
+impl Default for Projectile {
+    fn default() -> Self {
+        Self {
+            weight: WeightMass::Grains(140.0),
+            caliber: Length::Inches(0.264),
+            bc: BallisticCoefficient::new(0.305, G7),
+            velocity: Velocity::Fps(2710.0),
+        }
+    }
+}
+impl Default for Scope {
+    fn default() -> Self {
+        Self {
+            height: Length::Inches(1.5),
+        }
+    }
+}
+impl Default for Wind {
+    fn default() -> Self {
+        Self {
+            velocity: Velocity::Mph(0.0),
+            yaw: Angle::Radians(0.0),
+        }
+    }
+}
+impl Default for Atmosphere {
+    fn default() -> Self {
+        Self {
+            temperature: Temperature::F(68.0),
+            pressure: Pressure::Inhg(29.92),
+            humidity: 0.0,
+        }
+    }
+}
+impl Default for Other {
+    fn default() -> Self {
+        Self {
+            line_of_sight: Angle::Radians(0.0),
+            azimuth: Angle::Radians(0.0),
+            lattitude: Angle::Radians(0.0),
+            gravity: Acceleration::Mps2(GRAVITY),
+        }
+    }
+}
+impl Default for Conditions {
+    fn default() -> Self {
+        Self {
+            wind: Wind::default(),
+            atmosphere: Atmosphere::default(),
+            other: Other::default(),
+        }
     }
 }
