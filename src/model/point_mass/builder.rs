@@ -85,7 +85,12 @@ impl SimulationBuilder {
                                                       // dbg!(found_pitch.to_minutes());
         let (found_pitch, found_yaw) = self
             .flat(0.0, 0.0)
-            .new_zero(zero_distance, zero_elevation_offset, zero_windage_offset, zero_tolerance)
+            .new_zero(
+                zero_distance,
+                zero_elevation_offset,
+                zero_windage_offset,
+                zero_tolerance,
+            )
             .map(|(muzzle_pitch, muzzle_yaw)| {
                 (
                     Angle::Radians(
