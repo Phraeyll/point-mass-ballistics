@@ -109,7 +109,7 @@ impl From<Density> for Numeric {
         }
     }
 }
-impl self::Density {
+impl Density {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }
@@ -142,7 +142,7 @@ impl From<Velocity> for Numeric {
         }
     }
 }
-impl self::Velocity {
+impl Velocity {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }
@@ -184,7 +184,7 @@ impl From<Acceleration> for Numeric {
         }
     }
 }
-impl self::Acceleration {
+impl Acceleration {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }

@@ -6,7 +6,7 @@ pub struct SimulationBuilder {
     pub scope: Scope,           // Model variables, mostly projectile properties
     pub zero_conditions: Conditions,
     pub solve_conditions: Conditions,
-    pub time_step: Numeric,
+    pub time_step: Time,
 }
 impl Default for SimulationBuilder {
     fn default() -> Self {
@@ -15,7 +15,7 @@ impl Default for SimulationBuilder {
             scope: Scope::default(),
             zero_conditions: Conditions::default(),
             solve_conditions: Conditions::default(),
-            time_step: 0.000_1,
+            time_step: Time::Seconds(0.000_001),
         }
     }
 }
@@ -40,14 +40,14 @@ impl SimulationBuilder {
         self
     }
     pub fn time_step(mut self, time_step: Numeric) -> Self {
-        self.time_step = time_step;
+        self.time_step = Time::Seconds(time_step);
         self
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     pub fn flat(&self, pitch_offset: Numeric, yaw_offset: Numeric) -> Simulation {
-        let pitch_offset = (pitch_offset / 60.0).to_radians();
-        let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
+        let pitch_offset = Angle::Minutes(pitch_offset);
+        let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
             &self.projectile,
             &self.scope,
@@ -68,11 +68,11 @@ impl SimulationBuilder {
         pitch_offset: Numeric,
         yaw_offset: Numeric,
     ) -> Simulation {
-        let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
-        let zero_offset = Length::Inches(zero_offset).to_meters().to_num();
-        let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
-        let pitch_offset = (pitch_offset / 60.0).to_radians();
-        let yaw_offset = -(yaw_offset / 60.0).to_radians(); // Invert this number, since +90 is left in trig calculations
+        let zero_distance = Length::Yards(zero_distance);
+        let zero_offset = Length::Inches(zero_offset);
+        let zero_tolerance = Length::Inches(zero_tolerance);
+        let pitch_offset = Angle::Minutes(pitch_offset);
+        let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
             &self.projectile,
             &self.scope,
@@ -80,7 +80,11 @@ impl SimulationBuilder {
             self.time_step,
             self.flat(0.0, 0.0)
                 .zero(zero_distance, zero_offset, zero_tolerance)
-                .map(|muzzle_pitch| muzzle_pitch + pitch_offset)
+                .map(|muzzle_pitch| {
+                    Angle::Radians(
+                        muzzle_pitch.to_radians().to_num() + pitch_offset.to_radians().to_num(),
+                    )
+                })
                 .expect("Zeroing Failed"),
             yaw_offset,
         )

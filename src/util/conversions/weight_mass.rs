@@ -25,7 +25,7 @@ impl From<WeightMass> for Numeric {
         }
     }
 }
-impl self::WeightMass {
+impl WeightMass {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }

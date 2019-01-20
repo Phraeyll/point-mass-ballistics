@@ -25,7 +25,7 @@ impl From<Time> for Numeric {
         }
     }
 }
-impl self::Time {
+impl Time {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }

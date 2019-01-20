@@ -50,7 +50,7 @@ impl From<Length> for Numeric {
         }
     }
 }
-impl self::Length {
+impl Length {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }

@@ -30,23 +30,23 @@ pub struct Simulation<'p> {
     scope: &'p Scope,
     conditions: &'p Conditions,
     time_step: Time,
-    muzzle_pitch: Numeric,
-    muzzle_yaw: Numeric,
+    muzzle_pitch: Angle,
+    muzzle_yaw: Angle,
 }
 impl<'p> Simulation<'p> {
     pub fn new(
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions,
-        time_step: Numeric,
-        muzzle_pitch: Numeric,
-        muzzle_yaw: Numeric,
+        time_step: Time,
+        muzzle_pitch: Angle,
+        muzzle_yaw: Angle,
     ) -> Self {
         Self {
             projectile,
             scope,
             conditions,
-            time_step: Time::Seconds(time_step),
+            time_step,
             muzzle_pitch,
             muzzle_yaw,
         }
@@ -68,8 +68,8 @@ impl<'p> Simulation<'p> {
     fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity(self.muzzle_pitch, self.muzzle_yaw)
-            .pivot_z(self.conditions.other.line_of_sight())
-            .pivot_y(self.conditions.other.azimuth())
+            .pivot_z(self.conditions.other.line_of_sight)
+            .pivot_y(self.conditions.other.corrected_azimuth())
     }
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
@@ -79,7 +79,7 @@ impl<'p> Simulation<'p> {
         self.conditions
             .wind
             .velocity()
-            .pivot_y(self.conditions.other.azimuth())
+            .pivot_y(self.conditions.other.corrected_azimuth())
     }
 }
 
@@ -139,7 +139,7 @@ impl Projectile {
     fn i(&self) -> Numeric {
         self.sd() / self.bc.value()
     }
-    fn velocity(&self, muzzle_pitch: Numeric, muzzle_yaw: Numeric) -> Vector3<Numeric> {
+    fn velocity(&self, muzzle_pitch: Angle, muzzle_yaw: Angle) -> Vector3<Numeric> {
         self.velocity
             .to_mps()
             .to_num()
@@ -207,32 +207,32 @@ impl Conditions {
         self
     }
     pub fn with_wind_angle(mut self, yaw: Numeric) -> Self {
-        self.wind.yaw = yaw;
+        self.wind.yaw = Angle::Degrees(yaw);
         self
     }
     pub fn with_shot_angle(mut self, line_of_sight: Numeric) -> Self {
-        self.other.line_of_sight = line_of_sight;
+        self.other.line_of_sight = Angle::Degrees(line_of_sight);
         self
     }
     pub fn with_lattitude(mut self, lattitude: Numeric) -> Self {
-        self.other.lattitude = lattitude;
+        self.other.lattitude = Angle::Degrees(lattitude);
         self
     }
     pub fn with_bearing(mut self, azimuth: Numeric) -> Self {
-        self.other.azimuth = azimuth;
+        self.other.azimuth = Angle::Degrees(azimuth);
         self
     }
 }
 
 pub struct Wind {
     velocity: Velocity, // Wind Velocity (miles/hour)
-    yaw: Numeric,       // Wind Angle (degrees)
+    yaw: Angle,       // Wind Angle (degrees)
 }
 impl Default for Wind {
     fn default() -> Self {
         Self {
             velocity: Velocity::Mph(0.0),
-            yaw: 0.0,
+            yaw: Angle::Radians(0.0),
         }
     }
 }
@@ -271,15 +271,15 @@ impl Wind {
     //         |
     //         v
     //        (0)
-    fn yaw(&self) -> Numeric {
-        -(self.yaw.to_radians() + PI)
+    fn corrected_yaw(&self) -> Angle {
+        Angle::Radians(-self.yaw.to_radians().to_num() + PI)
     }
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
             .to_mps()
             .to_num()
             .mul(Vector3::x())
-            .pivot_y(self.yaw())
+            .pivot_y(self.corrected_yaw())
     }
 }
 
@@ -336,17 +336,17 @@ impl Atmosphere {
 }
 
 pub struct Other {
-    line_of_sight: Numeric, // Line of Sight angle (degrees)
-    azimuth: Numeric,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    lattitude: Numeric,     // Lattitude (Coriolis/Eotvos Effect)
+    line_of_sight: Angle, // Line of Sight angle (degrees)
+    azimuth: Angle,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    lattitude: Angle,     // Lattitude (Coriolis/Eotvos Effect)
     gravity: Acceleration,  // Gravity (m/s^2)
 }
 impl Default for Other {
     fn default() -> Self {
         Self {
-            line_of_sight: 0.0,
-            azimuth: 0.0,
-            lattitude: 0.0,
+            line_of_sight: Angle::Radians(0.0),
+            azimuth: Angle::Radians(0.0),
+            lattitude: Angle::Radians(0.0),
             gravity: Acceleration::Mps2(GRAVITY),
         }
     }
@@ -357,12 +357,6 @@ impl Other {
     }
     fn gravity(&self) -> Vector3<Numeric> {
         self.gravity.to_mps2().to_num().mul(Vector3::y())
-    }
-    fn lattitude(&self) -> Numeric {
-        self.lattitude.to_radians()
-    }
-    fn line_of_sight(&self) -> Numeric {
-        self.line_of_sight.to_radians()
     }
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
@@ -383,8 +377,8 @@ impl Other {
     //         |
     //         v
     //       (180)
-    fn azimuth(&self) -> Numeric {
-        -self.azimuth.to_radians()
+    fn corrected_azimuth(&self) -> Angle {
+        Angle::Radians(-self.azimuth.to_radians().to_num())
     }
     // Angular velocity vector of earth, at current lattitude
     // Can be thought of as vector from center of earth, pointing
@@ -392,6 +386,6 @@ impl Other {
     fn omega(&self) -> Vector3<Numeric> {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
-            .pivot_z(self.lattitude())
+            .pivot_z(self.lattitude)
     }
 }

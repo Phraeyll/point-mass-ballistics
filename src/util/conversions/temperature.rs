@@ -31,7 +31,7 @@ impl From<Temperature> for Numeric {
         }
     }
 }
-impl self::Temperature {
+impl Temperature {
     pub fn to_num(self) -> Numeric {
         Numeric::from(self)
     }
