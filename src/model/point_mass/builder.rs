@@ -21,14 +21,14 @@ impl Default for Solver {
 }
 
 pub trait SimulationBuilder<'a> {
-    type Sim;
+    type Simulation;
     fn new() -> Self;
     fn projectile(self, projectile: Projectile) -> Self;
     fn scope(self, scope: Scope) -> Self;
     fn zero_conditions(self, conditions: Conditions) -> Self;
     fn solve_conditions(self, conditions: Conditions) -> Self;
     fn time_step(self, time_step: Numeric) -> Self;
-    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Sim;
+    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Simulation;
     fn solve_for(
         &'a self,
         zero_distance: Numeric,
@@ -37,14 +37,14 @@ pub trait SimulationBuilder<'a> {
         zero_tolerance: Numeric,
         pitch_offset: Numeric,
         yaw_offset: Numeric,
-    ) -> Self::Sim;
+    ) -> Self::Simulation;
 
 }
 impl<'a> SimulationBuilder<'a> for Solver {
-    type Sim = Simulation<'a>;
+    type Simulation = Simulation<'a>;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Sim {
+    fn using_zero_conditions(&'a self, pitch_offset: Numeric, yaw_offset: Numeric) -> Self::Simulation {
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
