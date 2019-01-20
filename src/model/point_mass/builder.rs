@@ -22,7 +22,7 @@ impl Default for Solver {
 impl Solver {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn flat(&self, pitch_offset: Numeric, yaw_offset: Numeric) -> Simulation {
+    pub fn using_zero_conditions(&self, pitch_offset: Numeric, yaw_offset: Numeric) -> Simulation {
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
@@ -53,7 +53,7 @@ impl Solver {
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         let (found_pitch, found_yaw) = self
-            .flat(0.0, 0.0)
+            .using_zero_conditions(0.0, 0.0)
             .zero(
                 zero_distance,
                 zero_elevation_offset,
