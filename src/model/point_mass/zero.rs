@@ -3,10 +3,12 @@ use crate::util::*;
 use super::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-const MAX_ANGLE: Angle = Angle::Radians(FRAC_PI_4);
-
-fn max_angle() -> Numeric {
-    MAX_ANGLE.to_radians().to_num()
+fn max_pitch() -> Numeric {
+    Angle::Radians(FRAC_PI_4).to_radians().to_num()
+}
+// Should never try to yawn more than 90 degrees, probably not a necessary check
+fn max_yaw() -> Numeric {
+    Angle::Radians(FRAC_PI_2).to_radians().to_num()
 }
 
 struct IterFindAdjustments<'s> {
@@ -22,6 +24,16 @@ struct IterFindAdjustments<'s> {
 impl<'s> Iterator for IterFindAdjustments<'s> {
     type Item = (Angle, Angle, Length, Length);
     fn next(&mut self) -> Option<Self::Item> {
+        let &mut Self {
+            sim:
+                &mut super::Simulation {
+                    muzzle_pitch,
+                    muzzle_yaw,
+                    ..
+                },
+            ..
+        } = self;
+
         self.count += 1;
         self.sim.muzzle_pitch = Angle::Radians(
             self.sim.muzzle_pitch.to_radians().to_num()
@@ -32,8 +44,22 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 + self.windage_adjustment.to_radians().to_num(),
         );
 
-        if self.elevation_adjustment.to_radians().to_num() >= max_angle() {
-            dbg!((self.count, self.elevation_adjustment.to_degrees()));
+        if self.sim.muzzle_pitch.to_radians().to_num() == muzzle_pitch.to_radians().to_num()
+            && self.sim.muzzle_yaw.to_radians().to_num() == muzzle_yaw.to_radians().to_num()
+        {
+            dbg!((
+                self.count,
+                self.elevation_adjustment.to_degrees(),
+                muzzle_pitch.to_degrees(),
+                self.elevation_adjustment.to_degrees()
+            ));
+            dbg!("Angle not changing, cannot zero at this range");
+            None
+        } else if self.sim.muzzle_pitch.to_radians().to_num() >= max_pitch()
+            && self.sim.muzzle_yaw.to_radians().to_num() >= max_yaw()
+            && self.sim.muzzle_yaw.to_radians().to_num() <= -max_yaw()
+        {
+            dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             dbg!("Maximum angle reached, cannot zero at this range");
             None
         } else if let Some(packet) = self
@@ -53,7 +79,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
                 Length::Meters(packet.relative_position().z),
             ))
         } else {
-            dbg!((self.count, self.elevation_adjustment.to_degrees()));
+            dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             dbg!("Terminal velocity reached, cannot zero at this range");
             None
         }
