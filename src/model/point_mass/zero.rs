@@ -111,11 +111,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         if true
             && self.muzzle_pitch() == muzzle_pitch
             && self.muzzle_yaw() == muzzle_yaw
-            && (
-                self.muzzle_pitch() != 0.0 // Ignore first time
-            || self.muzzle_yaw() != 0.0
-                // Ignore first time
-            )
+            // Ignore first time, since both should be still be 0.0 at this point
+            && self.count != 1
         {
             // dbg!((
             //     self.count,
