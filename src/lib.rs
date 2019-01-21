@@ -23,6 +23,7 @@ mod util {
     pub use float_map::*;
     pub use nalgebra_helpers::*;
 
+    #[allow(clippy::or_fun_call)]
     #[macro_use]
     mod float_map;
     mod conversions;
