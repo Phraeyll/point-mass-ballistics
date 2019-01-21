@@ -1,3 +1,5 @@
+pub use BallisticCoefficientKind::*;
+
 use super::*;
 
 use std::error::Error as StdError;
@@ -81,7 +83,9 @@ pub trait SimulationBuilder<'a> {
     fn scope(self, scope: Scope) -> Self;
     fn zero_conditions(self, conditions: Conditions) -> Self;
     fn solve_conditions(self, conditions: Conditions) -> Self;
-    fn time_step(self, time_step: Numeric) -> Self;
+    fn time_step(self, time_step: Numeric) -> Result<Self>
+    where
+        Self: Sized;
     fn using_zero_conditions(
         &'a self,
         pitch_offset: Numeric,
@@ -171,122 +175,246 @@ impl<'a> SimulationBuilder<'a> for Solver {
     fn new() -> Self {
         Self::default()
     }
-    fn projectile(mut self, projectile: Projectile) -> Self {
-        self.projectile = projectile;
+    fn projectile(mut self, value: Projectile) -> Self {
+        self.projectile = value;
         self
     }
-    fn scope(mut self, scope: Scope) -> Self {
-        self.scope = scope;
+    fn scope(mut self, value: Scope) -> Self {
+        self.scope = value;
         self
     }
-    fn zero_conditions(mut self, conditions: Conditions) -> Self {
-        self.zero_conditions = conditions;
+    fn zero_conditions(mut self, value: Conditions) -> Self {
+        self.zero_conditions = value;
         self
     }
-    fn solve_conditions(mut self, conditions: Conditions) -> Self {
-        self.solve_conditions = conditions;
+    fn solve_conditions(mut self, value: Conditions) -> Self {
+        self.solve_conditions = value;
         self
     }
-    fn time_step(mut self, time_step: Numeric) -> Self {
-        self.time_step = Time::Seconds(time_step);
-        self
+    fn time_step(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (0.0, 0.1);
+        if value > min && value <= max {
+            self.time_step = Time::Seconds(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
+    }
+}
+
+// Type of BC used, implies which drag table to use
+#[derive(Copy, Clone)]
+pub enum BallisticCoefficientKind {
+    G1,
+    G2,
+    G5,
+    G6,
+    G7,
+    G8,
+    GI,
+    GS,
+}
+pub struct BallisticCoefficient {
+    value: Numeric,
+    kind: BallisticCoefficientKind,
+    table: FloatMap<Numeric>,
+}
+// Unwrap BC and create associated drag table
+impl BallisticCoefficient {
+    pub fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self> {
+        if value.is_sign_positive() {
+            Ok(Self {
+                value,
+                kind,
+                table: match kind {
+                    G1 => g1::init(),
+                    G2 => g2::init(),
+                    G5 => g5::init(),
+                    G6 => g6::init(),
+                    G7 => g7::init(),
+                    G8 => g8::init(),
+                    GI => gi::init(),
+                    GS => gs::init(),
+                },
+            })
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
+    }
+    pub fn value(&self) -> Numeric {
+        self.value
+    }
+    pub fn table(&self) -> &FloatMap<Numeric> {
+        &self.table
+    }
+    pub fn kind(&self) -> BallisticCoefficientKind {
+        self.kind
     }
 }
 
 pub trait ProjectileBuilder {
     fn new() -> Self;
-    fn with_velocity(self, velocity: Numeric) -> Self;
-    fn with_grains(self, grains: Numeric) -> Self;
-    fn with_caliber(self, caliber: Numeric) -> Self;
-    fn with_bc(self, bc: BallisticCoefficient) -> Self;
+    fn with_velocity(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+
+    fn with_grains(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+
+    fn with_caliber(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+
+    fn with_bc(self, value: BallisticCoefficient) -> Self;
 }
 impl ProjectileBuilder for Projectile {
     fn new() -> Self {
         Self::default()
     }
-    fn with_velocity(mut self, velocity: Numeric) -> Self {
-        self.velocity = Velocity::Fps(velocity);
-        self
+    fn with_velocity(mut self, value: Numeric) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.velocity = Velocity::Fps(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
-    fn with_grains(mut self, grains: Numeric) -> Self {
-        self.weight = WeightMass::Grains(grains);
-        self
+    fn with_grains(mut self, value: Numeric) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.weight = WeightMass::Grains(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
-    fn with_caliber(mut self, caliber: Numeric) -> Self {
-        self.caliber = Length::Inches(caliber);
-        self
+    fn with_caliber(mut self, value: Numeric) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.caliber = Length::Inches(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
-    fn with_bc(mut self, bc: BallisticCoefficient) -> Self {
-        self.bc = bc;
+    fn with_bc(mut self, value: BallisticCoefficient) -> Self {
+        self.bc = value;
         self
     }
 }
 pub trait ConditionsBuilder {
     fn new() -> Self;
-    fn with_temperature(self, temperature: Numeric) -> Self;
-    fn with_pressure(self, pressure: Numeric) -> Self;
-    fn with_humidity(self, humidity: Numeric) -> Self;
-    fn with_wind_speed(self, velocity: Numeric) -> Self;
-    fn with_wind_angle(self, yaw: Numeric) -> Self;
-    fn with_shot_angle(self, line_of_sight: Numeric) -> Self;
-    fn with_lattitude(self, lattitude: Numeric) -> Self;
-    fn with_bearing(self, azimuth: Numeric) -> Self;
+    fn with_temperature(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_pressure(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_humidity(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_wind_speed(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_wind_angle(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_shot_angle(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_lattitude(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn with_bearing(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
 }
 impl ConditionsBuilder for Conditions {
     fn new() -> Self {
         Self::default()
     }
-    fn with_temperature(mut self, temperature: Numeric) -> Self {
-        self.atmosphere.temperature = Temperature::F(temperature);
-        self
+    fn with_temperature(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (-112.0, 122.0);
+        if value >= min && value <= max {
+            self.atmosphere.temperature = Temperature::F(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
-    fn with_pressure(mut self, pressure: Numeric) -> Self {
-        self.atmosphere.pressure = Pressure::Inhg(pressure);
-        self
+    fn with_pressure(mut self, value: Numeric) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.atmosphere.pressure = Pressure::Inhg(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
-    fn with_humidity(mut self, humidity: Numeric) -> Self {
-        self.atmosphere.humidity = humidity;
-        self
+    fn with_humidity(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (0.0, 1.0);
+        if value >= min && value <= max {
+            self.atmosphere.humidity = value;
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
-    fn with_wind_speed(mut self, velocity: Numeric) -> Self {
-        self.wind.velocity = Velocity::Mph(velocity);
-        self
+    fn with_wind_speed(mut self, value: Numeric) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.wind.velocity = Velocity::Mph(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
-    fn with_wind_angle(mut self, yaw: Numeric) -> Self {
-        self.wind.yaw = Angle::Degrees(yaw);
-        self
+    fn with_wind_angle(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (-360.0, 360.0);
+        if value >= min && value <= max {
+            self.wind.yaw = Angle::Degrees(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
-    fn with_shot_angle(mut self, line_of_sight: Numeric) -> Self {
-        self.other.line_of_sight = Angle::Degrees(line_of_sight);
-        self
+    fn with_shot_angle(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (-90.0, 90.0);
+        if value >= min && value <= max {
+            self.other.line_of_sight = Angle::Degrees(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
-    fn with_lattitude(mut self, lattitude: Numeric) -> Self {
-        self.other.lattitude = Angle::Degrees(lattitude);
-        self
+    fn with_lattitude(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (-90.0, 90.0);
+        if value >= min && value <= max {
+            self.other.lattitude = Angle::Degrees(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
-    fn with_bearing(mut self, azimuth: Numeric) -> Self {
-        self.other.azimuth = Angle::Degrees(azimuth);
-        self
+    fn with_bearing(mut self, value: Numeric) -> Result<Self> {
+        let (min, max) = (-360.0, 360.0);
+        if value >= min && value <= max {
+            self.other.azimuth = Angle::Degrees(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+        }
     }
 }
 
 pub trait ScopeBuilder {
     fn new() -> Self;
-    fn with_height(self, height: Numeric) -> Result<Self>
-    where
-        Self: std::marker::Sized;
+    fn with_height(self, height: Numeric) -> Self;
 }
 impl ScopeBuilder for Scope {
     fn new() -> Self {
         Self::default()
     }
-    fn with_height(mut self, height: Numeric) -> Result<Self> {
-        if height.is_sign_positive() {
-            self.height = Length::Inches(height);
-            Ok(self)
-        } else {
-            Err(Error::new(ErrorKind::Input))
-        }
+    fn with_height(mut self, height: Numeric) -> Self {
+        self.height = Length::Inches(height);
+        self
     }
 }
 

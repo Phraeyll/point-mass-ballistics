@@ -12,7 +12,16 @@ use std::ops::Mul;
 
 pub mod builder;
 #[allow(clippy::approx_constant)]
-mod dragtables;
+mod dragtables {
+    pub mod g1;
+    pub mod g2;
+    pub mod g5;
+    pub mod g6;
+    pub mod g7;
+    pub mod g8;
+    pub mod gi;
+    pub mod gs;
+}
 pub mod error;
 #[allow(clippy::float_cmp)]
 pub mod iter;
@@ -54,7 +63,12 @@ impl<'p> Simulation<'p> {
         }
     }
     // Produce a drop table using specified range and step size
-    pub fn table(&self, step: Natural, range_start: Natural, range_end: Natural) -> FloatMap<Packet<'_>> {
+    pub fn table(
+        &self,
+        step: Natural,
+        range_start: Natural,
+        range_end: Natural,
+    ) -> FloatMap<Packet<'_>> {
         let mut iter = self.into_iter().fuse();
         (range_start..=range_end)
             .step_by(step as usize)
@@ -272,7 +286,7 @@ impl Default for Projectile {
         Self {
             weight: WeightMass::Grains(140.0),
             caliber: Length::Inches(0.264),
-            bc: BallisticCoefficient::new(0.305, G7),
+            bc: BallisticCoefficient::new(0.305, G7).expect("how"),
             velocity: Velocity::Fps(2710.0),
         }
     }
