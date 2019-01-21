@@ -183,26 +183,13 @@ impl FlagsBuilder for Flags {
     }
 }
 
-// Type of BC used, implies which drag table to use
-#[derive(Copy, Clone)]
-pub enum BallisticCoefficientKind {
-    G1,
-    G2,
-    G5,
-    G6,
-    G7,
-    G8,
-    GI,
-    GS,
-}
-pub struct BallisticCoefficient {
-    value: Numeric,
-    kind: BallisticCoefficientKind,
-    table: FloatMap<Numeric>,
-}
 // Unwrap BC and create associated drag table
-impl BallisticCoefficient {
-    pub fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self> {
+pub trait BallisticCoefficientBuilder {
+    fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self>
+    where Self: Sized;
+}
+impl BallisticCoefficientBuilder for BallisticCoefficient {
+    fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self> {
         if value.is_sign_positive() {
             Ok(Self {
                 value,
@@ -221,15 +208,6 @@ impl BallisticCoefficient {
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
-    }
-    pub fn value(&self) -> Numeric {
-        self.value
-    }
-    pub fn table(&self) -> &FloatMap<Numeric> {
-        &self.table
-    }
-    pub fn kind(&self) -> BallisticCoefficientKind {
-        self.kind
     }
 }
 

@@ -11,6 +11,7 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
+#[derive(Debug)]
 pub struct Simulation<'p> {
     pub(crate) projectile: &'p Projectile,
     pub(crate) scope: &'p Scope,
@@ -20,36 +21,61 @@ pub struct Simulation<'p> {
     pub(crate) muzzle_pitch: Angle,
     pub(crate) muzzle_yaw: Angle,
 }
+#[derive(Debug)]
 pub struct Flags {
     pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
     pub(crate) use_drag: bool,     // Whether or not to calculate drag
     pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
 }
+// Type of BC used, implies which drag table to use
+#[derive(Debug, Copy, Clone)]
+pub enum BallisticCoefficientKind {
+    G1,
+    G2,
+    G5,
+    G6,
+    G7,
+    G8,
+    GI,
+    GS,
+}
+#[derive(Debug)]
+pub struct BallisticCoefficient {
+    pub(crate) value: Numeric,
+    pub(crate) kind: BallisticCoefficientKind,
+    pub(crate) table: FloatMap<Numeric>,
+}
+#[derive(Debug)]
 pub struct Projectile {
     pub(crate) weight: WeightMass,       // Weight (grains)
     pub(crate) caliber: Length,          // Caliber (inches)
     pub(crate) bc: BallisticCoefficient, // Ballistic Coefficient
     pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
 }
+#[derive(Debug)]
 pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
+#[derive(Debug)]
 pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
 }
+#[derive(Debug)]
 pub struct Atmosphere {
     pub(crate) temperature: Temperature, // Temperature (F)
     pub(crate) pressure: Pressure,       // Pressure (InHg)
     pub(crate) humidity: Numeric,        // Humidity (0-1)
 }
+#[derive(Debug)]
 pub struct Other {
     pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
     pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
     pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
     pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
+#[derive(Debug)]
 pub struct Conditions {
     pub(crate) wind: Wind,
     pub(crate) atmosphere: Atmosphere,
@@ -172,6 +198,17 @@ impl<'p> Simulation<'p> {
             .wind
             .velocity()
             .pivot_y(self.conditions.other.corrected_azimuth())
+    }
+}
+impl BallisticCoefficient {
+    pub fn value(&self) -> Numeric {
+        self.value
+    }
+    pub fn table(&self) -> &FloatMap<Numeric> {
+        &self.table
+    }
+    pub fn kind(&self) -> BallisticCoefficientKind {
+        self.kind
     }
 }
 impl Projectile {
