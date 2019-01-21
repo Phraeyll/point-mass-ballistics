@@ -201,3 +201,60 @@ impl Packet<'_> {
         Angle::Radians(sign * position.angle(&desired))
     }
 }
+
+pub trait Output {
+    fn time(&self) -> Numeric;
+    fn velocity(&self) -> Numeric;
+    fn energy(&self) -> Numeric;
+    fn distance(&self) -> Numeric;
+    fn elevation(&self) -> Numeric;
+    fn windage(&self) -> Numeric;
+    fn moa(&self) -> Numeric;
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric;
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
+}
+// Hard coded Imperial units for now - need to use better library for this eventually
+impl Output for Packet<'_> {
+    fn time(&self) -> Numeric {
+        Time::Seconds(self.time).to_seconds().to_num()
+    }
+    fn velocity(&self) -> Numeric {
+        Velocity::Mps(self.velocity.norm()).to_fps().to_num()
+    }
+    fn energy(&self) -> Numeric {
+        Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
+            .to_ftlbs()
+            .to_num()
+    }
+    // Positions relative to line of sight (shooter_pitch)
+    fn distance(&self) -> Numeric {
+        Length::Meters(self.relative_position().x)
+            .to_yards()
+            .to_num()
+    }
+    fn elevation(&self) -> Numeric {
+        Length::Meters(self.relative_position().y)
+            .to_inches()
+            .to_num()
+    }
+    fn windage(&self) -> Numeric {
+        Length::Meters(self.relative_position().z)
+            .to_inches()
+            .to_num()
+    }
+    fn moa(&self) -> Numeric {
+        Angle::Radians(self.relative_position().angle(&Vector3::x_axis()))
+            .to_minutes()
+            .to_num()
+    }
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
+        self.offset_vertical_moa(Length::Inches(0.0), Length::Inches(tolerance))
+            .to_minutes()
+            .to_num()
+    }
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
+        self.offset_horizontal_moa(Length::Inches(0.0), Length::Inches(tolerance))
+            .to_minutes()
+            .to_num()
+    }
+}
