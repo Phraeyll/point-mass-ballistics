@@ -32,6 +32,7 @@ mod util {
     }
     mod nalgebra_helpers;
 }
+pub mod error;
 
 pub mod model {
     pub use crate::util::Numeric;
@@ -57,7 +58,6 @@ pub mod model {
             pub mod gi;
             pub mod gs;
         }
-        pub mod error;
         #[allow(clippy::float_cmp)]
         pub mod iter;
         #[allow(clippy::float_cmp)]

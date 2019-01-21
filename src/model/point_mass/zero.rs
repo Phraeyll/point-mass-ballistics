@@ -1,59 +1,6 @@
 use super::*;
 
-use std::error::Error as StdError;
-use std::fmt;
-use std::fmt::Display as StdDisplay;
-use std::result;
-use std::str;
-
-pub type Result<T> = result::Result<T, Error>;
-
-#[derive(Debug)]
-pub struct Error(Box<ErrorKind>);
-
-impl Error {
-    pub fn new(kind: ErrorKind) -> Error {
-        Error(Box::new(kind))
-    }
-    pub fn kind(&self) -> &ErrorKind {
-        &self.0
-    }
-    pub fn into_kind(self) -> ErrorKind {
-        *self.0
-    }
-}
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    AngleRange(u64, Numeric),
-    TerminalVelocity(u64, Numeric),
-    AngleNotChanging(u64, Numeric),
-}
-
-impl StdDisplay for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        match *self.0 {
-            ErrorKind::AngleRange(count, angle) => {
-                write!(formatter, "{}: Outside Valid Range Error: {}", count, angle)
-            }
-            ErrorKind::TerminalVelocity(count, angle) => {
-                write!(formatter, "{}: Terminal Velocity Error: {}", count, angle)
-            }
-            ErrorKind::AngleNotChanging(count, angle) => {
-                write!(formatter, "{}: Angle Not Changing Error: {}", count, angle)
-            }
-        }
-    }
-}
-impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self.0 {
-            ErrorKind::AngleRange(..) => "Angle out of range",
-            ErrorKind::TerminalVelocity(..) => "Terminal velocity reached",
-            ErrorKind::AngleNotChanging(..) => "Angle not changing curing iteration",
-        }
-    }
-}
+use crate::error::{Error, ErrorKind, Result};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;

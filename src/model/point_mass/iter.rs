@@ -11,6 +11,12 @@ pub struct IterSimulation<'s> {
     velocity: Vector3<Numeric>,            // Velocity (m/s)
     time: Numeric,                         // Position in time (s)
 }
+pub struct Packet<'s> {
+    pub(crate) simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
+    pub(crate) time: Numeric,                         // Position in time (s)
+    pub(crate) position: Vector3<Numeric>,            // Position (m)
+    pub(crate) velocity: Vector3<Numeric>,            // Velocity (m/s)
+}
 
 // Create an new iterator over Simulation
 impl<'s> IntoIterator for &'s super::Simulation<'s> {
@@ -21,7 +27,7 @@ impl<'s> IntoIterator for &'s super::Simulation<'s> {
         self.iter()
     }
 }
-
+// Ref iter
 impl super::Simulation<'_> {
     fn iter(&self) -> IterSimulation {
         IterSimulation {
@@ -32,7 +38,6 @@ impl super::Simulation<'_> {
         }
     }
 }
-
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
@@ -93,7 +98,7 @@ impl<'s> Iterator for IterSimulation<'s> {
         }
     }
 }
-
+// Calculations used during iteration
 impl IterSimulation<'_> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
@@ -139,16 +144,9 @@ impl IterSimulation<'_> {
             * self.vv().norm()
     }
 }
-
 // Output struct which represents projectiles current position, and velocity
 // Basically same values used internally during iteration
 // Along with a ref to the simulation which was iterated over
-pub struct Packet<'s> {
-    pub(crate) simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
-    pub(crate) time: Numeric,                         // Position in time (s)
-    pub(crate) position: Vector3<Numeric>,            // Position (m)
-    pub(crate) velocity: Vector3<Numeric>,            // Velocity (m/s)
-}
 impl Packet<'_> {
     // During the simulation, the velocity of the projectile is rotated to allign with
     // the shooter's bearing (azimuth and line of sight)
@@ -158,7 +156,7 @@ impl Packet<'_> {
         self.position
             .un_pivot_z(self.simulation.conditions.other.line_of_sight)
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
-            - self.simulation.scope.height()
+            - self.simulation.scope.position()
     }
     // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {

@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 
-use crate::model::point_mass::error::{Error, ErrorKind, Result};
+use crate::error::{Error, ErrorKind, Result};
 use crate::util::Numeric;
 
 use std::{

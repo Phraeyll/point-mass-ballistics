@@ -19,6 +19,90 @@ pub struct Simulation<'p> {
     pub(crate) muzzle_pitch: Angle,
     pub(crate) muzzle_yaw: Angle,
 }
+pub struct Projectile {
+    pub(crate) weight: WeightMass,       // Weight (grains)
+    pub(crate) caliber: Length,          // Caliber (inches)
+    pub(crate) bc: BallisticCoefficient, // Ballistic Coefficient
+    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
+}
+pub struct Scope {
+    pub(crate) height: Length, // Scope Height (inches)
+    pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+}
+pub struct Wind {
+    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
+    pub(crate) yaw: Angle,         // Wind Angle (degrees)
+}
+pub struct Atmosphere {
+    pub(crate) temperature: Temperature, // Temperature (F)
+    pub(crate) pressure: Pressure,       // Pressure (InHg)
+    pub(crate) humidity: Numeric,        // Humidity (0-1)
+}
+pub struct Other {
+    pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
+    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
+}
+pub struct Conditions {
+    pub(crate) wind: Wind,
+    pub(crate) atmosphere: Atmosphere,
+    pub(crate) other: Other,
+}
+impl Default for Projectile {
+    fn default() -> Self {
+        Self {
+            weight: WeightMass::Grains(140.0),
+            caliber: Length::Inches(0.264),
+            bc: BallisticCoefficient::new(0.305, G7).expect("how"),
+            velocity: Velocity::Fps(2710.0),
+        }
+    }
+}
+impl Default for Scope {
+    fn default() -> Self {
+        Self {
+            height: Length::Inches(1.5),
+            offset: Length::Inches(0.0),
+        }
+    }
+}
+impl Default for Wind {
+    fn default() -> Self {
+        Self {
+            velocity: Velocity::Mph(0.0),
+            yaw: Angle::Radians(0.0),
+        }
+    }
+}
+impl Default for Atmosphere {
+    fn default() -> Self {
+        Self {
+            temperature: Temperature::F(68.0),
+            pressure: Pressure::Inhg(29.92),
+            humidity: 0.0,
+        }
+    }
+}
+impl Default for Other {
+    fn default() -> Self {
+        Self {
+            line_of_sight: Angle::Radians(0.0),
+            azimuth: Angle::Radians(0.0),
+            lattitude: Angle::Radians(0.0),
+            gravity: Acceleration::Mps2(GRAVITY),
+        }
+    }
+}
+impl Default for Conditions {
+    fn default() -> Self {
+        Self {
+            wind: Wind::default(),
+            atmosphere: Atmosphere::default(),
+            other: Other::default(),
+        }
+    }
+}
 impl<'p> Simulation<'p> {
     pub(crate) fn new(
         projectile: &'p Projectile,
@@ -73,13 +157,6 @@ impl<'p> Simulation<'p> {
             .pivot_y(self.conditions.other.corrected_azimuth())
     }
 }
-
-pub struct Projectile {
-    pub(crate) weight: WeightMass,       // Weight (grains)
-    pub(crate) caliber: Length,          // Caliber (inches)
-    pub(crate) bc: BallisticCoefficient, // Ballistic Coefficient
-    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
-}
 impl Projectile {
     // Radius of projectile cross section in meters
     pub(crate) fn radius(&self) -> Numeric {
@@ -110,19 +187,14 @@ impl Projectile {
             .pivot_y(muzzle_yaw)
     }
 }
-
-pub struct Scope {
-    pub(crate) height: Length, // Scope Height (inches)
-}
 impl Scope {
-    pub(crate) fn height(&self) -> Vector3<Numeric> {
-        self.height.to_meters().to_num().mul(Vector3::y())
+    pub(crate) fn position(&self) -> Vector3<Numeric> {
+        Vector3::new(
+            0.0,
+            self.height.to_meters().to_num(),
+            self.offset.to_meters().to_num(),
+        )
     }
-}
-
-pub struct Wind {
-    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
-    pub(crate) yaw: Angle,         // Wind Angle (degrees)
 }
 impl Wind {
     // This vector indicates direction of wind flow, not source of wind
@@ -167,13 +239,6 @@ impl Wind {
             .pivot_y(self.corrected_yaw())
     }
 }
-
-// Environmental Conditions and other varialbe for simulation
-pub struct Atmosphere {
-    pub(crate) temperature: Temperature, // Temperature (F)
-    pub(crate) pressure: Pressure,       // Pressure (InHg)
-    pub(crate) humidity: Numeric,        // Humidity (0-1)
-}
 impl Atmosphere {
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> Numeric {
@@ -208,12 +273,6 @@ impl Atmosphere {
     }
 }
 
-pub struct Other {
-    pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
-    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
-    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
-}
 impl Other {
     pub(crate) fn gravity(&self) -> Vector3<Numeric> {
         self.gravity.to_mps2().to_num().mul(Vector3::y())
@@ -247,65 +306,5 @@ impl Other {
         ANGULAR_VELOCITY_EARTH
             .mul(Vector3::x())
             .pivot_z(self.lattitude)
-    }
-}
-
-pub struct Conditions {
-    pub(crate) wind: Wind,
-    pub(crate) atmosphere: Atmosphere,
-    pub(crate) other: Other,
-}
-
-impl Default for Projectile {
-    fn default() -> Self {
-        Self {
-            weight: WeightMass::Grains(140.0),
-            caliber: Length::Inches(0.264),
-            bc: BallisticCoefficient::new(0.305, G7).expect("how"),
-            velocity: Velocity::Fps(2710.0),
-        }
-    }
-}
-impl Default for Scope {
-    fn default() -> Self {
-        Self {
-            height: Length::Inches(1.5),
-        }
-    }
-}
-impl Default for Wind {
-    fn default() -> Self {
-        Self {
-            velocity: Velocity::Mph(0.0),
-            yaw: Angle::Radians(0.0),
-        }
-    }
-}
-impl Default for Atmosphere {
-    fn default() -> Self {
-        Self {
-            temperature: Temperature::F(68.0),
-            pressure: Pressure::Inhg(29.92),
-            humidity: 0.0,
-        }
-    }
-}
-impl Default for Other {
-    fn default() -> Self {
-        Self {
-            line_of_sight: Angle::Radians(0.0),
-            azimuth: Angle::Radians(0.0),
-            lattitude: Angle::Radians(0.0),
-            gravity: Acceleration::Mps2(GRAVITY),
-        }
-    }
-}
-impl Default for Conditions {
-    fn default() -> Self {
-        Self {
-            wind: Wind::default(),
-            atmosphere: Atmosphere::default(),
-            other: Other::default(),
-        }
     }
 }

@@ -1,63 +1,9 @@
 pub use BallisticCoefficientKind::*;
 
 use nalgebra::Vector3;
+use crate::error::{Error, ErrorKind, Result};
 
 use super::*;
-
-use std::error::Error as StdError;
-use std::fmt;
-use std::fmt::Display as StdDisplay;
-use std::result;
-use std::str;
-
-pub type Result<T> = result::Result<T, Error>;
-
-#[derive(Debug)]
-pub struct Error(Box<ErrorKind>);
-
-impl Error {
-    pub fn new(kind: ErrorKind) -> Error {
-        Error(Box::new(kind))
-    }
-    pub fn kind(&self) -> &ErrorKind {
-        &self.0
-    }
-    pub fn into_kind(self) -> ErrorKind {
-        *self.0
-    }
-}
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    Input,
-    PositiveExpected(Numeric),
-    OutOfRange(Numeric, Numeric),
-}
-
-impl StdDisplay for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        match *self.0 {
-            ErrorKind::Input => write!(formatter, "Input Error"),
-            ErrorKind::PositiveExpected(ref err) => {
-                write!(formatter, "Positive Expected Error: {}", err)
-            }
-            ErrorKind::OutOfRange(ref start, ref end) => write!(
-                formatter,
-                "Within Range Expected Error: {} - {}",
-                start, end
-            ),
-        }
-    }
-}
-impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self.0 {
-            ErrorKind::Input => "Invalid inputs",
-            ErrorKind::PositiveExpected(..) => "Number needs to be positive greater than 0",
-            ErrorKind::OutOfRange(..) => "Numer needs to be within range",
-        }
-    }
-}
 
 pub struct Solver {
     pub projectile: Projectile, // Use same projectile for zeroing and solving
@@ -303,6 +249,26 @@ impl ProjectileBuilder for Projectile {
         self
     }
 }
+
+pub trait ScopeBuilder {
+    fn new() -> Self;
+    fn with_height(self, value: Numeric) -> Self;
+    fn with_offset(self, value: Numeric) -> Self;
+}
+impl ScopeBuilder for Scope {
+    fn new() -> Self {
+        Self::default()
+    }
+    fn with_height(mut self, value: Numeric) -> Self {
+        self.height = Length::Inches(value);
+        self
+    }
+    fn with_offset(mut self, value: Numeric) -> Self {
+        self.offset = Length::Inches(value);
+        self
+    }
+}
+
 pub trait ConditionsBuilder {
     fn new() -> Self;
     fn with_temperature(self, value: Numeric) -> Result<Self>
@@ -403,20 +369,6 @@ impl ConditionsBuilder for Conditions {
         } else {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
-    }
-}
-
-pub trait ScopeBuilder {
-    fn new() -> Self;
-    fn with_height(self, height: Numeric) -> Self;
-}
-impl ScopeBuilder for Scope {
-    fn new() -> Self {
-        Self::default()
-    }
-    fn with_height(mut self, height: Numeric) -> Self {
-        self.height = Length::Inches(height);
-        self
     }
 }
 
