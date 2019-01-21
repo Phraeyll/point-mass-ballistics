@@ -34,27 +34,27 @@ pub enum ErrorKind {
 }
 
 impl StdDisplay for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             ErrorKind::VelocityLookup(ref err) => {
-                write!(formatter, "Velocity Lookup Error: {}", err)
+                write!(f, "Velocity Lookup Error: {}", err)
             }
             ErrorKind::PositiveExpected(ref err) => {
-                write!(formatter, "Positive Expected Error: {}", err)
+                write!(f, "Positive Expected Error: {}", err)
             }
             ErrorKind::OutOfRange(ref start, ref end) => write!(
-                formatter,
+                f,
                 "Within Range Expected Error: {} - {}",
                 start, end
             ),
             ErrorKind::AngleRange(count, angle) => {
-                write!(formatter, "{}: Outside Valid Range Error: {}", count, angle)
+                write!(f, "{}: Outside Valid Range Error: {}", count, angle)
             }
             ErrorKind::TerminalVelocity(count, angle) => {
-                write!(formatter, "{}: Terminal Velocity Error: {}", count, angle)
+                write!(f, "{}: Terminal Velocity Error: {}", count, angle)
             }
             ErrorKind::AngleNotChanging(count, angle) => {
-                write!(formatter, "{}: Angle Not Changing Error: {}", count, angle)
+                write!(f, "{}: Angle Not Changing Error: {}", count, angle)
             }
         }
     }

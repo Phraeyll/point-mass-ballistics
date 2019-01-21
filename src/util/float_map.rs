@@ -9,8 +9,13 @@ use std::{
     ops::RangeBounds,
 };
 
-#[derive(Debug)]
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
+
+impl<V> std::fmt::Debug for FloatMap<V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "FloatMap: [OrderedFloat(Numeric) => V, ...],")
+    }
+}
 
 impl<V> Default for FloatMap<V> {
     fn default() -> Self {
