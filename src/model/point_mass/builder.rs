@@ -1,5 +1,7 @@
 pub use BallisticCoefficientKind::*;
 
+use nalgebra::Vector3;
+
 use super::*;
 
 use std::error::Error as StdError;
