@@ -186,7 +186,8 @@ impl FlagsBuilder for Flags {
 // Unwrap BC and create associated drag table
 pub trait BallisticCoefficientBuilder {
     fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self>
-    where Self: Sized;
+    where
+        Self: Sized;
 }
 impl BallisticCoefficientBuilder for BallisticCoefficient {
     fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self> {

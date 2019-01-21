@@ -36,17 +36,11 @@ pub enum ErrorKind {
 impl StdDisplay for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
-            ErrorKind::VelocityLookup(ref err) => {
-                write!(f, "Velocity Lookup Error: {}", err)
+            ErrorKind::VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
+            ErrorKind::PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
+            ErrorKind::OutOfRange(ref start, ref end) => {
+                write!(f, "Within Range Expected Error: {} - {}", start, end)
             }
-            ErrorKind::PositiveExpected(ref err) => {
-                write!(f, "Positive Expected Error: {}", err)
-            }
-            ErrorKind::OutOfRange(ref start, ref end) => write!(
-                f,
-                "Within Range Expected Error: {} - {}",
-                start, end
-            ),
             ErrorKind::AngleRange(count, angle) => {
                 write!(f, "{}: Outside Valid Range Error: {}", count, angle)
             }
