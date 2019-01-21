@@ -35,33 +35,29 @@ mod util {
 pub mod error;
 
 pub mod model {
-    pub use crate::util::Numeric;
+    pub use self::core::*;
+    pub use crate::util::*;
+    pub use builder::*;
+    pub use dragtables::*;
+    pub use iter::*;
+    pub use zero::*;
 
-    pub mod point_mass {
-        pub use self::core::*;
-        pub use crate::util::*;
-        pub use builder::*;
-        pub use dragtables::*;
-        pub use iter::*;
-        pub use zero::*;
-
-        pub mod builder;
-        pub mod core;
-        #[allow(clippy::approx_constant)]
-        mod dragtables {
-            pub mod g1;
-            pub mod g2;
-            pub mod g5;
-            pub mod g6;
-            pub mod g7;
-            pub mod g8;
-            pub mod gi;
-            pub mod gs;
-        }
-        #[allow(clippy::float_cmp)]
-        pub mod iter;
-        #[allow(clippy::float_cmp)]
-        #[allow(clippy::nonminimal_bool)]
-        mod zero;
+    pub mod builder;
+    pub mod core;
+    #[allow(clippy::approx_constant)]
+    mod dragtables {
+        pub mod g1;
+        pub mod g2;
+        pub mod g5;
+        pub mod g6;
+        pub mod g7;
+        pub mod g8;
+        pub mod gi;
+        pub mod gs;
     }
+    #[allow(clippy::float_cmp)]
+    pub mod iter;
+    #[allow(clippy::float_cmp)]
+    #[allow(clippy::nonminimal_bool)]
+    mod zero;
 }

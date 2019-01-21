@@ -164,23 +164,6 @@ impl<'p> Simulation<'p> {
             muzzle_yaw,
         }
     }
-    // Produce a drop table using specified range and step size
-    pub fn table(
-        &self,
-        step: Natural,
-        range_start: Natural,
-        range_end: Natural,
-    ) -> FloatMap<Packet<'_>> {
-        let mut iter = self.into_iter().fuse();
-        (range_start..=range_end)
-            .step_by(step as usize)
-            .filter_map(|current_step| {
-                iter.by_ref()
-                    .find(|p| p.distance() >= Numeric::from(current_step))
-                    .map(|p| (p.distance(), p))
-            })
-            .collect::<FloatMap<_>>()
-    }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {

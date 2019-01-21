@@ -1,5 +1,5 @@
 [package]
-name = "rballistics-flat"
+name = "point-mass-ballistics"
 version = "0.0.1"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 edition = "2018"
