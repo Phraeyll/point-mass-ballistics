@@ -2,6 +2,61 @@ use crate::util::*;
 
 use super::*;
 
+use std::error::Error as StdError;
+use std::fmt;
+use std::fmt::Display as StdDisplay;
+use std::result;
+use std::str;
+
+pub type Result<T> = result::Result<T, Error>;
+
+#[derive(Debug)]
+pub struct Error(Box<ErrorKind>);
+
+impl Error {
+    pub fn new(kind: ErrorKind) -> Error {
+        Error(Box::new(kind))
+    }
+    pub fn kind(&self) -> &ErrorKind {
+        &self.0
+    }
+    pub fn into_kind(self) -> ErrorKind {
+        *self.0
+    }
+}
+
+#[derive(Debug)]
+pub enum ErrorKind {
+    AngleRange(u64, Numeric),
+    TerminalVelocity(u64, Numeric),
+    AngleNotChanging(u64, Numeric),
+}
+
+impl StdDisplay for Error {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match *self.0 {
+            ErrorKind::AngleRange(count, angle) => {
+                write!(formatter, "{}: Outside Valid Range Error: {}", count, angle)
+            }
+            ErrorKind::TerminalVelocity(count, angle) => {
+                write!(formatter, "{}: Terminal Velocity Error: {}", count, angle)
+            }
+            ErrorKind::AngleNotChanging(count, angle) => {
+                write!(formatter, "{}: Angle Not Changing Error: {}", count, angle)
+            }
+        }
+    }
+}
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match *self.0 {
+            ErrorKind::AngleRange(..) => "Angle out of range",
+            ErrorKind::TerminalVelocity(..) => "Terminal velocity reached",
+            ErrorKind::AngleNotChanging(..) => "Angle not changing curing iteration",
+        }
+    }
+}
+
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;
 // Should never try to yaw more than 90 degrees, probably not a necessary check
@@ -35,7 +90,7 @@ impl IterFindAdjustments<'_> {
 // This never returns None - it returns Some(Result) which can indicate failure instead
 // This is just to capture reason why iteration stopped
 impl<'s> Iterator for IterFindAdjustments<'s> {
-    type Item = Result<(Angle, Angle, Length, Length), &'static str>;
+    type Item = Result<(Angle, Angle, Length, Length)>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
@@ -68,9 +123,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             //     self.count,
             //     self.elevation_adjustment.to_degrees(),
             //     muzzle_pitch.to_degrees(),
-            //     self.elevation_adjustment.to_degrees()
-            // ));
-            Some(Err("Angle not changing, cannot zero at this range"))
+            //     self.elevation_adjustment.to_degrees());
+            Some(Err(Error::new(ErrorKind::AngleNotChanging(self.count, self.muzzle_pitch()))))
         } else if true
             && self.muzzle_pitch() >= DEG_45
             && self.muzzle_pitch() <= -DEG_90
@@ -78,7 +132,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             && self.muzzle_yaw() <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err("Maximum angle reached, cannot zero at this range"))
+            Some(Err(Error::new(ErrorKind::AngleRange(self.count, self.muzzle_pitch()))))
         } else if let Some(packet) = self
             .sim
             .into_iter()
@@ -99,7 +153,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             )))
         } else {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err("Terminal velocity reached, cannot zero at this range"))
+            Some(Err(Error::new(ErrorKind::TerminalVelocity(self.count, self.muzzle_pitch()))))
         }
     }
 }
@@ -146,7 +200,7 @@ impl<'s> super::Simulation<'s> {
         zero_elevation_offset: Length,
         zero_windage_offset: Length,
         zero_tolerance: Length,
-    ) -> Result<(Angle, Angle), &str> {
+    ) -> Result<(Angle, Angle)> {
         self.find_adjustments(
             zero_distance,
             zero_elevation_offset,
@@ -171,9 +225,9 @@ impl<'s> super::Simulation<'s> {
                 } else {
                     None
                 }
-            }
+            },
             Err(err) => Some(Err(err)),
         })
-        .unwrap_or(Err("Can this ever be reached?"))
+        .unwrap()
     }
 }

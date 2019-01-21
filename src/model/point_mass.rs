@@ -13,6 +13,7 @@ use std::ops::Mul;
 pub mod builder;
 #[allow(clippy::approx_constant)]
 mod dragtables;
+pub mod error;
 #[allow(clippy::float_cmp)]
 pub mod iter;
 #[allow(clippy::float_cmp)]

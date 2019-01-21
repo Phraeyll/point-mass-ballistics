@@ -60,6 +60,8 @@ impl<'s> Iterator for IterSimulation<'s> {
         // 'First Equation of Motion'
         self.velocity += acceleration * time_step;
 
+        // dbg!(position);
+
         // Save packet for debugging purposes for now
         let packet = Self::Item {
             simulation: &self.simulation,

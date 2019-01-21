@@ -1,6 +1,7 @@
 use ordered_float::OrderedFloat;
 
 use crate::util::Numeric;
+use crate::model::point_mass::error::{Result, Error, ErrorKind};
 
 use std::{
     collections::{btree_map, BTreeMap},
@@ -60,13 +61,13 @@ impl FloatMap<Numeric> {
     // Search for closest surrounding 'x' keys in map
     // and use them along with their values for interpolation
     // Works for exact values of 'x' as well
-    pub fn lerp(&self, x: Numeric) -> Result<Numeric, &'static str> {
+    pub fn lerp(&self, x: Numeric) -> Result<Numeric> {
         let key = OrderedFloat(x);
         self.range(key..)
             .zip(self.range(..key).rev())
             .next()
-            .map(|((x1, y1), (x0, y0))| Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0))))
-            .unwrap_or(Err("Velocity out of range"))
+            .map(|((x1, y1), (x0, y0))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+            .ok_or(Error::new(ErrorKind::VelocityLookup(x)))
     }
 }
 
