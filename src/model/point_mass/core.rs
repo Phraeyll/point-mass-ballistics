@@ -18,6 +18,9 @@ pub struct Simulation<'p> {
     pub(crate) time_step: Time,
     pub(crate) muzzle_pitch: Angle,
     pub(crate) muzzle_yaw: Angle,
+    pub(crate) use_coriolis: bool,                    // Whether or not to calculate coriolis/eotvos effect
+    pub(crate) use_drag: bool,                        // Whether or not to calculate drag
+    pub(crate) use_gravity: bool,                     // Whether or not to calculate gravity
 }
 pub struct Projectile {
     pub(crate) weight: WeightMass,       // Weight (grains)
@@ -111,6 +114,9 @@ impl<'p> Simulation<'p> {
         time_step: Time,
         muzzle_pitch: Angle,
         muzzle_yaw: Angle,
+        use_coriolis: bool,
+        use_drag: bool,
+        use_gravity: bool,
     ) -> Self {
         Self {
             projectile,
@@ -119,6 +125,9 @@ impl<'p> Simulation<'p> {
             time_step,
             muzzle_pitch,
             muzzle_yaw,
+            use_coriolis,
+            use_drag,
+            use_gravity,
         }
     }
     // Produce a drop table using specified range and step size

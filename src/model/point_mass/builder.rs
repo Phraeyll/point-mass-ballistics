@@ -1,7 +1,7 @@
 pub use BallisticCoefficientKind::*;
 
-use nalgebra::Vector3;
 use crate::error::{Error, ErrorKind, Result};
+use nalgebra::Vector3;
 
 use super::*;
 
@@ -11,6 +11,9 @@ pub struct Solver {
     pub zero_conditions: Conditions, // Different conditions during zeroing
     pub solve_conditions: Conditions, // Different conditions during solving
     pub time_step: Time,        // Use same timestep for zeroing and solving
+    pub use_coriolis: bool,
+    pub use_drag: bool,
+    pub use_gravity: bool,
 }
 impl Default for Solver {
     fn default() -> Self {
@@ -20,6 +23,9 @@ impl Default for Solver {
             zero_conditions: Conditions::default(),
             solve_conditions: Conditions::default(),
             time_step: Time::Seconds(0.000_001),
+            use_coriolis: true,
+            use_drag: true,
+            use_gravity: true,
         }
     }
 }
@@ -27,13 +33,16 @@ impl Default for Solver {
 pub trait SimulationBuilder<'a> {
     type Simulation;
     fn new() -> Self;
-    fn projectile(self, projectile: Projectile) -> Self;
-    fn scope(self, scope: Scope) -> Self;
-    fn zero_conditions(self, conditions: Conditions) -> Self;
-    fn solve_conditions(self, conditions: Conditions) -> Self;
-    fn time_step(self, time_step: Numeric) -> Result<Self>
+    fn projectile(self, value: Projectile) -> Self;
+    fn scope(self, value: Scope) -> Self;
+    fn zero_conditions(self, value: Conditions) -> Self;
+    fn solve_conditions(self, value: Conditions) -> Self;
+    fn time_step(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
+    fn coriolis(self, value: bool) -> Self;
+    fn drag(self, value: bool) -> Self;
+    fn gravity(self, value: bool) -> Self;
     fn using_zero_conditions(
         &'a self,
         pitch_offset: Numeric,
@@ -67,6 +76,9 @@ impl<'a> SimulationBuilder<'a> for Solver {
             self.time_step,
             pitch_offset,
             yaw_offset,
+            self.use_coriolis,
+            self.use_drag,
+            self.use_gravity,
         )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
@@ -118,6 +130,9 @@ impl<'a> SimulationBuilder<'a> for Solver {
             self.time_step,
             found_pitch,
             found_yaw,
+            self.use_coriolis,
+            self.use_drag,
+            self.use_gravity,
         )
     }
     fn new() -> Self {
@@ -147,6 +162,18 @@ impl<'a> SimulationBuilder<'a> for Solver {
         } else {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
+    }
+    fn coriolis(mut self, value: bool) -> Self {
+        self.use_coriolis = value;
+        self
+    }
+    fn drag(mut self, value: bool) -> Self {
+        self.use_drag = value;
+        self
+    }
+    fn gravity(mut self, value: bool) -> Self {
+        self.use_gravity = value;
+        self
     }
 }
 

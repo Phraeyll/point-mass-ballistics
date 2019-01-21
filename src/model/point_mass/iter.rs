@@ -54,27 +54,13 @@ impl<'s> Iterator for IterSimulation<'s> {
 
         // Unwrap time
         let time_step = self.simulation.time_step.to_seconds().to_num();
-        // Acceleration from drag force and gravity (F = ma)
-        // Keep drag acceleration for other uses
-        let acceleration = self.drag_force() / self.simulation.projectile.mass()
-            + self.simulation.conditions.other.gravity()
-            + self.coriolis_acceleration();
         // Increment position in time
         self.time += time_step;
         // 'Second Equation of Motion'
-        self.position += self.velocity * time_step + (acceleration * time_step.powf(2.0)) / 2.0;
+        self.position +=
+            self.velocity * time_step + (self.acceleration() * time_step.powf(2.0)) / 2.0;
         // 'First Equation of Motion'
-        self.velocity += acceleration * time_step;
-
-        // dbg!(position);
-
-        // Save packet for debugging purposes for now
-        let packet = Self::Item {
-            simulation: &self.simulation,
-            time,
-            position,
-            velocity,
-        };
+        self.velocity += self.acceleration() * time_step;
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -87,14 +73,13 @@ impl<'s> Iterator for IterSimulation<'s> {
         // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
         // how to check previous iteration values in standard iterator adaptors.
         if self.position.x != position.x {
-            Some(packet)
+            Some(Self::Item {
+                simulation: &self.simulation,
+                time,
+                position,
+                velocity,
+            })
         } else {
-            // dbg!((
-            //     packet.velocity(),
-            //     packet.distance(),
-            //     packet.simulation.muzzle_pitch.to_degrees(),
-            //     packet.position.x,
-            // ));
             None
         }
     }
@@ -108,30 +93,34 @@ impl IterSimulation<'_> {
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        -2.0 * self
-            .simulation
-            .conditions
-            .other
-            .omega()
-            .cross(&self.velocity)
+        if self.simulation.use_coriolis {
+            -2.0 * self
+                .simulation
+                .conditions
+                .other
+                .omega()
+                .cross(&self.velocity)
+        } else {
+            Vector3::zeros()
+        }
     }
-    // Velocity relative to speed of sound (c), with given atmospheric conditions
-    fn mach(&self) -> Numeric {
-        self.velocity.norm() / self.simulation.conditions.atmosphere.speed_of_sound()
+    fn gravity_acceleration(&self) -> Vector3<Numeric> {
+        if self.simulation.use_gravity {
+            self.simulation.conditions.other.gravity()
+        } else {
+            Vector3::zeros()
+        }
     }
-    // Coefficient of drag, as defined by a standard projectile depending on drag table used
-    fn cd(&self) -> Numeric {
-        self.simulation
-            .projectile
-            .bc
-            .table()
-            .lerp(self.mach())
-            .expect("cd")
+    fn drag_acceleration(&self) -> Vector3<Numeric> {
+        if self.simulation.use_drag {
+            // Acceleration from drag force and gravity (F = ma)
+            self.drag_force() / self.simulation.projectile.mass()
+        } else {
+            Vector3::zeros()
+        }
     }
-    // Velocity vector, after impact from wind (actually from drag, not "being blown")
-    // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
-    fn vv(&self) -> Vector3<Numeric> {
-        self.velocity - self.simulation.absolute_wind_velocity()
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
@@ -143,6 +132,24 @@ impl IterSimulation<'_> {
             * self.simulation.projectile.i()
             * self.vv()
             * self.vv().norm()
+    }
+    // Coefficient of drag, as defined by a standard projectile depending on drag table used
+    fn cd(&self) -> Numeric {
+        self.simulation
+            .projectile
+            .bc
+            .table()
+            .lerp(self.mach())
+            .expect("cd")
+    }
+    // Velocity relative to speed of sound (c), with given atmospheric conditions
+    fn mach(&self) -> Numeric {
+        self.velocity.norm() / self.simulation.conditions.atmosphere.speed_of_sound()
+    }
+    // Velocity vector, after impact from wind (actually from drag, not "being blown")
+    // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
+    fn vv(&self) -> Vector3<Numeric> {
+        self.velocity - self.simulation.absolute_wind_velocity()
     }
 }
 // Output struct which represents projectiles current position, and velocity
