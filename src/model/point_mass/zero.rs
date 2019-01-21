@@ -1,5 +1,3 @@
-use crate::util::*;
-
 use super::*;
 
 use std::error::Error as StdError;
@@ -124,7 +122,10 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             //     self.elevation_adjustment.to_degrees(),
             //     muzzle_pitch.to_degrees(),
             //     self.elevation_adjustment.to_degrees());
-            Some(Err(Error::new(ErrorKind::AngleNotChanging(self.count, self.muzzle_pitch()))))
+            Some(Err(Error::new(ErrorKind::AngleNotChanging(
+                self.count,
+                self.muzzle_pitch(),
+            ))))
         } else if true
             && self.muzzle_pitch() >= DEG_45
             && self.muzzle_pitch() <= -DEG_90
@@ -132,7 +133,10 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             && self.muzzle_yaw() <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::AngleRange(self.count, self.muzzle_pitch()))))
+            Some(Err(Error::new(ErrorKind::AngleRange(
+                self.count,
+                self.muzzle_pitch(),
+            ))))
         } else if let Some(packet) = self
             .sim
             .into_iter()
@@ -153,7 +157,10 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             )))
         } else {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::TerminalVelocity(self.count, self.muzzle_pitch()))))
+            Some(Err(Error::new(ErrorKind::TerminalVelocity(
+                self.count,
+                self.muzzle_pitch(),
+            ))))
         }
     }
 }
@@ -225,7 +232,7 @@ impl<'s> super::Simulation<'s> {
                 } else {
                     None
                 }
-            },
+            }
             Err(err) => Some(Err(err)),
         })
         .unwrap()

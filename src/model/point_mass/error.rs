@@ -1,7 +1,6 @@
-use crate::util::Numeric;
-
-use super::zero;
 use super::builder;
+use super::zero;
+use crate::util::Numeric;
 
 use std::error::Error as StdError;
 use std::fmt;
@@ -36,15 +35,11 @@ pub enum ErrorKind {
 impl StdDisplay for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
-            ErrorKind::Zeroing(ref err) => {
-                write!(formatter, "Zeroing Error: {}", err)
-            }
+            ErrorKind::Zeroing(ref err) => write!(formatter, "Zeroing Error: {}", err),
             ErrorKind::VelocityLookup(ref err) => {
                 write!(formatter, "Velocity Lookup Error: {}", err)
             }
-            ErrorKind::Builder(ref err) => {
-                write!(formatter, "Builder Error: {}", err)
-            }
+            ErrorKind::Builder(ref err) => write!(formatter, "Builder Error: {}", err),
         }
     }
 }
