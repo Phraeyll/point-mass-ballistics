@@ -31,10 +31,11 @@ mod util {
 
 pub mod model {
     pub use crate::util::Numeric;
+
     pub mod point_mass {
+        pub use self::core::*;
         pub use crate::util::*;
         pub use builder::*;
-        pub use self::core::*;
         pub use dragtables::*;
         pub use iter::*;
         pub use zero::*;

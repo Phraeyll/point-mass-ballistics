@@ -210,8 +210,8 @@ impl Atmosphere {
 
 pub struct Other {
     pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
-    pub(crate) azimuth: Angle,        // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub(crate) lattitude: Angle,      // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
     pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
 impl Other {

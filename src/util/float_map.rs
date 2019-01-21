@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 
+use crate::model::point_mass::error::{Error, ErrorKind, Result};
 use crate::util::Numeric;
-use crate::model::point_mass::error::{Result, Error, ErrorKind};
 
 use std::{
     collections::{btree_map, BTreeMap},
