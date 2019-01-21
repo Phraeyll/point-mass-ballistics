@@ -10,10 +10,8 @@ pub struct Solver {
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub zero_conditions: Conditions, // Different conditions during zeroing
     pub solve_conditions: Conditions, // Different conditions during solving
+    pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub time_step: Time,        // Use same timestep for zeroing and solving
-    pub use_coriolis: bool,
-    pub use_drag: bool,
-    pub use_gravity: bool,
 }
 impl Default for Solver {
     fn default() -> Self {
@@ -23,9 +21,7 @@ impl Default for Solver {
             zero_conditions: Conditions::default(),
             solve_conditions: Conditions::default(),
             time_step: Time::Seconds(0.000_001),
-            use_coriolis: true,
-            use_drag: true,
-            use_gravity: true,
+            flags: Flags::default(),
         }
     }
 }
@@ -40,9 +36,7 @@ pub trait SimulationBuilder<'a> {
     fn time_step(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn coriolis(self, value: bool) -> Self;
-    fn drag(self, value: bool) -> Self;
-    fn gravity(self, value: bool) -> Self;
+    fn flags(self, value: Flags) -> Self;
     fn using_zero_conditions(
         &'a self,
         pitch_offset: Numeric,
@@ -73,12 +67,10 @@ impl<'a> SimulationBuilder<'a> for Solver {
             &self.projectile,
             &self.scope,
             &self.zero_conditions,
+            &self.flags,
             self.time_step,
             pitch_offset,
             yaw_offset,
-            self.use_coriolis,
-            self.use_drag,
-            self.use_gravity,
         )
     }
     // Create a simulation with muzzle pitch found in 'zeroin' simulation
@@ -127,16 +119,18 @@ impl<'a> SimulationBuilder<'a> for Solver {
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
+            &self.flags,
             self.time_step,
             found_pitch,
             found_yaw,
-            self.use_coriolis,
-            self.use_drag,
-            self.use_gravity,
         )
     }
     fn new() -> Self {
         Self::default()
+    }
+    fn flags(mut self, value: Flags) -> Self {
+        self.flags = value;
+        self
     }
     fn projectile(mut self, value: Projectile) -> Self {
         self.projectile = value;
@@ -163,15 +157,27 @@ impl<'a> SimulationBuilder<'a> for Solver {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
-    fn coriolis(mut self, value: bool) -> Self {
+}
+
+pub trait FlagsBuilder {
+    fn new() -> Self;
+    fn enable_coriolis(self, value: bool) -> Self;
+    fn enable_drag(self, value: bool) -> Self;
+    fn enable_gravity(self, value: bool) -> Self;
+}
+impl FlagsBuilder for Flags {
+    fn new() -> Self {
+        Self::default()
+    }
+    fn enable_coriolis(mut self, value: bool) -> Self {
         self.use_coriolis = value;
         self
     }
-    fn drag(mut self, value: bool) -> Self {
+    fn enable_drag(mut self, value: bool) -> Self {
         self.use_drag = value;
         self
     }
-    fn gravity(mut self, value: bool) -> Self {
+    fn enable_gravity(mut self, value: bool) -> Self {
         self.use_gravity = value;
         self
     }

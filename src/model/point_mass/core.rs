@@ -15,12 +15,15 @@ pub struct Simulation<'p> {
     pub(crate) projectile: &'p Projectile,
     pub(crate) scope: &'p Scope,
     pub(crate) conditions: &'p Conditions,
+    pub(crate) flags: &'p Flags,
     pub(crate) time_step: Time,
     pub(crate) muzzle_pitch: Angle,
     pub(crate) muzzle_yaw: Angle,
-    pub(crate) use_coriolis: bool,                    // Whether or not to calculate coriolis/eotvos effect
-    pub(crate) use_drag: bool,                        // Whether or not to calculate drag
-    pub(crate) use_gravity: bool,                     // Whether or not to calculate gravity
+}
+pub struct Flags {
+    pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
+    pub(crate) use_drag: bool,     // Whether or not to calculate drag
+    pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
 }
 pub struct Projectile {
     pub(crate) weight: WeightMass,       // Weight (grains)
@@ -51,6 +54,15 @@ pub struct Conditions {
     pub(crate) wind: Wind,
     pub(crate) atmosphere: Atmosphere,
     pub(crate) other: Other,
+}
+impl Default for Flags {
+    fn default() -> Self {
+        Self {
+            use_coriolis: true,
+            use_drag: true,
+            use_gravity: true,
+        }
+    }
 }
 impl Default for Projectile {
     fn default() -> Self {
@@ -111,23 +123,19 @@ impl<'p> Simulation<'p> {
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions,
+        flags: &'p Flags,
         time_step: Time,
         muzzle_pitch: Angle,
         muzzle_yaw: Angle,
-        use_coriolis: bool,
-        use_drag: bool,
-        use_gravity: bool,
     ) -> Self {
         Self {
             projectile,
             scope,
             conditions,
+            flags,
             time_step,
             muzzle_pitch,
             muzzle_yaw,
-            use_coriolis,
-            use_drag,
-            use_gravity,
         }
     }
     // Produce a drop table using specified range and step size

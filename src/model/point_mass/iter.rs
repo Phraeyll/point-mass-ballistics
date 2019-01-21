@@ -93,7 +93,7 @@ impl IterSimulation<'_> {
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        if self.simulation.use_coriolis {
+        if self.simulation.flags.use_coriolis {
             -2.0 * self
                 .simulation
                 .conditions
@@ -105,14 +105,14 @@ impl IterSimulation<'_> {
         }
     }
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
-        if self.simulation.use_gravity {
+        if self.simulation.flags.use_gravity {
             self.simulation.conditions.other.gravity()
         } else {
             Vector3::zeros()
         }
     }
     fn drag_acceleration(&self) -> Vector3<Numeric> {
-        if self.simulation.use_drag {
+        if self.simulation.flags.use_drag {
             // Acceleration from drag force and gravity (F = ma)
             self.drag_force() / self.simulation.projectile.mass()
         } else {
