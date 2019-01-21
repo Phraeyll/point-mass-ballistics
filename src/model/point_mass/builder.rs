@@ -322,6 +322,7 @@ pub trait ConditionsBuilder {
     fn with_bearing(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
+    fn with_gravity(self, value: Numeric) -> Self;
 }
 impl ConditionsBuilder for Conditions {
     fn new() -> Self {
@@ -396,6 +397,10 @@ impl ConditionsBuilder for Conditions {
         } else {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
+    }
+    fn with_gravity(mut self, value: Numeric) -> Self {
+        self.other.gravity = Acceleration::Fps2(value);
+        self
     }
 }
 
