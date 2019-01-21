@@ -1,6 +1,7 @@
 use crate::util::Numeric;
 
 use super::zero;
+use super::builder;
 
 use std::error::Error as StdError;
 use std::fmt;
@@ -29,16 +30,20 @@ impl Error {
 pub enum ErrorKind {
     Zeroing(zero::Error),
     VelocityLookup(Numeric),
+    Builder(builder::Error),
 }
 
 impl StdDisplay for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             ErrorKind::Zeroing(ref err) => {
-                write!(formatter, "Zeroing error. {}", err)
+                write!(formatter, "Zeroing Error: {}", err)
             }
-            ErrorKind::VelocityLookup(ref velocity) => {
-                write!(formatter, "Velocity Lookup error. velocity: {}", velocity)
+            ErrorKind::VelocityLookup(ref err) => {
+                write!(formatter, "Velocity Lookup Error: {}", err)
+            }
+            ErrorKind::Builder(ref err) => {
+                write!(formatter, "Builder Error: {}", err)
             }
         }
     }
@@ -48,6 +53,7 @@ impl StdError for Error {
         match *self.0 {
             ErrorKind::Zeroing(ref err, ..) => err.description(),
             ErrorKind::VelocityLookup(_) => "Velocity out of range",
+            ErrorKind::Builder(_) => "Invalid inputs",
         }
     }
 }
@@ -55,5 +61,10 @@ impl StdError for Error {
 impl From<zero::Error> for Error {
     fn from(err: zero::Error) -> Self {
         Error::new(ErrorKind::Zeroing(err))
+    }
+}
+impl From<builder::Error> for Error {
+    fn from(err: builder::Error) -> Self {
+        Error::new(ErrorKind::Builder(err))
     }
 }

@@ -1,11 +1,66 @@
 use super::*;
 
+use std::error::Error as StdError;
+use std::fmt;
+use std::fmt::Display as StdDisplay;
+use std::result;
+use std::str;
+
+pub type Result<T> = result::Result<T, Error>;
+
+#[derive(Debug)]
+pub struct Error(Box<ErrorKind>);
+
+impl Error {
+    pub fn new(kind: ErrorKind) -> Error {
+        Error(Box::new(kind))
+    }
+    pub fn kind(&self) -> &ErrorKind {
+        &self.0
+    }
+    pub fn into_kind(self) -> ErrorKind {
+        *self.0
+    }
+}
+
+#[derive(Debug)]
+pub enum ErrorKind {
+    Input,
+    PositiveExpected(Numeric),
+    OutOfRange(Numeric, Numeric),
+}
+
+impl StdDisplay for Error {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match *self.0 {
+            ErrorKind::Input => write!(formatter, "Input Error"),
+            ErrorKind::PositiveExpected(ref err) => {
+                write!(formatter, "Positive Expected Error: {}", err)
+            }
+            ErrorKind::OutOfRange(ref start, ref end) => write!(
+                formatter,
+                "Within Range Expected Error: {} - {}",
+                start, end
+            ),
+        }
+    }
+}
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match *self.0 {
+            ErrorKind::Input => "Invalid inputs",
+            ErrorKind::PositiveExpected(..) => "Number needs to be positive greater than 0",
+            ErrorKind::OutOfRange(..) => "Numer needs to be within range",
+        }
+    }
+}
+
 pub struct Solver {
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub zero_conditions: Conditions, // Different conditions during zeroing
     pub solve_conditions: Conditions, // Different conditions during solving
-    pub time_step: Time, // Use same timestep for zeroing and solving
+    pub time_step: Time,        // Use same timestep for zeroing and solving
 }
 impl Default for Solver {
     fn default() -> Self {
@@ -217,15 +272,21 @@ impl ConditionsBuilder for Conditions {
 
 pub trait ScopeBuilder {
     fn new() -> Self;
-    fn with_height(self, height: Numeric) -> Self;
+    fn with_height(self, height: Numeric) -> Result<Self>
+    where
+        Self: std::marker::Sized;
 }
 impl ScopeBuilder for Scope {
     fn new() -> Self {
         Self::default()
     }
-    fn with_height(mut self, height: Numeric) -> Self {
-        self.height = Length::Inches(height);
-        self
+    fn with_height(mut self, height: Numeric) -> Result<Self> {
+        if height.is_sign_positive() {
+            self.height = Length::Inches(height);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::Input))
+        }
     }
 }
 
