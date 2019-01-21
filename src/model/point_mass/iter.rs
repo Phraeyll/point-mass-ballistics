@@ -5,6 +5,7 @@ use crate::util::*;
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Output Item has this same reference
+#[derive(Debug)]
 pub struct IterSimulation<'s> {
     simulation: &'s super::Simulation<'s>, // Reference to model used for calculations
     position: Vector3<Numeric>,            // Position (m)
@@ -12,6 +13,7 @@ pub struct IterSimulation<'s> {
     time: Numeric,                         // Position in time (s)
 }
 // Output of iteration, need a better name to encapsulate a moving projectile
+#[derive(Debug)]
 pub struct Packet<'s> {
     pub(crate) simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
     pub(crate) time: Numeric,                         // Position in time (s)
