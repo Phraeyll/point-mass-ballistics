@@ -9,6 +9,7 @@ pub struct SimulationBuilder {
     pub angles: Angles,         // Use same timestep for zeroing and solving
     pub time_step: Time,        // Use same timestep for zeroing and solving
 }
+
 impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
         Self {
@@ -21,6 +22,7 @@ impl From<Simulation> for SimulationBuilder {
         }
     }
 }
+
 impl Default for SimulationBuilder {
     fn default() -> Self {
         Self {

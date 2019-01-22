@@ -1,13 +1,14 @@
 use nalgebra::Vector3;
 
 use crate::util::*;
+use crate::model::core::Simulation;
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Output Item has this same reference
 #[derive(Debug)]
 pub struct IterSimulation<'s> {
-    simulation: &'s super::Simulation, // Reference to model used for calculations
+    simulation: &'s Simulation, // Reference to model used for calculations
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
     time: Numeric,                         // Position in time (s)
@@ -22,7 +23,7 @@ pub struct Packet<'s> {
 }
 
 // Create an new iterator over Simulation
-impl<'s> IntoIterator for &'s super::Simulation {
+impl<'s> IntoIterator for &'s Simulation {
     type Item = <IterSimulation<'s> as Iterator>::Item;
     type IntoIter = IterSimulation<'s>;
 
@@ -30,9 +31,10 @@ impl<'s> IntoIterator for &'s super::Simulation {
         self.iter()
     }
 }
+
 // Ref iter
-impl super::Simulation {
-    fn iter(&self) -> IterSimulation {
+impl Simulation {
+    pub fn iter(&self) -> IterSimulation {
         IterSimulation {
             simulation: self,
             position: Vector3::zeros(),
