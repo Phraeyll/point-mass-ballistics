@@ -1,6 +1,6 @@
 use crate::util::*;
 use crate::model::core::{Conditions, Atmosphere, Wind, Other};
-use crate::model::builder::{SimulationBuilder, ConditionsBuilder};
+use crate::model::builder::{SimulationBuilder, AtmosphereBuilder, WindBuilder, OtherBuilder};
 
 impl Default for Conditions {
     fn default() -> Self {
@@ -39,7 +39,7 @@ impl Default for Other {
     }
 }
 
-impl ConditionsBuilder for SimulationBuilder {
+impl AtmosphereBuilder for SimulationBuilder {
     fn set_temperature(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-112.0, 122.0);
         if value >= min && value <= max {
@@ -66,6 +66,8 @@ impl ConditionsBuilder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
+}
+impl WindBuilder for SimulationBuilder {
     fn set_wind_speed(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.conditions.wind.velocity = Velocity::Mph(value);
@@ -83,6 +85,8 @@ impl ConditionsBuilder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
+}
+impl OtherBuilder for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {

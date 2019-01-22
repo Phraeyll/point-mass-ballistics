@@ -88,8 +88,7 @@ pub trait ProjectileBuilder {
     fn set_bc(self, value: Bc) -> Self;
 }
 
-pub trait ConditionsBuilder {
-    // Atmosphere
+pub trait AtmosphereBuilder {
     fn set_temperature(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -99,14 +98,16 @@ pub trait ConditionsBuilder {
     fn set_humidity(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    // Wind
+}
+pub trait WindBuilder {
     fn set_wind_speed(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
     fn set_wind_angle(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    // Other
+}
+pub trait OtherBuilder {
     fn set_shot_angle(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
