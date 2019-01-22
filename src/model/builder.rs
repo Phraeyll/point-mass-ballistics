@@ -32,6 +32,17 @@ pub struct Builder {
     pub conditions: Conditions, // Different conditions during solving
     pub time_step: Time,        // Use same timestep for zeroing and solving
 }
+impl From<Simulation<'_>> for Builder {
+    fn from(other: Simulation) -> Self {
+        Self {
+            flags: other.flags.clone(),
+            projectile: other.projectile.clone(),
+            scope: other.scope.clone(),
+            conditions: other.conditions.clone(),
+            time_step: other.time_step,
+        }
+    }
+}
 impl Default for Builder {
     fn default() -> Self {
         Self {

@@ -1,6 +1,6 @@
 use crate::util::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Conditions {
     pub(crate) wind: Wind,
     pub(crate) atmosphere: Atmosphere,
@@ -16,7 +16,7 @@ impl Default for Conditions {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
@@ -30,7 +30,7 @@ impl Default for Wind {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Atmosphere {
     pub(crate) temperature: Temperature, // Temperature (F)
     pub(crate) pressure: Pressure,       // Pressure (InHg)
@@ -46,7 +46,7 @@ impl Default for Atmosphere {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Other {
     pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
     pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)

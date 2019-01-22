@@ -14,7 +14,7 @@ pub enum BallisticCoefficientKind {
     GI,
     GS,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BallisticCoefficient {
     pub(crate) value: Numeric,
     pub(crate) kind: BallisticCoefficientKind,
@@ -48,7 +48,7 @@ impl BallisticCoefficientBuilder for BallisticCoefficient {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Projectile {
     pub(crate) weight: WeightMass,       // Weight (grains)
     pub(crate) caliber: Length,          // Caliber (inches)

@@ -1,6 +1,6 @@
 use crate::util::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Angles {
     pub(crate) pitch: Angle,
     pub(crate) yaw: Angle,

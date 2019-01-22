@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Flags {
     pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
     pub(crate) use_drag: bool,     // Whether or not to calculate drag

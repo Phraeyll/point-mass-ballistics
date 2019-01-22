@@ -1,6 +1,6 @@
 use crate::util::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
