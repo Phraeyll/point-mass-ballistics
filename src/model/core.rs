@@ -37,58 +37,58 @@ pub enum BcKind {
     GI,
     GS,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Bc {
     pub(crate) value: Numeric,
     pub(crate) kind: BcKind,
     pub(crate) table: FloatMap<Numeric>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Projectile {
-    pub(crate) weight: WeightMass,       // Weight (grains)
-    pub(crate) caliber: Length,          // Caliber (inches)
-    pub(crate) bc: Bc, // Ballistic Coefficient
-    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
+    pub(crate) weight: WeightMass, // Weight (grains)
+    pub(crate) caliber: Length,    // Caliber (inches)
+    pub(crate) bc: Bc,             // Ballistic Coefficient
+    pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Flags {
     pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
     pub(crate) use_drag: bool,     // Whether or not to calculate drag
     pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Angles {
     pub(crate) pitch: Angle,
     pub(crate) yaw: Angle,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Conditions {
     pub(crate) wind: Wind,
     pub(crate) atmosphere: Atmosphere,
     pub(crate) other: Other,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
 }
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Atmosphere {
     pub(crate) temperature: Temperature, // Temperature (F)
     pub(crate) pressure: Pressure,       // Pressure (InHg)
     pub(crate) humidity: Numeric,        // Humidity (0-1)
 }
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Other {
     pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
     pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)

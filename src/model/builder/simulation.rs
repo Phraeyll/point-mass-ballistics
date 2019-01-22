@@ -11,10 +11,10 @@ pub struct SimulationBuilder {
 impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
         Self {
-            flags: other.flags.clone(),
-            projectile: other.projectile.clone(),
-            scope: other.scope.clone(),
-            conditions: other.conditions.clone(),
+            flags: other.flags,
+            projectile: other.projectile,
+            scope: other.scope,
+            conditions: other.conditions,
             time_step: other.time_step,
         }
     }
