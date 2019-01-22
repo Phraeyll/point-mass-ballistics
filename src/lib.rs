@@ -47,6 +47,7 @@ pub mod model {
     pub mod builder {
         pub use crate::model::core::*;
         pub use angles::*;
+        pub use bc::*;
         pub use conditions::*;
         pub use flags::*;
         pub use projectile::*;
@@ -54,6 +55,7 @@ pub mod model {
         pub use simulation::*;
 
         mod angles;
+        mod bc;
         mod conditions;
         mod flags;
         mod projectile;

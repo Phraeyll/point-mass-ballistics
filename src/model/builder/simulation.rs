@@ -1,4 +1,4 @@
-use crate::model::core::{Angles, Bc, Conditions, Flags, Projectile, Scope, Simulation};
+use crate::model::core::{Angles, Bc, BcKind, Conditions, Flags, Projectile, Scope, Simulation};
 use crate::util::*;
 
 pub struct SimulationBuilder {
@@ -66,6 +66,12 @@ pub trait Builder {
 
     // timestep
     fn time_step(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+pub trait BcBuilder {
+    fn with(value: Numeric, kind: BcKind) -> Result<Self>
     where
         Self: Sized;
 }
