@@ -3,7 +3,7 @@ pub use BcKind::*;
 use nalgebra::Vector3;
 
 use crate::util::*;
-// use crate::model::builder::SimulationBuilder;
+use crate::model::builder::SimulationBuilder;
 
 use std::ops::Mul;
 
@@ -14,17 +14,28 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
-// impl From<SimulationBuilder> for Simulation {
-//     fn from(other: Simulation) -> Self {
-//         Self {
-//             flags: other.flags.clone(),
-//             projectile: other.projectile.clone(),
-//             scope: other.scope.clone(),
-//             conditions: other.conditions.clone(),
-//             time_step: other.time_step,
-//         }
-//     }
-// }
+#[derive(Debug)]
+pub struct Simulation {
+    pub(crate) flags: Flags,
+    pub(crate) projectile: Projectile,
+    pub(crate) scope: Scope,
+    pub(crate) conditions: Conditions,
+    pub(crate) angles: Angles,
+    pub(crate) time_step: Time,
+}
+
+impl From<SimulationBuilder> for Simulation {
+    fn from(other: SimulationBuilder) -> Self {
+        Self {
+            flags: other.flags,
+            projectile: other.projectile,
+            scope: other.scope,
+            conditions: other.conditions,
+            angles: other.angles,
+            time_step: other.time_step,
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -95,33 +106,7 @@ pub struct Other {
     pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
     pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
-#[derive(Debug)]
-pub struct Simulation {
-    pub(crate) flags: Flags,
-    pub(crate) projectile: Projectile,
-    pub(crate) scope: Scope,
-    pub(crate) conditions: Conditions,
-    pub(crate) angles: Angles,
-    pub(crate) time_step: Time,
-}
 impl Simulation {
-    pub(crate) fn new(
-        flags: Flags,
-        projectile: Projectile,
-        scope: Scope,
-        conditions: Conditions,
-        angles: Angles,
-        time_step: Time,
-    ) -> Self {
-        Self {
-            projectile,
-            scope,
-            conditions,
-            flags,
-            angles,
-            time_step,
-        }
-    }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {

@@ -41,12 +41,9 @@ pub mod model {
     pub use builder::*;
     pub use iter::*;
 
-    pub mod solver {
-        #[allow(clippy::float_cmp)]
-        #[allow(clippy::nonminimal_bool)]
-        pub mod zero;
-    }
-
+    pub mod core;
+    #[allow(clippy::float_cmp)]
+    pub mod iter;
     pub mod builder {
         pub use crate::model::core::*;
         pub use angles::*;
@@ -76,7 +73,9 @@ pub mod model {
         }
 
     }
-    pub mod core;
-    #[allow(clippy::float_cmp)]
-    pub mod iter;
+    pub mod solver {
+        #[allow(clippy::float_cmp)]
+        #[allow(clippy::nonminimal_bool)]
+        pub mod zero;
+    }
 }
