@@ -1,5 +1,6 @@
 use crate::util::*;
 use crate::model::core::Angles;
+use crate::model::core::Simulation;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;
@@ -8,7 +9,7 @@ const DEG_45: Numeric = FRAC_PI_4;
 const DEG_90: Numeric = FRAC_PI_2;
 
 struct IterFindAdjustments<'s> {
-    sim: &'s mut super::Simulation,
+    sim: &'s mut Simulation,
     zero_distance: Length,
     zero_elevation_offset: Length,
     zero_windage_offset: Length,
@@ -39,8 +40,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
             sim:
-                &mut super::Simulation {
-                    angles: super::Angles { pitch, yaw, .. },
+                &mut Simulation {
+                    angles: Angles { pitch, yaw, .. },
                     ..
                 },
             ..
@@ -119,7 +120,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
 //           expected &mut model::point_mass::Simulation<'_>
 //              found &mut model::point_mass::Simulation<'_>
 //
-impl<'s> super::Simulation {
+impl<'s> Simulation {
     fn find_adjustments(
         &'s mut self,
         zero_distance: Length,

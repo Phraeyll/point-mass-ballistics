@@ -40,7 +40,12 @@ pub mod model {
     pub use crate::util::*;
     pub use builder::*;
     pub use iter::*;
-    pub use zero::*;
+
+    pub mod solver {
+        #[allow(clippy::float_cmp)]
+        #[allow(clippy::nonminimal_bool)]
+        pub mod zero;
+    }
 
     pub mod builder {
         pub use crate::model::core::*;
@@ -74,7 +79,4 @@ pub mod model {
     pub mod core;
     #[allow(clippy::float_cmp)]
     pub mod iter;
-    #[allow(clippy::float_cmp)]
-    #[allow(clippy::nonminimal_bool)]
-    pub mod zero;
 }
