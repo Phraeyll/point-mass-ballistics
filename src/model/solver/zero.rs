@@ -1,6 +1,5 @@
 use crate::util::*;
-use crate::model::core::Angles;
-use crate::model::core::Simulation;
+use crate::model::core::{Angles, Simulation};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;
