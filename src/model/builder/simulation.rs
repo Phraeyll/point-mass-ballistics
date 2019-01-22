@@ -1,6 +1,7 @@
 use crate::model::core::{Angles, Bc, BcKind, Conditions, Flags, Projectile, Scope, Simulation};
 use crate::util::*;
 
+#[derive(Debug)]
 pub struct SimulationBuilder {
     pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub projectile: Projectile, // Use same projectile for zeroing and solving
@@ -133,7 +134,8 @@ pub trait FlagsBuilder {
 }
 
 pub trait AnglesBuilder {
-    // Angles
     fn set_pitch(self, value: Numeric) -> Self;
     fn set_yaw(self, value: Numeric) -> Self;
+    fn increment_pitch(self, value: Numeric) -> Self;
+    fn increment_yaw(self, value: Numeric) -> Self;
 }

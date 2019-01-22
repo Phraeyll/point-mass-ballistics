@@ -20,4 +20,18 @@ impl AnglesBuilder for SimulationBuilder {
         self.angles.yaw = Angle::Minutes(value);
         self
     }
+    fn increment_pitch(mut self, value: Numeric) -> Self {
+        self.angles.pitch = Angle::Minutes(
+            self.angles.pitch.to_minutes().to_num() +
+            value
+        );
+        self
+    }
+    fn increment_yaw(mut self, value: Numeric) -> Self {
+        self.angles.yaw = Angle::Minutes(
+            self.angles.yaw.to_minutes().to_num() +
+            value
+        );
+        self
+    }
 }

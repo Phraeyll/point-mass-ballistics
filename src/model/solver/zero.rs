@@ -149,7 +149,7 @@ impl<'s> Simulation {
         zero_elevation_offset: Numeric,
         zero_windage_offset: Numeric,
         zero_tolerance: Numeric,
-    ) -> Result<(Numeric, Numeric)> {
+    ) -> Result<Simulation> {
         let zero_distance = Length::Yards(zero_distance);
         let zero_elevation_offset = Length::Inches(zero_elevation_offset);
         let zero_windage_offset = Length::Inches(zero_windage_offset);
@@ -174,7 +174,7 @@ impl<'s> Simulation {
                     && windage >= (zero_windage_offset - zero_tolerance)
                     && windage <= (zero_windage_offset + zero_tolerance)
                 {
-                    Some(Ok((pitch.to_minutes().to_num(), yaw.to_minutes().to_num())))
+                    Some(Ok(Angles { pitch, yaw }))
                 } else {
                     None
                 }
@@ -182,5 +182,9 @@ impl<'s> Simulation {
             Err(err) => Some(Err(err)),
         })
         .unwrap()
+        .map(|angles| {
+            self.angles = angles;
+            self
+        })
     }
 }
