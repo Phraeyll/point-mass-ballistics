@@ -9,6 +9,7 @@ use std::{
     ops::RangeBounds,
 };
 
+#[derive(Clone)]
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
 
 impl<V> std::fmt::Debug for FloatMap<V> {
