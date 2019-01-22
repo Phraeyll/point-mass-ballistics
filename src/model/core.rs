@@ -1,10 +1,11 @@
 use nalgebra::Vector3;
 
-use super::*;
+use crate::util::*;
+use crate::model::builder::*;
 
 use std::ops::Mul;
 
-const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
+pub(crate) const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
 const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
@@ -17,132 +18,8 @@ pub struct Simulation<'p> {
     pub(crate) projectile: &'p Projectile,
     pub(crate) scope: &'p Scope,
     pub(crate) conditions: &'p Conditions,
+    pub(crate) angles: Angles,
     pub(crate) time_step: Time,
-    pub(crate) muzzle_pitch: Angle,
-    pub(crate) muzzle_yaw: Angle,
-}
-#[derive(Debug)]
-pub struct Flags {
-    pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
-    pub(crate) use_drag: bool,     // Whether or not to calculate drag
-    pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
-}
-// Type of BC used, implies which drag table to use
-#[derive(Debug, Copy, Clone)]
-pub enum BallisticCoefficientKind {
-    G1,
-    G2,
-    G5,
-    G6,
-    G7,
-    G8,
-    GI,
-    GS,
-}
-#[derive(Debug)]
-pub struct BallisticCoefficient {
-    pub(crate) value: Numeric,
-    pub(crate) kind: BallisticCoefficientKind,
-    pub(crate) table: FloatMap<Numeric>,
-}
-#[derive(Debug)]
-pub struct Projectile {
-    pub(crate) weight: WeightMass,       // Weight (grains)
-    pub(crate) caliber: Length,          // Caliber (inches)
-    pub(crate) bc: BallisticCoefficient, // Ballistic Coefficient
-    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
-}
-#[derive(Debug)]
-pub struct Scope {
-    pub(crate) height: Length, // Scope Height (inches)
-    pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
-}
-#[derive(Debug)]
-pub struct Wind {
-    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
-    pub(crate) yaw: Angle,         // Wind Angle (degrees)
-}
-#[derive(Debug)]
-pub struct Atmosphere {
-    pub(crate) temperature: Temperature, // Temperature (F)
-    pub(crate) pressure: Pressure,       // Pressure (InHg)
-    pub(crate) humidity: Numeric,        // Humidity (0-1)
-}
-#[derive(Debug)]
-pub struct Other {
-    pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
-    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
-    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
-}
-#[derive(Debug)]
-pub struct Conditions {
-    pub(crate) wind: Wind,
-    pub(crate) atmosphere: Atmosphere,
-    pub(crate) other: Other,
-}
-impl Default for Flags {
-    fn default() -> Self {
-        Self {
-            use_coriolis: true,
-            use_drag: true,
-            use_gravity: true,
-        }
-    }
-}
-impl Default for Projectile {
-    fn default() -> Self {
-        Self {
-            weight: WeightMass::Grains(140.0),
-            caliber: Length::Inches(0.264),
-            bc: BallisticCoefficient::new(0.305, G7).expect("how"),
-            velocity: Velocity::Fps(2710.0),
-        }
-    }
-}
-impl Default for Scope {
-    fn default() -> Self {
-        Self {
-            height: Length::Inches(1.5),
-            offset: Length::Inches(0.0),
-        }
-    }
-}
-impl Default for Wind {
-    fn default() -> Self {
-        Self {
-            velocity: Velocity::Mph(0.0),
-            yaw: Angle::Radians(0.0),
-        }
-    }
-}
-impl Default for Atmosphere {
-    fn default() -> Self {
-        Self {
-            temperature: Temperature::F(68.0),
-            pressure: Pressure::Inhg(29.92),
-            humidity: 0.0,
-        }
-    }
-}
-impl Default for Other {
-    fn default() -> Self {
-        Self {
-            line_of_sight: Angle::Radians(0.0),
-            azimuth: Angle::Radians(0.0),
-            lattitude: Angle::Radians(0.0),
-            gravity: Acceleration::Mps2(GRAVITY),
-        }
-    }
-}
-impl Default for Conditions {
-    fn default() -> Self {
-        Self {
-            wind: Wind::default(),
-            atmosphere: Atmosphere::default(),
-            other: Other::default(),
-        }
-    }
 }
 impl<'p> Simulation<'p> {
     pub(crate) fn new(
@@ -150,25 +27,23 @@ impl<'p> Simulation<'p> {
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions,
+        angles: Angles,
         time_step: Time,
-        muzzle_pitch: Angle,
-        muzzle_yaw: Angle,
     ) -> Self {
         Self {
             projectile,
             scope,
             conditions,
             flags,
+            angles,
             time_step,
-            muzzle_pitch,
-            muzzle_yaw,
         }
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
-            .velocity(self.muzzle_pitch, self.muzzle_yaw)
+            .velocity(self.angles.pitch, self.angles.yaw)
             .pivot_z(self.conditions.other.line_of_sight)
             .pivot_y(self.conditions.other.corrected_azimuth())
     }

@@ -1,6 +1,5 @@
-use super::*;
-
-use crate::error::{Error, ErrorKind, Result};
+use crate::util::*;
+use crate::model::builder::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;
@@ -19,11 +18,11 @@ struct IterFindAdjustments<'s> {
     count: u64,
 }
 impl IterFindAdjustments<'_> {
-    fn muzzle_pitch(&self) -> Numeric {
-        self.sim.muzzle_pitch.to_radians().to_num()
+    fn pitch(&self) -> Numeric {
+        self.sim.angles.pitch.to_radians().to_num()
     }
-    fn muzzle_yaw(&self) -> Numeric {
-        self.sim.muzzle_yaw.to_radians().to_num()
+    fn yaw(&self) -> Numeric {
+        self.sim.angles.yaw.to_radians().to_num()
     }
     fn elevation_adjustment(&self) -> Numeric {
         self.elevation_adjustment.to_radians().to_num()
@@ -41,23 +40,22 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         let &mut Self {
             sim:
                 &mut super::Simulation {
-                    muzzle_pitch,
-                    muzzle_yaw,
+                    angles: super::Angles { pitch, yaw, .. },
                     ..
                 },
             ..
         } = self;
-        let muzzle_pitch = muzzle_pitch.to_radians().to_num();
-        let muzzle_yaw = muzzle_yaw.to_radians().to_num();
+        let pitch = pitch.to_radians().to_num();
+        let yaw = yaw.to_radians().to_num();
 
         self.count += 1;
-        self.sim.muzzle_pitch = Angle::Radians(self.muzzle_pitch() + self.elevation_adjustment());
-        self.sim.muzzle_yaw = Angle::Radians(self.muzzle_yaw() + self.windage_adjustment());
+        self.sim.angles.pitch = Angle::Radians(self.pitch() + self.elevation_adjustment());
+        self.sim.angles.yaw = Angle::Radians(self.yaw() + self.windage_adjustment());
 
         // Ensure angle is changing from previous value - may not for really small floats
         if true
-            && self.muzzle_pitch() == muzzle_pitch
-            && self.muzzle_yaw() == muzzle_yaw
+            && self.pitch() == pitch
+            && self.yaw() == yaw
             // Ignore first time, since both should be still be 0.0 at this point
             && self.count != 1
         {
@@ -68,18 +66,18 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             //     self.elevation_adjustment.to_degrees());
             Some(Err(Error::new(ErrorKind::AngleNotChanging(
                 self.count,
-                self.muzzle_pitch(),
+                self.pitch(),
             ))))
         } else if true
-            && self.muzzle_pitch() >= DEG_45
-            && self.muzzle_pitch() <= -DEG_90
-            && self.muzzle_yaw() >= DEG_90
-            && self.muzzle_yaw() <= -DEG_90
+            && self.pitch() >= DEG_45
+            && self.pitch() <= -DEG_90
+            && self.yaw() >= DEG_90
+            && self.yaw() <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err(Error::new(ErrorKind::AngleRange(
                 self.count,
-                self.muzzle_pitch(),
+                self.pitch(),
             ))))
         } else if let Some(packet) = self
             .sim
@@ -94,8 +92,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
             // eprintln!("");
             Some(Ok((
-                self.sim.muzzle_pitch,
-                self.sim.muzzle_yaw,
+                self.sim.angles.pitch,
+                self.sim.angles.yaw,
                 Length::Meters(packet.relative_position().y),
                 Length::Meters(packet.relative_position().z),
             )))
@@ -103,7 +101,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err(Error::new(ErrorKind::TerminalVelocity(
                 self.count,
-                self.muzzle_pitch(),
+                self.pitch(),
             ))))
         }
     }
@@ -151,7 +149,7 @@ impl<'s> super::Simulation<'s> {
         zero_elevation_offset: Length,
         zero_windage_offset: Length,
         zero_tolerance: Length,
-    ) -> Result<(Angle, Angle)> {
+    ) -> Result<Angles> {
         self.find_adjustments(
             zero_distance,
             zero_elevation_offset,
@@ -172,7 +170,11 @@ impl<'s> super::Simulation<'s> {
                     && windage >= (zero_windage_offset - zero_tolerance)
                     && windage <= (zero_windage_offset + zero_tolerance)
                 {
-                    Some(Ok((pitch, yaw)))
+                    Some(Ok(Angles {
+                        pitch,
+                        yaw,
+                        roll: Angle::Radians(0.0),
+                    }))
                 } else {
                     None
                 }
