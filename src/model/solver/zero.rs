@@ -1,5 +1,5 @@
-use crate::util::*;
 use crate::model::core::{Angles, Simulation};
+use crate::util::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Numeric = FRAC_PI_4;
@@ -144,12 +144,16 @@ impl<'s> Simulation {
     // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
     // This should also work for windage adjustments as well
     pub fn zero(
-        &'s mut self,
-        zero_distance: Length,
-        zero_elevation_offset: Length,
-        zero_windage_offset: Length,
-        zero_tolerance: Length,
-    ) -> Result<Angles> {
+        mut self,
+        zero_distance: Numeric,
+        zero_elevation_offset: Numeric,
+        zero_windage_offset: Numeric,
+        zero_tolerance: Numeric,
+    ) -> Result<(Numeric, Numeric)> {
+        let zero_distance = Length::Yards(zero_distance);
+        let zero_elevation_offset = Length::Inches(zero_elevation_offset);
+        let zero_windage_offset = Length::Inches(zero_windage_offset);
+        let zero_tolerance = Length::Inches(zero_tolerance);
         self.find_adjustments(
             zero_distance,
             zero_elevation_offset,
@@ -170,10 +174,7 @@ impl<'s> Simulation {
                     && windage >= (zero_windage_offset - zero_tolerance)
                     && windage <= (zero_windage_offset + zero_tolerance)
                 {
-                    Some(Ok(Angles {
-                        pitch,
-                        yaw,
-                    }))
+                    Some(Ok((pitch.to_minutes().to_num(), yaw.to_minutes().to_num())))
                 } else {
                     None
                 }
