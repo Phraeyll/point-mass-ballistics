@@ -34,20 +34,6 @@ impl Default for SimulationBuilder {
     }
 }
 
-pub trait Builder {
-    type Simulation;
-
-    fn new() -> Self;
-    fn projectile(self, value: Projectile) -> Self;
-    fn scope(self, value: Scope) -> Self;
-    fn conditions(self, value: Conditions) -> Self;
-    fn angles(self, value: Angles) -> Self;
-    fn time_step(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-    fn flags(self, value: Flags) -> Self;
-    fn init_with(self, value: Bc) -> Self::Simulation;
-}
 impl Builder for SimulationBuilder {
     type Simulation = Simulation;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
@@ -56,31 +42,8 @@ impl Builder for SimulationBuilder {
         self.projectile.bc = value;
         Simulation::from(self)
     }
-    // Create a simulation with muzzle pitch found in 'zeroin' simulation
-    // Then solve for current conditions
-    // Can be used for drop table, or eventually dialing in a specific distance
     fn new() -> Self {
         Self::default()
-    }
-    fn angles(mut self, value: Angles) -> Self {
-        self.angles = value;
-        self
-    }
-    fn flags(mut self, value: Flags) -> Self {
-        self.flags = value;
-        self
-    }
-    fn projectile(mut self, value: Projectile) -> Self {
-        self.projectile = value;
-        self
-    }
-    fn scope(mut self, value: Scope) -> Self {
-        self.scope = value;
-        self
-    }
-    fn conditions(mut self, value: Conditions) -> Self {
-        self.conditions = value;
-        self
     }
     fn time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
@@ -91,4 +54,77 @@ impl Builder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
+}
+
+pub trait Builder {
+    type Simulation;
+    // Creation and Finalization
+    fn new() -> Self;
+    fn init_with(self, value: Bc) -> Self::Simulation;
+
+    // timestep
+    fn time_step(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+pub trait ScopeBuilder {
+    fn set_height(self, value: Numeric) -> Self;
+    fn set_offset(self, value: Numeric) -> Self;
+}
+
+pub trait ProjectileBuilder {
+    fn set_velocity(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_grains(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_caliber(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_bc(self, value: Bc) -> Self;
+}
+
+pub trait ConditionsBuilder {
+    // Atmosphere
+    fn set_temperature(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_pressure(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_humidity(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    // Wind
+    fn set_wind_speed(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_wind_angle(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    // Other
+    fn set_shot_angle(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_lattitude(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_bearing(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_gravity(self, value: Numeric) -> Self;
+}
+
+pub trait FlagsBuilder {
+    fn use_coriolis(self, value: bool) -> Self;
+    fn use_drag(self, value: bool) -> Self;
+    fn use_gravity(self, value: bool) -> Self;
+}
+
+pub trait AnglesBuilder {
+    // Angles
+    fn set_pitch(self, value: Numeric) -> Self;
+    fn set_yaw(self, value: Numeric) -> Self;
 }

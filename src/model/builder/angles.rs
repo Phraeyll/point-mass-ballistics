@@ -1,5 +1,6 @@
 use crate::util::*;
 use crate::model::core::Angles;
+use crate::model::builder::{SimulationBuilder, AnglesBuilder};
 
 impl Default for Angles {
     fn default() -> Self {
@@ -10,21 +11,13 @@ impl Default for Angles {
     }
 }
 
-pub trait MutateAngles {
-    fn new() -> Self;
-    fn set_pitch(self, value: Numeric) -> Self;
-    fn set_yaw(self, value: Numeric) -> Self;
-}
-impl MutateAngles for Angles {
-    fn new() -> Self {
-        Self::default()
-    }
+impl AnglesBuilder for SimulationBuilder {
     fn set_pitch(mut self, value: Numeric) -> Self {
-        self.pitch = Angle::Minutes(value);
+        self.angles.pitch = Angle::Minutes(value);
         self
     }
     fn set_yaw(mut self, value: Numeric) -> Self {
-        self.yaw = Angle::Minutes(value);
+        self.angles.yaw = Angle::Minutes(value);
         self
     }
 }

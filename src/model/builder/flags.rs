@@ -1,4 +1,5 @@
 use crate::model::core::Flags;
+use crate::model::builder::{SimulationBuilder, FlagsBuilder};
 
 impl Default for Flags {
     fn default() -> Self {
@@ -10,26 +11,17 @@ impl Default for Flags {
     }
 }
 
-pub trait MutateFlags {
-    fn new() -> Self;
-    fn enable_coriolis(self, value: bool) -> Self;
-    fn enable_drag(self, value: bool) -> Self;
-    fn enable_gravity(self, value: bool) -> Self;
-}
-impl MutateFlags for Flags {
-    fn new() -> Self {
-        Self::default()
-    }
-    fn enable_coriolis(mut self, value: bool) -> Self {
-        self.use_coriolis = value;
+impl FlagsBuilder for SimulationBuilder {
+    fn use_coriolis(mut self, value: bool) -> Self {
+        self.flags.use_coriolis = value;
         self
     }
-    fn enable_drag(mut self, value: bool) -> Self {
-        self.use_drag = value;
+    fn use_drag(mut self, value: bool) -> Self {
+        self.flags.use_drag = value;
         self
     }
-    fn enable_gravity(mut self, value: bool) -> Self {
-        self.use_gravity = value;
+    fn use_gravity(mut self, value: bool) -> Self {
+        self.flags.use_gravity = value;
         self
     }
 }

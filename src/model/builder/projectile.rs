@@ -1,6 +1,29 @@
 use super::dragtables::*;
 use crate::model::core::{Bc, BcKind, BcKind::*, Projectile};
+use crate::model::builder::{SimulationBuilder, ProjectileBuilder};
 use crate::util::*;
+
+impl Default for Bc {
+    fn default() -> Self {
+        // Arbitrary data - intended to be set by with method above at initialization point
+        Self {
+            value: 0.0,
+            kind: G1,
+            table: float_map![],
+        }
+    }
+}
+
+impl Default for Projectile {
+    fn default() -> Self {
+        Self {
+            weight: WeightMass::Grains(140.0),
+            caliber: Length::Inches(0.264),
+            bc: Bc::default(),
+            velocity: Velocity::Fps(2710.0),
+        }
+    }
+}
 
 pub trait BcBuilder {
     fn with(value: Numeric, kind: BcKind) -> Result<Self>
@@ -29,51 +52,11 @@ impl BcBuilder for Bc {
         }
     }
 }
-impl Default for Bc {
-    fn default() -> Self {
-        // Arbitrary data - intended to be set by with method above at initialization point
-        Self {
-            value: 0.0,
-            kind: G1,
-            table: float_map![],
-        }
-    }
-}
 
-impl Default for Projectile {
-    fn default() -> Self {
-        Self {
-            weight: WeightMass::Grains(140.0),
-            caliber: Length::Inches(0.264),
-            bc: Bc::default(),
-            velocity: Velocity::Fps(2710.0),
-        }
-    }
-}
-
-pub trait MutateProjectile {
-    fn new() -> Self;
-    fn set_velocity(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-
-    fn set_grains(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-
-    fn set_caliber(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-
-    fn set_bc(self, value: Bc) -> Self;
-}
-impl MutateProjectile for Projectile {
-    fn new() -> Self {
-        Self::default()
-    }
+impl ProjectileBuilder for SimulationBuilder {
     fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.velocity = Velocity::Fps(value);
+            self.projectile.velocity = Velocity::Fps(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -81,7 +64,7 @@ impl MutateProjectile for Projectile {
     }
     fn set_grains(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.weight = WeightMass::Grains(value);
+            self.projectile.weight = WeightMass::Grains(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -89,14 +72,14 @@ impl MutateProjectile for Projectile {
     }
     fn set_caliber(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.caliber = Length::Inches(value);
+            self.projectile.caliber = Length::Inches(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
     fn set_bc(mut self, value: Bc) -> Self {
-        self.bc = value;
+        self.projectile.bc = value;
         self
     }
 }
