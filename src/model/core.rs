@@ -13,10 +13,10 @@ const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity o
 
 #[derive(Debug)]
 pub struct Simulation<'p> {
+    pub(crate) flags: &'p Flags,
     pub(crate) projectile: &'p Projectile,
     pub(crate) scope: &'p Scope,
     pub(crate) conditions: &'p Conditions,
-    pub(crate) flags: &'p Flags,
     pub(crate) time_step: Time,
     pub(crate) muzzle_pitch: Angle,
     pub(crate) muzzle_yaw: Angle,
@@ -146,10 +146,10 @@ impl Default for Conditions {
 }
 impl<'p> Simulation<'p> {
     pub(crate) fn new(
+        flags: &'p Flags,
         projectile: &'p Projectile,
         scope: &'p Scope,
         conditions: &'p Conditions,
-        flags: &'p Flags,
         time_step: Time,
         muzzle_pitch: Angle,
         muzzle_yaw: Angle,

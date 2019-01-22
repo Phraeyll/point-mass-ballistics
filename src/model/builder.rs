@@ -5,22 +5,22 @@ use crate::error::{Error, ErrorKind, Result};
 use super::*;
 
 pub struct Solver {
+    pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub zero_conditions: Conditions, // Different conditions during zeroing
     pub solve_conditions: Conditions, // Different conditions during solving
-    pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub time_step: Time,        // Use same timestep for zeroing and solving
 }
 impl Default for Solver {
     fn default() -> Self {
         Self {
+            flags: Flags::default(),
             projectile: Projectile::default(),
             scope: Scope::default(),
             zero_conditions: Conditions::default(),
             solve_conditions: Conditions::default(),
             time_step: Time::Seconds(0.000_001),
-            flags: Flags::default(),
         }
     }
 }
@@ -64,10 +64,10 @@ impl<'a> SimulationBuilder<'a> for Solver {
         let pitch_offset = Angle::Minutes(pitch_offset);
         let yaw_offset = Angle::Minutes(-yaw_offset); // Invert this number, since +90 is left in trig calculations
         Simulation::new(
+            &self.flags,
             &self.projectile,
             &self.scope,
             &self.zero_conditions,
-            &self.flags,
             self.time_step,
             pitch_offset,
             yaw_offset,
@@ -116,10 +116,10 @@ impl<'a> SimulationBuilder<'a> for Solver {
             .expect("solve_for");
 
         Simulation::new(
+            &self.flags,
             &self.projectile,
             &self.scope,
             &self.solve_conditions,
-            &self.flags,
             self.time_step,
             found_pitch,
             found_yaw,
