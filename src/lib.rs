@@ -1,9 +1,9 @@
 #[macro_use]
 mod util {
+    pub use crate::error::*;
     pub use conversions::*;
     pub use float_map::*;
     pub use nalgebra_helpers::*;
-    pub use crate::error::*;
 
     pub type Numeric = f64;
     pub type Natural = u32;
@@ -42,7 +42,35 @@ pub mod model {
     pub use iter::*;
     pub use zero::*;
 
-    pub mod builder;
+    pub mod builder {
+        pub use crate::model::core::*;
+        pub use angles::*;
+        pub use conditions::*;
+        pub use flags::*;
+        pub use projectile::*;
+        pub use scope::*;
+        pub use simulation::*;
+
+        mod angles;
+        mod conditions;
+        mod flags;
+        mod projectile;
+        mod scope;
+        mod simulation;
+
+        #[allow(clippy::approx_constant)]
+        pub(crate) mod dragtables {
+            pub mod g1;
+            pub mod g2;
+            pub mod g5;
+            pub mod g6;
+            pub mod g7;
+            pub mod g8;
+            pub mod gi;
+            pub mod gs;
+        }
+
+    }
     pub mod core;
     #[allow(clippy::float_cmp)]
     pub mod iter;

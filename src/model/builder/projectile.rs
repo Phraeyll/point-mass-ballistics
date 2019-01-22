@@ -1,45 +1,27 @@
-pub use BallisticCoefficientKind::*;
-
+use super::dragtables::*;
+use crate::model::core::{Bc, BcKind, Projectile};
 use crate::util::*;
-use crate::model::builder::dragtables::*;
 
-#[derive(Debug, Copy, Clone)]
-pub enum BallisticCoefficientKind {
-    G1,
-    G2,
-    G5,
-    G6,
-    G7,
-    G8,
-    GI,
-    GS,
-}
-#[derive(Debug, Clone)]
-pub struct BallisticCoefficient {
-    pub(crate) value: Numeric,
-    pub(crate) kind: BallisticCoefficientKind,
-    pub(crate) table: FloatMap<Numeric>,
-}
-pub trait BallisticCoefficientBuilder {
-    fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self>
+pub trait BcBuilder {
+    fn new(value: Numeric, kind: BcKind) -> Result<Self>
     where
         Self: Sized;
 }
-impl BallisticCoefficientBuilder for BallisticCoefficient {
-    fn new(value: Numeric, kind: BallisticCoefficientKind) -> Result<Self> {
+impl BcBuilder for Bc {
+    fn new(value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
             Ok(Self {
                 value,
                 kind,
                 table: match kind {
-                    G1 => g1::init(),
-                    G2 => g2::init(),
-                    G5 => g5::init(),
-                    G6 => g6::init(),
-                    G7 => g7::init(),
-                    G8 => g8::init(),
-                    GI => gi::init(),
-                    GS => gs::init(),
+                    BcKind::G1 => g1::init(),
+                    BcKind::G2 => g2::init(),
+                    BcKind::G5 => g5::init(),
+                    BcKind::G6 => g6::init(),
+                    BcKind::G7 => g7::init(),
+                    BcKind::G8 => g8::init(),
+                    BcKind::GI => gi::init(),
+                    BcKind::GS => gs::init(),
                 },
             })
         } else {
@@ -48,19 +30,12 @@ impl BallisticCoefficientBuilder for BallisticCoefficient {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Projectile {
-    pub(crate) weight: WeightMass,       // Weight (grains)
-    pub(crate) caliber: Length,          // Caliber (inches)
-    pub(crate) bc: BallisticCoefficient, // Ballistic Coefficient
-    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
-}
 impl Default for Projectile {
     fn default() -> Self {
         Self {
             weight: WeightMass::Grains(140.0),
             caliber: Length::Inches(0.264),
-            bc: BallisticCoefficient::new(0.305, G7).expect("how"),
+            bc: Bc::new(0.305, BcKind::G7).expect("how"),
             velocity: Velocity::Fps(2710.0),
         }
     }
@@ -68,25 +43,25 @@ impl Default for Projectile {
 
 pub trait MutateProjectile {
     fn new() -> Self;
-    fn with_velocity(self, value: Numeric) -> Result<Self>
+    fn set_velocity(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 
-    fn with_grains(self, value: Numeric) -> Result<Self>
+    fn set_grains(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 
-    fn with_caliber(self, value: Numeric) -> Result<Self>
+    fn set_caliber(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 
-    fn with_bc(self, value: BallisticCoefficient) -> Self;
+    fn set_bc(self, value: Bc) -> Self;
 }
 impl MutateProjectile for Projectile {
     fn new() -> Self {
         Self::default()
     }
-    fn with_velocity(mut self, value: Numeric) -> Result<Self> {
+    fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.velocity = Velocity::Fps(value);
             Ok(self)
@@ -94,7 +69,7 @@ impl MutateProjectile for Projectile {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    fn with_grains(mut self, value: Numeric) -> Result<Self> {
+    fn set_grains(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.weight = WeightMass::Grains(value);
             Ok(self)
@@ -102,7 +77,7 @@ impl MutateProjectile for Projectile {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    fn with_caliber(mut self, value: Numeric) -> Result<Self> {
+    fn set_caliber(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.caliber = Length::Inches(value);
             Ok(self)
@@ -110,7 +85,7 @@ impl MutateProjectile for Projectile {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    fn with_bc(mut self, value: BallisticCoefficient) -> Self {
+    fn set_bc(mut self, value: Bc) -> Self {
         self.bc = value;
         self
     }

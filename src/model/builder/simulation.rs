@@ -1,38 +1,14 @@
-use crate::model::core::Simulation;
+use crate::model::core::{Angles, Conditions, Flags, Projectile, Scope, Simulation};
 use crate::util::*;
 
-pub use angles::*;
-pub use conditions::*;
-pub use flags::*;
-pub use projectile::*;
-pub use scope::*;
-
-mod angles;
-mod conditions;
-mod flags;
-mod projectile;
-mod scope;
-
-#[allow(clippy::approx_constant)]
-pub(crate) mod dragtables {
-    pub mod g1;
-    pub mod g2;
-    pub mod g5;
-    pub mod g6;
-    pub mod g7;
-    pub mod g8;
-    pub mod gi;
-    pub mod gs;
-}
-
-pub struct Builder {
+pub struct SimulationBuilder {
     pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub conditions: Conditions, // Different conditions during solving
     pub time_step: Time,        // Use same timestep for zeroing and solving
 }
-impl From<Simulation<'_>> for Builder {
+impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
         Self {
             flags: other.flags.clone(),
@@ -43,7 +19,7 @@ impl From<Simulation<'_>> for Builder {
         }
     }
 }
-impl Default for Builder {
+impl Default for SimulationBuilder {
     fn default() -> Self {
         Self {
             flags: Flags::default(),
@@ -55,7 +31,7 @@ impl Default for Builder {
     }
 }
 
-pub trait SimulationBuilder<'a> {
+pub trait Builder {
     type Simulation;
 
     fn new() -> Self;
@@ -66,18 +42,18 @@ pub trait SimulationBuilder<'a> {
     where
         Self: Sized;
     fn flags(self, value: Flags) -> Self;
-    fn create_with(&'a self, angles: Angles) -> Self::Simulation;
+    fn create_with(self, angles: Angles) -> Self::Simulation;
 }
-impl<'a> SimulationBuilder<'a> for Builder {
-    type Simulation = Simulation<'a>;
+impl Builder for SimulationBuilder {
+    type Simulation = Simulation;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn create_with(&'a self, angles: Angles) -> Self::Simulation {
+    fn create_with(self, angles: Angles) -> Self::Simulation {
         Simulation::new(
-            &self.flags,
-            &self.projectile,
-            &self.scope,
-            &self.conditions,
+         self.flags,
+         self.projectile,
+         self.scope,
+         self.conditions,
             angles,
             self.time_step,
         )

@@ -1,7 +1,9 @@
+pub use BcKind::*;
+
 use nalgebra::Vector3;
 
 use crate::util::*;
-use crate::model::builder::*;
+// use crate::model::builder::SimulationBuilder;
 
 use std::ops::Mul;
 
@@ -12,21 +14,102 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
+// impl From<SimulationBuilder> for Simulation {
+//     fn from(other: Simulation) -> Self {
+//         Self {
+//             flags: other.flags.clone(),
+//             projectile: other.projectile.clone(),
+//             scope: other.scope.clone(),
+//             conditions: other.conditions.clone(),
+//             time_step: other.time_step,
+//         }
+//     }
+// }
+
+#[derive(Debug, Copy, Clone)]
+pub enum BcKind {
+    G1,
+    G2,
+    G5,
+    G6,
+    G7,
+    G8,
+    GI,
+    GS,
+}
+#[derive(Debug, Clone)]
+pub struct Bc {
+    pub(crate) value: Numeric,
+    pub(crate) kind: BcKind,
+    pub(crate) table: FloatMap<Numeric>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Projectile {
+    pub(crate) weight: WeightMass,       // Weight (grains)
+    pub(crate) caliber: Length,          // Caliber (inches)
+    pub(crate) bc: Bc, // Ballistic Coefficient
+    pub(crate) velocity: Velocity,       // Initial velocity (ft/s)
+}
+
+#[derive(Debug, Clone)]
+pub struct Scope {
+    pub(crate) height: Length, // Scope Height (inches)
+    pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+}
+
+#[derive(Debug, Clone)]
+pub struct Flags {
+    pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
+    pub(crate) use_drag: bool,     // Whether or not to calculate drag
+    pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
+}
+
+#[derive(Debug, Clone)]
+pub struct Angles {
+    pub(crate) pitch: Angle,
+    pub(crate) yaw: Angle,
+}
+
+#[derive(Debug, Clone)]
+pub struct Conditions {
+    pub(crate) wind: Wind,
+    pub(crate) atmosphere: Atmosphere,
+    pub(crate) other: Other,
+}
+#[derive(Debug, Clone)]
+pub struct Wind {
+    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
+    pub(crate) yaw: Angle,         // Wind Angle (degrees)
+}
+#[derive(Debug, Clone)]
+pub struct Atmosphere {
+    pub(crate) temperature: Temperature, // Temperature (F)
+    pub(crate) pressure: Pressure,       // Pressure (InHg)
+    pub(crate) humidity: Numeric,        // Humidity (0-1)
+}
+#[derive(Debug, Clone)]
+pub struct Other {
+    pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
+    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
+}
 #[derive(Debug)]
-pub struct Simulation<'p> {
-    pub(crate) flags: &'p Flags,
-    pub(crate) projectile: &'p Projectile,
-    pub(crate) scope: &'p Scope,
-    pub(crate) conditions: &'p Conditions,
+pub struct Simulation {
+    pub(crate) flags: Flags,
+    pub(crate) projectile: Projectile,
+    pub(crate) scope: Scope,
+    pub(crate) conditions: Conditions,
     pub(crate) angles: Angles,
     pub(crate) time_step: Time,
 }
-impl<'p> Simulation<'p> {
+impl Simulation {
     pub(crate) fn new(
-        flags: &'p Flags,
-        projectile: &'p Projectile,
-        scope: &'p Scope,
-        conditions: &'p Conditions,
+        flags: Flags,
+        projectile: Projectile,
+        scope: Scope,
+        conditions: Conditions,
         angles: Angles,
         time_step: Time,
     ) -> Self {
@@ -58,14 +141,14 @@ impl<'p> Simulation<'p> {
             .pivot_y(self.conditions.other.corrected_azimuth())
     }
 }
-impl BallisticCoefficient {
+impl Bc {
     pub fn value(&self) -> Numeric {
         self.value
     }
     pub fn table(&self) -> &FloatMap<Numeric> {
         &self.table
     }
-    pub fn kind(&self) -> BallisticCoefficientKind {
+    pub fn kind(&self) -> BcKind {
         self.kind
     }
 }

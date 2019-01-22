@@ -7,7 +7,7 @@ use crate::util::*;
 // Output Item has this same reference
 #[derive(Debug)]
 pub struct IterSimulation<'s> {
-    simulation: &'s super::Simulation<'s>, // Reference to model used for calculations
+    simulation: &'s super::Simulation, // Reference to model used for calculations
     position: Vector3<Numeric>,            // Position (m)
     velocity: Vector3<Numeric>,            // Velocity (m/s)
     time: Numeric,                         // Position in time (s)
@@ -15,14 +15,14 @@ pub struct IterSimulation<'s> {
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'s> {
-    pub(crate) simulation: &'s super::Simulation<'s>, //Simulation this came from, used for various calculations
+    pub(crate) simulation: &'s super::Simulation, //Simulation this came from, used for various calculations
     pub(crate) time: Numeric,                         // Position in time (s)
     pub(crate) position: Vector3<Numeric>,            // Position (m)
     pub(crate) velocity: Vector3<Numeric>,            // Velocity (m/s)
 }
 
 // Create an new iterator over Simulation
-impl<'s> IntoIterator for &'s super::Simulation<'s> {
+impl<'s> IntoIterator for &'s super::Simulation {
     type Item = <IterSimulation<'s> as Iterator>::Item;
     type IntoIter = IterSimulation<'s>;
 
@@ -31,7 +31,7 @@ impl<'s> IntoIterator for &'s super::Simulation<'s> {
     }
 }
 // Ref iter
-impl super::Simulation<'_> {
+impl super::Simulation {
     fn iter(&self) -> IterSimulation {
         IterSimulation {
             simulation: self,
