@@ -1,6 +1,6 @@
+use crate::model::builder::{AtmosphereBuilder, OtherBuilder, SimulationBuilder, WindBuilder};
+use crate::model::core::{Atmosphere, Conditions, Other, Wind};
 use crate::util::*;
-use crate::model::core::{Conditions, Atmosphere, Wind, Other};
-use crate::model::builder::{SimulationBuilder, AtmosphereBuilder, WindBuilder, OtherBuilder};
 
 impl Default for Conditions {
     fn default() -> Self {

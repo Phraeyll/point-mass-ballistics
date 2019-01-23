@@ -2,8 +2,8 @@ pub use BcKind::*;
 
 use nalgebra::Vector3;
 
-use crate::util::*;
 use crate::model::builder::SimulationBuilder;
+use crate::util::*;
 
 use std::ops::Mul;
 
@@ -20,7 +20,7 @@ pub struct Simulation {
     pub(crate) projectile: Projectile,
     pub(crate) scope: Scope,
     pub(crate) conditions: Conditions,
-    pub(crate) time_step: Time,
+    pub(crate) time_step: Numeric,
 }
 
 impl From<SimulationBuilder> for Simulation {
@@ -67,7 +67,7 @@ pub struct Scope {
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
     pub(crate) pitch: Angle,
     pub(crate) yaw: Angle,
-    pub(crate) roll: Angle,    // Scope Roll (Cant) (Degrees)
+    pub(crate) roll: Angle, // Scope Roll (Cant) (Degrees)
 }
 
 #[derive(Debug)]
@@ -123,6 +123,12 @@ impl Simulation {
             .wind
             .velocity()
             .pivot_y(self.conditions.other.corrected_azimuth())
+    }
+    pub fn increment_scope_pitch(&mut self, value: Numeric) {
+        self.scope.pitch += Angle::Minutes(value);
+    }
+    pub fn increment_scope_yaw(&mut self, value: Numeric) {
+        self.scope.yaw += Angle::Minutes(value);
     }
 }
 impl Bc {

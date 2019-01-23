@@ -1,6 +1,6 @@
-use crate::util::*;
+use crate::model::builder::{FlagsBuilder, SimulationBuilder};
 use crate::model::core::Flags;
-use crate::model::builder::{SimulationBuilder, FlagsBuilder};
+use crate::util::*;
 
 impl Default for Flags {
     fn default() -> Self {

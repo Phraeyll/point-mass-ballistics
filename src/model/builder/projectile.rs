@@ -1,5 +1,5 @@
 use crate::model::builder::{ProjectileBuilder, SimulationBuilder};
-use crate::model::core::{Projectile, Bc};
+use crate::model::core::{Bc, Projectile};
 use crate::util::*;
 
 impl Default for Projectile {

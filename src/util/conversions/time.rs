@@ -5,10 +5,10 @@ pub const HOURS_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
 
 pub const MINUTES_TO_SECONDS: Numeric = 60.0;
-pub const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
-
-pub const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
 pub const SECONDS_TO_MINUTES: Numeric = 1.0 / MINUTES_TO_SECONDS;
+
+pub const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
+pub const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Time {

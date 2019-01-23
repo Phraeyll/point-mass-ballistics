@@ -1,6 +1,6 @@
-use crate::util::*;
+use crate::model::builder::{ScopeBuilder, SimulationBuilder};
 use crate::model::core::Scope;
-use crate::model::builder::{SimulationBuilder, ScopeBuilder};
+use crate::util::*;
 
 impl Default for Scope {
     fn default() -> Self {
@@ -33,20 +33,6 @@ impl ScopeBuilder for SimulationBuilder {
     }
     fn set_roll(mut self, value: Numeric) -> Result<Self> {
         self.scope.roll = Angle::Degrees(value);
-        Ok(self)
-    }
-    fn increment_pitch(mut self, value: Numeric) -> Result<Self> {
-        self.scope.pitch = Angle::Minutes(
-            self.scope.pitch.to_minutes().to_num() +
-            value
-        );
-        Ok(self)
-    }
-    fn increment_yaw(mut self, value: Numeric) -> Result<Self> {
-        self.scope.yaw = Angle::Minutes(
-            self.scope.yaw.to_minutes().to_num() +
-            value
-        );
         Ok(self)
     }
 }

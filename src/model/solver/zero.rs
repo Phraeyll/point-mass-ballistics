@@ -24,12 +24,6 @@ impl IterFindAdjustments<'_> {
     fn yaw(&self) -> Numeric {
         self.sim.scope.yaw.to_radians().to_num()
     }
-    fn elevation_adjustment(&self) -> Numeric {
-        self.elevation_adjustment.to_radians().to_num()
-    }
-    fn windage_adjustment(&self) -> Numeric {
-        self.windage_adjustment.to_radians().to_num()
-    }
 }
 // This never returns None - it returns Some(Result) which can indicate failure instead
 // This is just to capture reason why iteration stopped
@@ -49,8 +43,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         let yaw = yaw.to_radians().to_num();
 
         self.count += 1;
-        self.sim.scope.pitch = Angle::Radians(self.pitch() + self.elevation_adjustment());
-        self.sim.scope.yaw = Angle::Radians(self.yaw() + self.windage_adjustment());
+        self.sim.scope.pitch += self.elevation_adjustment;
+        self.sim.scope.yaw += self.windage_adjustment;
 
         // Ensure angle is changing from previous value - may not for really small floats
         if true
@@ -183,7 +177,11 @@ impl<'s> Simulation {
         })
         .unwrap()
         .map(|(pitch, yaw)| {
-            self.scope = Scope {pitch, yaw, ..self.scope}; // Keep roll same, not adjusted during zeroing
+            self.scope = Scope {
+                pitch,
+                yaw,
+                ..self.scope
+            }; // Keep roll same, not adjusted during zeroing
             self
         })
     }
