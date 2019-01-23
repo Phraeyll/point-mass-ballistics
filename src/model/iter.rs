@@ -168,7 +168,6 @@ impl Packet<'_> {
         self.position
             .un_pivot_z(self.simulation.conditions.other.line_of_sight)
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
-            .un_pivot_x(self.simulation.scope.roll)
     }
     // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
