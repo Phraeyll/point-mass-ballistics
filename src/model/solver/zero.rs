@@ -1,4 +1,4 @@
-use crate::model::core::{Angles, Simulation};
+use crate::model::core::{Scope, Simulation};
 use crate::util::*;
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -19,10 +19,10 @@ struct IterFindAdjustments<'s> {
 }
 impl IterFindAdjustments<'_> {
     fn pitch(&self) -> Numeric {
-        self.sim.angles.pitch.to_radians().to_num()
+        self.sim.scope.pitch.to_radians().to_num()
     }
     fn yaw(&self) -> Numeric {
-        self.sim.angles.yaw.to_radians().to_num()
+        self.sim.scope.yaw.to_radians().to_num()
     }
     fn elevation_adjustment(&self) -> Numeric {
         self.elevation_adjustment.to_radians().to_num()
@@ -40,7 +40,7 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         let &mut Self {
             sim:
                 &mut Simulation {
-                    angles: Angles { pitch, yaw, .. },
+                    scope: Scope { pitch, yaw, .. },
                     ..
                 },
             ..
@@ -49,8 +49,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
         let yaw = yaw.to_radians().to_num();
 
         self.count += 1;
-        self.sim.angles.pitch = Angle::Radians(self.pitch() + self.elevation_adjustment());
-        self.sim.angles.yaw = Angle::Radians(self.yaw() + self.windage_adjustment());
+        self.sim.scope.pitch = Angle::Radians(self.pitch() + self.elevation_adjustment());
+        self.sim.scope.yaw = Angle::Radians(self.yaw() + self.windage_adjustment());
 
         // Ensure angle is changing from previous value - may not for really small floats
         if true
@@ -92,8 +92,8 @@ impl<'s> Iterator for IterFindAdjustments<'s> {
             // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
             // eprintln!("");
             Some(Ok((
-                self.sim.angles.pitch,
-                self.sim.angles.yaw,
+                self.sim.scope.pitch,
+                self.sim.scope.yaw,
                 Length::Meters(packet.relative_position().y),
                 Length::Meters(packet.relative_position().z),
             )))
@@ -174,7 +174,7 @@ impl<'s> Simulation {
                     && windage >= (zero_windage_offset - zero_tolerance)
                     && windage <= (zero_windage_offset + zero_tolerance)
                 {
-                    Some(Ok( Angles { pitch, yaw }))
+                    Some(Ok((pitch, yaw)))
                 } else {
                     None
                 }
@@ -182,8 +182,8 @@ impl<'s> Simulation {
             Err(err) => Some(Err(err)),
         })
         .unwrap()
-        .map(|angles| {
-            self.angles = angles; // Keep roll same, not adjusted during zeroing
+        .map(|(pitch, yaw)| {
+            self.scope = Scope {pitch, yaw, ..self.scope}; // Keep roll same, not adjusted during zeroing
             self
         })
     }

@@ -1,6 +1,6 @@
 use super::dragtables::*;
 use crate::model::core::{
-    Angles, BcKind, BcKind::*, Conditions, Flags, Projectile, Scope, Simulation,
+    BcKind, BcKind::*, Conditions, Flags, Projectile, Scope, Simulation,
 };
 use crate::util::*;
 
@@ -10,7 +10,6 @@ pub struct SimulationBuilder {
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub conditions: Conditions, // Different conditions during solving
-    pub angles: Angles,         // Use same timestep for zeroing and solving
     pub time_step: Time,        // Use same timestep for zeroing and solving
 }
 
@@ -21,7 +20,6 @@ impl From<Simulation> for SimulationBuilder {
             projectile: other.projectile,
             scope: other.scope,
             conditions: other.conditions,
-            angles: other.angles,
             time_step: other.time_step,
         }
     }
@@ -34,7 +32,6 @@ impl Default for SimulationBuilder {
             projectile: Projectile::default(),
             scope: Scope::default(),
             conditions: Conditions::default(),
-            angles: Angles::default(),
             time_step: Time::Seconds(0.000_001),
         }
     }
@@ -97,7 +94,19 @@ pub trait ScopeBuilder {
     fn set_offset(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
+    fn set_pitch(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_yaw(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
     fn set_roll(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn increment_pitch(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn increment_yaw(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 }
@@ -161,16 +170,4 @@ pub trait FlagsBuilder {
 }
 
 pub trait AnglesBuilder {
-    fn set_pitch(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-    fn set_yaw(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-    fn increment_pitch(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-    fn increment_yaw(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
 }

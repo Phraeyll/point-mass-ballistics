@@ -7,6 +7,8 @@ impl Default for Scope {
         Self {
             height: Length::Inches(1.5),
             offset: Length::Inches(0.0),
+            pitch: Angle::Radians(0.0),
+            yaw: Angle::Radians(0.0),
             roll: Angle::Radians(0.0),
         }
     }
@@ -21,8 +23,30 @@ impl ScopeBuilder for SimulationBuilder {
         self.scope.offset = Length::Inches(value);
         Ok(self)
     }
+    fn set_pitch(mut self, value: Numeric) -> Result<Self> {
+        self.scope.pitch = Angle::Minutes(value);
+        Ok(self)
+    }
+    fn set_yaw(mut self, value: Numeric) -> Result<Self> {
+        self.scope.yaw = Angle::Minutes(value);
+        Ok(self)
+    }
     fn set_roll(mut self, value: Numeric) -> Result<Self> {
         self.scope.roll = Angle::Degrees(value);
+        Ok(self)
+    }
+    fn increment_pitch(mut self, value: Numeric) -> Result<Self> {
+        self.scope.pitch = Angle::Minutes(
+            self.scope.pitch.to_minutes().to_num() +
+            value
+        );
+        Ok(self)
+    }
+    fn increment_yaw(mut self, value: Numeric) -> Result<Self> {
+        self.scope.yaw = Angle::Minutes(
+            self.scope.yaw.to_minutes().to_num() +
+            value
+        );
         Ok(self)
     }
 }
