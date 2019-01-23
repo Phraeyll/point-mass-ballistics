@@ -38,8 +38,4 @@ impl ProjectileBuilder for SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    fn set_bc(mut self, value: Bc) -> Self {
-        self.projectile.bc = value;
-        self
-    }
 }

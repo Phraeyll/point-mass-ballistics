@@ -12,12 +12,12 @@ impl Default for Scope {
 }
 
 impl ScopeBuilder for SimulationBuilder {
-    fn set_height(mut self, value: Numeric) -> Self {
+    fn set_height(mut self, value: Numeric) -> Result<Self> {
         self.scope.height = Length::Inches(value);
-        self
+        Ok(self)
     }
-    fn set_offset(mut self, value: Numeric) -> Self {
+    fn set_offset(mut self, value: Numeric) -> Result<Self> {
         self.scope.offset = Length::Inches(value);
-        self
+        Ok(self)
     }
 }

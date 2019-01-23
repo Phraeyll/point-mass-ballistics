@@ -12,26 +12,26 @@ impl Default for Angles {
 }
 
 impl AnglesBuilder for SimulationBuilder {
-    fn set_pitch(mut self, value: Numeric) -> Self {
+    fn set_pitch(mut self, value: Numeric) -> Result<Self> {
         self.angles.pitch = Angle::Minutes(value);
-        self
+        Ok(self)
     }
-    fn set_yaw(mut self, value: Numeric) -> Self {
+    fn set_yaw(mut self, value: Numeric) -> Result<Self> {
         self.angles.yaw = Angle::Minutes(value);
-        self
+        Ok(self)
     }
-    fn increment_pitch(mut self, value: Numeric) -> Self {
+    fn increment_pitch(mut self, value: Numeric) -> Result<Self> {
         self.angles.pitch = Angle::Minutes(
             self.angles.pitch.to_minutes().to_num() +
             value
         );
-        self
+        Ok(self)
     }
-    fn increment_yaw(mut self, value: Numeric) -> Self {
+    fn increment_yaw(mut self, value: Numeric) -> Result<Self> {
         self.angles.yaw = Angle::Minutes(
             self.angles.yaw.to_minutes().to_num() +
             value
         );
-        self
+        Ok(self)
     }
 }

@@ -1,4 +1,7 @@
-use crate::model::core::{Angles, Bc, BcKind, Conditions, Flags, Projectile, Scope, Simulation};
+use super::dragtables::*;
+use crate::model::core::{
+    Angles, BcKind, BcKind::*, Conditions, Flags, Projectile, Scope, Simulation,
+};
 use crate::util::*;
 
 #[derive(Debug)]
@@ -41,10 +44,6 @@ impl Builder for SimulationBuilder {
     type Simulation = Simulation;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn init_with(mut self, value: Bc) -> Self::Simulation {
-        self.projectile.bc = value;
-        Simulation::from(self)
-    }
     fn new() -> Self {
         Self::default()
     }
@@ -57,29 +56,47 @@ impl Builder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
+    fn init_with(mut self, value: Numeric, kind: BcKind) -> Result<Self::Simulation> {
+        if value.is_sign_positive() {
+            self.projectile.bc.value = value;
+            self.projectile.bc.kind = kind;
+            self.projectile.bc.table = match kind {
+                G1 => g1::init(),
+                G2 => g2::init(),
+                G5 => g5::init(),
+                G6 => g6::init(),
+                G7 => g7::init(),
+                G8 => g8::init(),
+                GI => gi::init(),
+                GS => gs::init(),
+            };
+            Ok(Simulation::from(self))
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
+    }
 }
 
 pub trait Builder {
     type Simulation;
-    // Creation and Finalization
-    fn new() -> Self;
-    fn init_with(self, value: Bc) -> Self::Simulation;
-
-    // timestep
+    fn new() -> Self
+    where
+        Self: Sized;
     fn time_step(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-}
-
-pub trait BcBuilder {
-    fn with(value: Numeric, kind: BcKind) -> Result<Self>
+    fn init_with(self, value: Numeric, kind: BcKind) -> Result<Self::Simulation>
     where
         Self: Sized;
 }
 
 pub trait ScopeBuilder {
-    fn set_height(self, value: Numeric) -> Self;
-    fn set_offset(self, value: Numeric) -> Self;
+    fn set_height(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_offset(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 pub trait ProjectileBuilder {
@@ -92,7 +109,6 @@ pub trait ProjectileBuilder {
     fn set_caliber(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_bc(self, value: Bc) -> Self;
 }
 
 pub trait AtmosphereBuilder {
@@ -124,18 +140,34 @@ pub trait OtherBuilder {
     fn set_bearing(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_gravity(self, value: Numeric) -> Self;
+    fn set_gravity(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 pub trait FlagsBuilder {
-    fn use_coriolis(self, value: bool) -> Self;
-    fn use_drag(self, value: bool) -> Self;
-    fn use_gravity(self, value: bool) -> Self;
+    fn use_coriolis(self, value: bool) -> Result<Self>
+    where
+        Self: Sized;
+    fn use_drag(self, value: bool) -> Result<Self>
+    where
+        Self: Sized;
+    fn use_gravity(self, value: bool) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 pub trait AnglesBuilder {
-    fn set_pitch(self, value: Numeric) -> Self;
-    fn set_yaw(self, value: Numeric) -> Self;
-    fn increment_pitch(self, value: Numeric) -> Self;
-    fn increment_yaw(self, value: Numeric) -> Self;
+    fn set_pitch(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_yaw(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn increment_pitch(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn increment_yaw(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
 }

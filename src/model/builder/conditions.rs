@@ -114,8 +114,8 @@ impl OtherBuilder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
-    fn set_gravity(mut self, value: Numeric) -> Self {
+    fn set_gravity(mut self, value: Numeric) -> Result<Self> {
         self.conditions.other.gravity = Acceleration::Fps2(value);
-        self
+        Ok(self)
     }
 }
