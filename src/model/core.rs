@@ -115,6 +115,11 @@ impl Simulation {
             .velocity(&self.angles)
             .pivot_z(self.conditions.other.line_of_sight)
             .pivot_y(self.conditions.other.corrected_azimuth())
+            .pivot_x(self.scope.roll)
+    }
+    // Projectiles position relative to scope
+    pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
+        -self.scope.position().pivot_x(self.scope.roll)
     }
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
@@ -174,11 +179,6 @@ impl Scope {
             0.0,
             self.height.to_meters().to_num(),
             self.offset.to_meters().to_num(),
-        )
-    }
-    pub(crate) fn roll(&self) -> Angle {
-        Angle::Radians(
-            -self.roll.to_radians().to_num()
         )
     }
 }
