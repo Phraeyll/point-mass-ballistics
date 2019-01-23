@@ -37,7 +37,7 @@ impl Simulation {
     pub fn iter(&self) -> IterSimulation {
         IterSimulation {
             simulation: self,
-            position: Vector3::zeros(),
+            position: -self.scope.position(),
             velocity: self.absolute_projectile_velocity(),
             time: 0.0,
         }
@@ -168,7 +168,6 @@ impl Packet<'_> {
         self.position
             .un_pivot_z(self.simulation.conditions.other.line_of_sight)
             .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
-            - self.simulation.scope.position()
     }
     // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
