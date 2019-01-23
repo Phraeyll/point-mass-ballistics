@@ -38,7 +38,7 @@ impl Simulation {
         IterSimulation {
             simulation: self,
             position: -self.scope.position(),
-            velocity: self.absolute_projectile_velocity(),
+            velocity: -self.absolute_projectile_velocity().pivot_z(self.scope.roll()),
             time: 0.0,
         }
     }

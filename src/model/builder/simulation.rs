@@ -97,6 +97,9 @@ pub trait ScopeBuilder {
     fn set_offset(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
+    fn set_roll(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 pub trait ProjectileBuilder {

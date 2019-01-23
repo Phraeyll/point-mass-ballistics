@@ -7,6 +7,7 @@ impl Default for Scope {
         Self {
             height: Length::Inches(1.5),
             offset: Length::Inches(0.0),
+            roll: Angle::Radians(0.0),
         }
     }
 }
@@ -18,6 +19,10 @@ impl ScopeBuilder for SimulationBuilder {
     }
     fn set_offset(mut self, value: Numeric) -> Result<Self> {
         self.scope.offset = Length::Inches(value);
+        Ok(self)
+    }
+    fn set_roll(mut self, value: Numeric) -> Result<Self> {
+        self.scope.roll = Angle::Degrees(value);
         Ok(self)
     }
 }

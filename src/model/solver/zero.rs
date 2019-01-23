@@ -174,7 +174,7 @@ impl<'s> Simulation {
                     && windage >= (zero_windage_offset - zero_tolerance)
                     && windage <= (zero_windage_offset + zero_tolerance)
                 {
-                    Some(Ok(Angles { pitch, yaw }))
+                    Some(Ok( Angles { pitch, yaw }))
                 } else {
                     None
                 }
@@ -183,7 +183,7 @@ impl<'s> Simulation {
         })
         .unwrap()
         .map(|angles| {
-            self.angles = angles;
+            self.angles = angles; // Keep roll same, not adjusted during zeroing
             self
         })
     }

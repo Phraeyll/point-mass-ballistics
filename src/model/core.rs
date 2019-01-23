@@ -67,6 +67,7 @@ pub struct Projectile {
 pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+    pub(crate) roll: Angle,    // Scope Roll (Cant) (Degrees)
 }
 
 #[derive(Debug)]
@@ -111,7 +112,7 @@ impl Simulation {
     // Start with velocity value along X unit vector
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
-            .velocity(self.angles.pitch, self.angles.yaw)
+            .velocity(&self.angles)
             .pivot_z(self.conditions.other.line_of_sight)
             .pivot_y(self.conditions.other.corrected_azimuth())
     }
@@ -158,13 +159,13 @@ impl Projectile {
     pub(crate) fn i(&self) -> Numeric {
         self.sd() / self.bc.value()
     }
-    pub(crate) fn velocity(&self, muzzle_pitch: Angle, muzzle_yaw: Angle) -> Vector3<Numeric> {
+    pub(crate) fn velocity(&self, angles: &Angles) -> Vector3<Numeric> {
         self.velocity
             .to_mps()
             .to_num()
             .mul(Vector3::x())
-            .pivot_z(muzzle_pitch)
-            .pivot_y(muzzle_yaw)
+            .pivot_z(angles.pitch)
+            .pivot_y(angles.yaw)
     }
 }
 impl Scope {
@@ -173,6 +174,11 @@ impl Scope {
             0.0,
             self.height.to_meters().to_num(),
             self.offset.to_meters().to_num(),
+        )
+    }
+    pub(crate) fn roll(&self) -> Angle {
+        Angle::Radians(
+            -self.roll.to_radians().to_num()
         )
     }
 }
