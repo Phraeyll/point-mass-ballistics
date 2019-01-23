@@ -80,7 +80,6 @@ impl FloatMap<Numeric> {
 
 // Initialize BTreeMap with OrdereredFloat wrapper around key, and FloatMap wrapper
 // around entire map.  Used for drag tables and output/drop tables
-#[allow(clippy::let_and_return)]
 macro_rules! float_map {
     ( $($key:expr => $val:expr,)+ ) => {
         float_map![
