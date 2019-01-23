@@ -15,6 +15,7 @@ mod util {
 
     #[macro_use]
     #[allow(clippy::or_fun_call)]
+    #[allow(clippy::let_and_return)]
     mod float_map;
     mod conversions {
         // Terribly inefficient and unsafe/untyped method of unit conversion, only for units needed
