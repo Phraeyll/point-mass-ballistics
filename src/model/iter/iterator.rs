@@ -51,8 +51,8 @@ impl<'s> Iterator for IterSimulation<'s> {
         // Increment position in time
         self.time += self.simulation.time_step;
         // 'Second Equation of Motion'
-        self.position +=
-            self.velocity * self.simulation.time_step + (self.acceleration() * self.simulation.time_step.powf(2.0)) / 2.0;
+        self.position += self.velocity * self.simulation.time_step
+            + (self.acceleration() * self.simulation.time_step.powf(2.0)) / 2.0;
         // 'First Equation of Motion'
         self.velocity += self.acceleration() * self.simulation.time_step;
 

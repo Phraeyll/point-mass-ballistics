@@ -57,12 +57,12 @@ impl Output for Packet<'_> {
             .to_num()
     }
     fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_vertical_moa(Length::Inches(0.0), Length::Inches(tolerance))
+        self.offset_vertical_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
             .to_minutes()
             .to_num()
     }
     fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_horizontal_moa(Length::Inches(0.0), Length::Inches(tolerance))
+        self.offset_horizontal_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
             .to_minutes()
             .to_num()
     }
@@ -83,10 +83,8 @@ impl Packet<'_> {
             .pivot_x(-self.simulation.shooter.roll())
     }
     // This gives adjustment - opposite sign relative to desired offset
-    pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
-        let offset = offset.to_meters().to_num();
-        let tolerance = tolerance.to_meters().to_num();
-
+    // Always done in meters for now, due to relative_position()
+    pub(crate) fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().y >= (offset - tolerance) {
             -1.0
         } else {
@@ -99,10 +97,8 @@ impl Packet<'_> {
         Angle::Radians(sign * position.angle(&desired))
     }
     // This gives adjustment - opposite sign relative to desired offset
-    pub(crate) fn offset_horizontal_moa(&self, offset: Length, tolerance: Length) -> Angle {
-        let offset = offset.to_meters().to_num();
-        let tolerance = tolerance.to_meters().to_num();
-
+    // Always done in meters for now, due to relative_position()
+    pub(crate) fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().z >= (offset - tolerance) {
             -1.0
         } else {
