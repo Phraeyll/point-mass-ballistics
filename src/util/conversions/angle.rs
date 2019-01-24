@@ -1,9 +1,9 @@
-use ordered_float::OrderedFloat;
 use crate::util::Numeric;
+use ordered_float::OrderedFloat;
 use Angle::*;
 
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 use std::cmp::Ordering;
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 pub const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;

@@ -1,9 +1,6 @@
 use crate::util::Numeric;
 use Length::*;
 
-use std::cmp::PartialEq;
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
-
 pub const MILES_TO_YARDS: Numeric = 1_760.0;
 pub const YARDS_TO_MILES: Numeric = 1.0 / MILES_TO_YARDS;
 
