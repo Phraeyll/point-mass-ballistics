@@ -42,28 +42,34 @@ pub mod model {
     pub use solver::*;
 
     #[allow(clippy::float_cmp)]
-    pub mod iter;
+    pub mod iter {
+        pub use main::*;
+        pub use packet::*;
+
+        mod main;
+        mod packet;
+    }
     pub mod core {
-        pub use crate::util::{Numeric, Natural};
+        pub use crate::util::{Natural, Numeric};
+        pub use atmosphere::*;
         pub use bc::*;
+        pub use builder::*;
         pub use flags::*;
         pub use projectile::*;
         pub use scope::*;
-        pub use atmosphere::*;
-        pub use wind::*;
         pub use shooter::*;
         pub use simulation::*;
-        pub use builder::*;
+        pub use wind::*;
 
-        mod builder;
-        mod bc;
-        mod wind;
         mod atmosphere;
-        mod shooter;
+        mod bc;
+        mod builder;
         mod flags;
         mod projectile;
         mod scope;
+        mod shooter;
         mod simulation;
+        mod wind;
 
         #[allow(clippy::approx_constant)]
         pub(crate) mod dragtables {
