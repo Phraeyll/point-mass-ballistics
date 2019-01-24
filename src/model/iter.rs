@@ -100,8 +100,7 @@ impl IterSimulation<'_> {
         if self.simulation.flags.use_coriolis {
             -2.0 * self
                 .simulation
-                .conditions
-                .other
+                .shooter
                 .omega()
                 .cross(&self.velocity)
         } else {
@@ -110,7 +109,7 @@ impl IterSimulation<'_> {
     }
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
         if self.simulation.flags.use_gravity {
-            self.simulation.conditions.other.gravity()
+            self.simulation.shooter.gravity()
         } else {
             Vector3::zeros()
         }
@@ -130,7 +129,7 @@ impl IterSimulation<'_> {
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
     fn drag_force(&self) -> Vector3<Numeric> {
-        -0.5 * self.simulation.conditions.atmosphere.rho()
+        -0.5 * self.simulation.atmosphere.rho()
             * self.simulation.projectile.area()
             * self.cd()
             * self.simulation.projectile.i()
@@ -148,7 +147,7 @@ impl IterSimulation<'_> {
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
-        self.velocity.norm() / self.simulation.conditions.atmosphere.speed_of_sound()
+        self.velocity.norm() / self.simulation.atmosphere.speed_of_sound()
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
@@ -166,8 +165,8 @@ impl Packet<'_> {
     // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .un_pivot_z(self.simulation.conditions.other.line_of_sight)
-            .un_pivot_y(self.simulation.conditions.other.corrected_azimuth())
+            .un_pivot_z(self.simulation.shooter.line_of_sight)
+            .un_pivot_y(self.simulation.shooter.corrected_azimuth())
     }
     // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {

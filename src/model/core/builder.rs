@@ -1,5 +1,4 @@
-use super::dragtables::*;
-use crate::model::core::{BcKind, BcKind::*, Conditions, Flags, Projectile, Scope, Simulation};
+use crate::model::core::{Simulation, Atmosphere, Wind, Shooter, Flags, Projectile, Scope, BcKind, BcKind::*, dragtables::*};
 use crate::util::*;
 
 #[derive(Debug)]
@@ -7,7 +6,9 @@ pub struct SimulationBuilder {
     pub flags: Flags,           // Flags to enable/disable certain parts of simulation
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
-    pub conditions: Conditions, // Different conditions during solving
+    pub atmosphere: Atmosphere, // Different conditions during solving
+    pub wind: Wind, // Different conditions during solving
+    pub shooter: Shooter, // Different conditions during solving
     pub time_step: Numeric,        // Use same timestep for zeroing and solving
 }
 
@@ -17,7 +18,9 @@ impl From<Simulation> for SimulationBuilder {
             flags: other.flags,
             projectile: other.projectile,
             scope: other.scope,
-            conditions: other.conditions,
+            atmosphere: other.atmosphere,
+            wind: other.wind,
+            shooter: other.shooter,
             time_step: other.time_step,
         }
     }
@@ -29,7 +32,9 @@ impl Default for SimulationBuilder {
             flags: Flags::default(),
             projectile: Projectile::default(),
             scope: Scope::default(),
-            conditions: Conditions::default(),
+            atmosphere: Atmosphere::default(),
+            wind: Wind::default(),
+            shooter: Shooter::default(),
             time_step: 0.000_001,
         }
     }
@@ -134,7 +139,7 @@ pub trait WindBuilder {
     where
         Self: Sized;
 }
-pub trait OtherBuilder {
+pub trait ShooterBuilder {
     fn set_shot_angle(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;

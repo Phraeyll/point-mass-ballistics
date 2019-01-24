@@ -1,6 +1,12 @@
-use crate::model::builder::{FlagsBuilder, SimulationBuilder};
-use crate::model::core::Flags;
+use crate::model::core::{FlagsBuilder, SimulationBuilder};
 use crate::util::*;
+
+#[derive(Debug)]
+pub struct Flags {
+    pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
+    pub(crate) use_drag: bool,     // Whether or not to calculate drag
+    pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
+}
 
 impl Default for Flags {
     fn default() -> Self {

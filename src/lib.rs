@@ -38,24 +38,28 @@ pub mod error;
 
 pub mod model {
     pub use self::core::*;
-    pub use crate::util::*;
-    pub use builder::*;
     pub use iter::*;
+    pub use solver::*;
 
-    pub mod core;
     #[allow(clippy::float_cmp)]
     pub mod iter;
-    pub mod builder {
-        pub use crate::model::core::*;
+    pub mod core {
+        pub use crate::util::{Numeric, Natural};
         pub use bc::*;
-        pub use conditions::*;
         pub use flags::*;
         pub use projectile::*;
         pub use scope::*;
+        pub use atmosphere::*;
+        pub use wind::*;
+        pub use shooter::*;
         pub use simulation::*;
+        pub use builder::*;
 
+        mod builder;
         mod bc;
-        mod conditions;
+        mod wind;
+        mod atmosphere;
+        mod shooter;
         mod flags;
         mod projectile;
         mod scope;

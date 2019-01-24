@@ -1,6 +1,16 @@
-use crate::model::builder::{ScopeBuilder, SimulationBuilder};
-use crate::model::core::Scope;
+use nalgebra::Vector3;
+
+use crate::model::core::{ScopeBuilder, SimulationBuilder};
 use crate::util::*;
+
+#[derive(Debug)]
+pub struct Scope {
+    pub(crate) height: Length, // Scope Height (inches)
+    pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+    pub(crate) pitch: Angle,
+    pub(crate) yaw: Angle,
+    pub(crate) roll: Angle, // Scope Roll (Cant) (Degrees)
+}
 
 impl Default for Scope {
     fn default() -> Self {
@@ -34,5 +44,15 @@ impl ScopeBuilder for SimulationBuilder {
     fn set_roll(mut self, value: Numeric) -> Result<Self> {
         self.scope.roll = Angle::Degrees(value);
         Ok(self)
+    }
+}
+
+impl Scope {
+    pub(crate) fn position(&self) -> Vector3<Numeric> {
+        Vector3::new(
+            0.0,
+            self.height.to_meters().to_num(),
+            self.offset.to_meters().to_num(),
+        )
     }
 }
