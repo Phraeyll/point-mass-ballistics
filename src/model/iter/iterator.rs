@@ -48,15 +48,13 @@ impl<'s> Iterator for IterSimulation<'s> {
             ..
         } = self;
 
-        let time_step = self.simulation.time_step;
-
         // Increment position in time
-        self.time += time_step;
+        self.time += self.simulation.time_step;
         // 'Second Equation of Motion'
         self.position +=
-            self.velocity * time_step + (self.acceleration() * time_step.powf(2.0)) / 2.0;
+            self.velocity * self.simulation.time_step + (self.acceleration() * self.simulation.time_step.powf(2.0)) / 2.0;
         // 'First Equation of Motion'
-        self.velocity += self.acceleration() * time_step;
+        self.velocity += self.acceleration() * self.simulation.time_step;
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
