@@ -46,11 +46,12 @@ impl From<Bc> for BcBuilder {
 impl Default for BcBuilder {
     fn default() -> Self {
         // Arbitrary data - intended to be set by with method above at initialization point
-        Self {
-            value: 0.0,
-            kind: G1,
-            table: float_map![],
-        }
+        create_bc(0.305, G7)
+        // Self {
+        //     value: 0.0,
+        //     kind: G1,
+        //     table: float_map![],
+        // }
     }
 }
 
@@ -65,7 +66,7 @@ impl Bc {
         self.kind
     }
 }
-pub fn set_bc(value: Numeric, kind: BcKind) -> BcBuilder {
+pub fn create_bc(value: Numeric, kind: BcKind) -> BcBuilder {
     BcBuilder {
         value,
         kind,

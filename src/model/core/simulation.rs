@@ -98,6 +98,7 @@ impl Simulation {
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
     }
+
     pub fn increment_scope_pitch(&mut self, value: Numeric) {
         self.scope.pitch += Angle::Minutes(value);
     }

@@ -157,4 +157,45 @@ impl Simulation {
             self
         })
     }
+    pub fn try_mut_zero(
+        &mut self,
+        zero_distance: Numeric,
+        zero_elevation_offset: Numeric,
+        zero_windage_offset: Numeric,
+        zero_tolerance: Numeric,
+    ) -> Result<()> {
+        let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
+        let zero_elevation_offset = Length::Inches(zero_elevation_offset).to_meters().to_num();
+        let zero_windage_offset = Length::Inches(zero_windage_offset).to_meters().to_num();
+        let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
+        self.find_adjustments(
+            zero_distance,
+            zero_elevation_offset,
+            zero_windage_offset,
+            zero_tolerance,
+        )
+        .find_map(|result| match result {
+            Ok((_, _, elevation, windage)) => {
+                if true
+                    && elevation >= (zero_elevation_offset - zero_tolerance)
+                    && elevation <= (zero_elevation_offset + zero_tolerance)
+                    && windage >= (zero_windage_offset - zero_tolerance)
+                    && windage <= (zero_windage_offset + zero_tolerance)
+                {
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            result @ Err(_) => Some(result),
+        })
+        .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
+        .map(|(pitch, yaw, _, _)| {
+            self.scope = Scope {
+                pitch,
+                yaw,
+                ..self.scope
+            }; // Keep roll same, not adjusted during zeroing
+        })
+    }
 }

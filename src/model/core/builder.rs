@@ -1,5 +1,5 @@
-use crate::model::core::{BcKind, BcKind::*, Simulation, SimulationBuilder};
-use crate::model::core::bc::set_bc;
+use crate::model::core::{BcKind, Simulation, SimulationBuilder};
+use crate::model::core::bc::create_bc;
 use crate::util::*;
 
 impl Builder for SimulationBuilder {
@@ -20,7 +20,7 @@ impl Builder for SimulationBuilder {
     }
     fn init_with(mut self, value: Numeric, kind: BcKind) -> Result<Self::Simulation> {
         if value.is_sign_positive() {
-            self.projectile.bc = set_bc(value, kind);
+            self.projectile.bc = create_bc(value, kind);
             Ok(Simulation::from(self))
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
