@@ -18,7 +18,7 @@ pub struct AtmosphereBuilder {
     pub pressure: Pressure,       // Pressure (InHg)
     pub humidity: Numeric,        // Humidity (0-1)
 }
-impl From<AtmosphereBuilder> for Atmosphere{
+impl From<AtmosphereBuilder> for Atmosphere {
     fn from(other: AtmosphereBuilder) -> Self {
         Self {
             temperature: other.temperature,
@@ -45,7 +45,6 @@ impl Default for AtmosphereBuilder {
         }
     }
 }
-
 impl AtmosphereAdjuster for SimulationBuilder {
     fn set_temperature(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-112.0, 122.0);

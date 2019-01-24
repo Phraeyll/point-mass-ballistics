@@ -50,7 +50,7 @@ pub mod model {
         mod packet;
     }
     pub mod core {
-        pub use crate::util::{Natural, Numeric, conversions::*};
+        pub use crate::util::{conversions::*, Natural, Numeric};
         pub use atmosphere::*;
         pub use bc::*;
         pub use builder::*;

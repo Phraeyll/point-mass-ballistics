@@ -40,8 +40,6 @@ impl Default for FlagsBuilder {
         }
     }
 }
-
-
 impl FlagsAdjuster for SimulationBuilder {
     fn use_coriolis(mut self, value: bool) -> Result<Self> {
         self.flags.coriolis = value;

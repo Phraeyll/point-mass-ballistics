@@ -164,6 +164,16 @@ impl Simulation {
         zero_windage_offset: Numeric,
         zero_tolerance: Numeric,
     ) -> Result<()> {
+        let Scope {
+            pitch: prev_pitch,
+            yaw: prev_yaw,
+            ..
+        } = self.scope;
+        self.scope = Scope {
+            pitch: Angle::Radians(0.0),
+            yaw: Angle::Radians(0.0),
+            ..self.scope
+        };
         let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
         let zero_elevation_offset = Length::Inches(zero_elevation_offset).to_meters().to_num();
         let zero_windage_offset = Length::Inches(zero_windage_offset).to_meters().to_num();
@@ -191,11 +201,8 @@ impl Simulation {
         })
         .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
         .map(|(pitch, yaw, _, _)| {
-            self.scope = Scope {
-                pitch,
-                yaw,
-                ..self.scope
-            }; // Keep roll same, not adjusted during zeroing
+            self.scope.pitch = pitch + prev_pitch;
+            self.scope.yaw = yaw + prev_yaw;
         })
     }
 }

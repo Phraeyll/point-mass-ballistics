@@ -1,6 +1,9 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind, AtmosphereBuilder, FlagsBuilder, ProjectileBuilder, ScopeBuilder, ShooterBuilder, WindBuilder};
+use crate::model::core::{
+    Atmosphere, AtmosphereBuilder, Flags, FlagsBuilder, Projectile, ProjectileBuilder, Scope,
+    ScopeBuilder, Shooter, ShooterBuilder, Wind, WindBuilder,
+};
 use crate::util::*;
 
 #[derive(Debug)]
@@ -35,7 +38,7 @@ pub struct SimulationBuilder {
     pub atmosphere: AtmosphereBuilder, // Different conditions during solving
     pub wind: WindBuilder,   // Different conditions during solving
     pub shooter: ShooterBuilder, // Different conditions during solving
-    pub time_step: Numeric, // Use same timestep for zeroing and solving
+    pub time_step: Numeric,  // Use same timestep for zeroing and solving
 }
 
 impl From<Simulation> for SimulationBuilder {
@@ -97,12 +100,5 @@ impl Simulation {
             .pivot_x(self.shooter.roll())
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
-    }
-
-    pub fn increment_scope_pitch(&mut self, value: Numeric) {
-        self.scope.pitch += Angle::Minutes(value);
-    }
-    pub fn increment_scope_yaw(&mut self, value: Numeric) {
-        self.scope.yaw += Angle::Minutes(value);
     }
 }

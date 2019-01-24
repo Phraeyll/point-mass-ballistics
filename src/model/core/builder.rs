@@ -1,9 +1,7 @@
 use crate::model::core::{BcKind, Simulation, SimulationBuilder};
-use crate::model::core::bc::create_bc;
 use crate::util::*;
 
 impl Builder for SimulationBuilder {
-    type Simulation = Simulation;
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     fn new() -> Self {
@@ -18,43 +16,52 @@ impl Builder for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
         }
     }
-    fn init_with(mut self, value: Numeric, kind: BcKind) -> Result<Self::Simulation> {
-        if value.is_sign_positive() {
-            self.projectile.bc = create_bc(value, kind);
-            Ok(Simulation::from(self))
-        } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
+}
+impl Finalizer for Result<SimulationBuilder> {
+    type Simulation = Simulation;
+    fn init(self) -> Result<Self::Simulation> {
+        match self {
+            Ok(result) => Ok(Simulation::from(result)),
+            Err(err) => Err(err),
         }
     }
 }
 
-pub trait Builder {
+pub trait Finalizer {
     type Simulation;
+    fn init(self) -> Result<Self::Simulation>
+    where
+        Self: Sized;
+}
+
+pub trait Builder {
     fn new() -> Self
     where
         Self: Sized;
     fn time_step(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn init_with(self, value: Numeric, kind: BcKind) -> Result<Self::Simulation>
+}
+pub trait BcAdjuster {
+    fn set_bc(self, value: Numeric, kind: BcKind) -> Result<Self>
     where
         Self: Sized;
 }
 
 pub trait ScopeAdjuster {
-    fn set_height(self, value: Numeric) -> Result<Self>
+    fn set_scope_height(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_offset(self, value: Numeric) -> Result<Self>
+    fn set_scope_offset(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_pitch(self, value: Numeric) -> Result<Self>
+    fn set_scope_pitch(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_yaw(self, value: Numeric) -> Result<Self>
+    fn set_scope_yaw(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_roll(self, value: Numeric) -> Result<Self>
+    fn set_scope_roll(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 }

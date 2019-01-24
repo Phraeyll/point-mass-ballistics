@@ -1,6 +1,6 @@
+use crate::model::core::{dragtables::*, BcAdjuster, SimulationBuilder};
 use crate::util::*;
 pub use BcKind::*;
-use crate::model::core::dragtables::*;
 
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -46,12 +46,21 @@ impl From<Bc> for BcBuilder {
 impl Default for BcBuilder {
     fn default() -> Self {
         // Arbitrary data - intended to be set by with method above at initialization point
-        create_bc(0.305, G7)
-        // Self {
-        //     value: 0.0,
-        //     kind: G1,
-        //     table: float_map![],
-        // }
+        Self {
+            value: 0.0,
+            kind: G1,
+            table: float_map![],
+        }
+    }
+}
+impl BcAdjuster for SimulationBuilder {
+    fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.projectile.bc = BcBuilder::new(value, kind);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
 }
 
@@ -66,19 +75,21 @@ impl Bc {
         self.kind
     }
 }
-pub fn create_bc(value: Numeric, kind: BcKind) -> BcBuilder {
-    BcBuilder {
-        value,
-        kind,
-        table: match kind {
-            G1 => g1::init(),
-            G2 => g2::init(),
-            G5 => g5::init(),
-            G6 => g6::init(),
-            G7 => g7::init(),
-            G8 => g8::init(),
-            GI => gi::init(),
-            GS => gs::init(),
-        },
+impl BcBuilder {
+    pub fn new(value: Numeric, kind: BcKind) -> BcBuilder {
+        BcBuilder {
+            value,
+            kind,
+            table: match kind {
+                G1 => g1::init(),
+                G2 => g2::init(),
+                G5 => g5::init(),
+                G6 => g6::init(),
+                G7 => g7::init(),
+                G8 => g8::init(),
+                GI => gi::init(),
+                GS => gs::init(),
+            },
+        }
     }
 }

@@ -49,7 +49,6 @@ impl Default for WindBuilder {
         }
     }
 }
-
 impl WindAdjuster for SimulationBuilder {
     fn set_wind_speed(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {

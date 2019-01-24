@@ -8,6 +8,10 @@ use std::ops::Mul;
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 
+pub fn default_gravity() -> Acceleration {
+    Acceleration::Mps2(GRAVITY)
+}
+
 #[derive(Debug)]
 pub struct Shooter {
     pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
@@ -57,11 +61,6 @@ impl Default for ShooterBuilder {
         }
     }
 }
-
-pub fn default_gravity() -> Acceleration {
-    Acceleration::Mps2(GRAVITY)
-}
-
 impl ShooterAdjuster for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
@@ -95,6 +94,7 @@ impl ShooterAdjuster for SimulationBuilder {
         Ok(self)
     }
 }
+
 impl Shooter {
     pub(crate) fn gravity(&self) -> Vector3<Numeric> {
         self.gravity.to_mps2().to_num().mul(Vector3::y())

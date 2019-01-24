@@ -19,7 +19,7 @@ pub struct ScopeBuilder {
     pub height: Length, // Scope Height (inches)
     pub offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
-impl From<ScopeBuilder> for Scope{
+impl From<ScopeBuilder> for Scope {
     fn from(other: ScopeBuilder) -> Self {
         Self {
             yaw: other.yaw,
@@ -52,25 +52,24 @@ impl Default for ScopeBuilder {
         }
     }
 }
-
 impl ScopeAdjuster for SimulationBuilder {
-    fn set_height(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_height(mut self, value: Numeric) -> Result<Self> {
         self.scope.height = Length::Inches(value);
         Ok(self)
     }
-    fn set_offset(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_offset(mut self, value: Numeric) -> Result<Self> {
         self.scope.offset = Length::Inches(value);
         Ok(self)
     }
-    fn set_pitch(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_pitch(mut self, value: Numeric) -> Result<Self> {
         self.scope.pitch = Angle::Minutes(value);
         Ok(self)
     }
-    fn set_yaw(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_yaw(mut self, value: Numeric) -> Result<Self> {
         self.scope.yaw = Angle::Minutes(value);
         Ok(self)
     }
-    fn set_roll(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_roll(mut self, value: Numeric) -> Result<Self> {
         self.scope.roll = Angle::Degrees(value);
         Ok(self)
     }

@@ -16,7 +16,7 @@ pub struct Projectile {
 pub struct ProjectileBuilder {
     pub weight: WeightMass, // Weight (grains)
     pub caliber: Length,    // Caliber (inches)
-    pub bc: BcBuilder,             // Ballistic Coefficient
+    pub bc: BcBuilder,      // Ballistic Coefficient
     pub velocity: Velocity, // Initial velocity (ft/s)
 }
 impl From<ProjectileBuilder> for Projectile {
@@ -49,7 +49,6 @@ impl Default for ProjectileBuilder {
         }
     }
 }
-
 impl ProjectileAdjuster for SimulationBuilder {
     fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
