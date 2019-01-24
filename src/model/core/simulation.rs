@@ -29,6 +29,9 @@ impl From<SimulationBuilder> for Simulation {
 }
 
 impl Simulation {
+    //TODO: I think this actually does need to be euler angles now, look into
+
+
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
@@ -40,7 +43,13 @@ impl Simulation {
     }
     // Projectiles position relative to scope
     pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
-        -self.scope.position().pivot_x(self.scope.roll())
+        -self
+            .scope
+            .position()
+            .pivot_y(self.shooter.yaw())
+            .pivot_z(self.shooter.pitch())
+            .pivot_x(self.shooter.roll())
+            .pivot_x(self.scope.roll())
     }
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
