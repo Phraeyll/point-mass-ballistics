@@ -37,19 +37,19 @@ impl Simulation {
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity(&self.scope)
-            .pivot_y(self.shooter.yaw())
-            .pivot_z(self.shooter.pitch())
             .pivot_x(self.shooter.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
     }
     // Projectiles position relative to scope
     pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
         -self
             .scope
             .position()
-            .pivot_y(self.shooter.yaw())
-            .pivot_z(self.shooter.pitch())
             .pivot_x(self.shooter.roll())
-            .pivot_x(self.scope.roll())
+            .pivot_x(-self.scope.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
     }
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind

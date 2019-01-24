@@ -78,9 +78,9 @@ impl Packet<'_> {
     // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .pivot_x(-self.simulation.shooter.roll())
-            .pivot_z(-self.simulation.shooter.pitch())
             .pivot_y(-self.simulation.shooter.yaw())
+            .pivot_z(-self.simulation.shooter.pitch())
+            .pivot_x(-self.simulation.shooter.roll())
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
