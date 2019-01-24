@@ -1,30 +1,56 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{Bc, ProjectileBuilder, Scope, SimulationBuilder};
+use crate::model::core::{Bc, BcBuilder, ProjectileAdjuster, Scope, SimulationBuilder};
 use crate::util::*;
 
 use std::ops::Mul;
 
 #[derive(Debug)]
 pub struct Projectile {
-    weight: WeightMass, // Weight (grains)
-    caliber: Length,    // Caliber (inches)
-    pub(crate) bc: Bc,  // Ballistic Coefficient
-    velocity: Velocity, // Initial velocity (ft/s)
+    pub(crate) weight: WeightMass, // Weight (grains)
+    pub(crate) caliber: Length,    // Caliber (inches)
+    pub(crate) bc: Bc,             // Ballistic Coefficient
+    pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
-
-impl Default for Projectile {
+#[derive(Debug)]
+pub struct ProjectileBuilder {
+    pub weight: WeightMass, // Weight (grains)
+    pub caliber: Length,    // Caliber (inches)
+    pub bc: BcBuilder,             // Ballistic Coefficient
+    pub velocity: Velocity, // Initial velocity (ft/s)
+}
+impl From<ProjectileBuilder> for Projectile {
+    fn from(other: ProjectileBuilder) -> Self {
+        Self {
+            weight: other.weight,
+            caliber: other.caliber,
+            bc: Bc::from(other.bc),
+            velocity: other.velocity,
+        }
+    }
+}
+impl From<Projectile> for ProjectileBuilder {
+    fn from(other: Projectile) -> Self {
+        Self {
+            weight: other.weight,
+            caliber: other.caliber,
+            bc: BcBuilder::from(other.bc),
+            velocity: other.velocity,
+        }
+    }
+}
+impl Default for ProjectileBuilder {
     fn default() -> Self {
         Self {
             weight: WeightMass::Grains(140.0),
             caliber: Length::Inches(0.264),
-            bc: Bc::default(),
+            bc: BcBuilder::default(),
             velocity: Velocity::Fps(2710.0),
         }
     }
 }
 
-impl ProjectileBuilder for SimulationBuilder {
+impl ProjectileAdjuster for SimulationBuilder {
     fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.projectile.velocity = Velocity::Fps(value);

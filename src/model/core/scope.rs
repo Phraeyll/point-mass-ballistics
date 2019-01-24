@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{ScopeBuilder, SimulationBuilder};
+use crate::model::core::{ScopeAdjuster, SimulationBuilder};
 use crate::util::*;
 
 #[derive(Debug)]
@@ -11,8 +11,37 @@ pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
-
-impl Default for Scope {
+#[derive(Debug)]
+pub struct ScopeBuilder {
+    pub yaw: Angle,
+    pub pitch: Angle,
+    pub roll: Angle,    // Scope Roll (Cant) (Degrees)
+    pub height: Length, // Scope Height (inches)
+    pub offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+}
+impl From<ScopeBuilder> for Scope{
+    fn from(other: ScopeBuilder) -> Self {
+        Self {
+            yaw: other.yaw,
+            pitch: other.pitch,
+            roll: other.roll,
+            height: other.height,
+            offset: other.offset,
+        }
+    }
+}
+impl From<Scope> for ScopeBuilder {
+    fn from(other: Scope) -> Self {
+        Self {
+            yaw: other.yaw,
+            pitch: other.pitch,
+            roll: other.roll,
+            height: other.height,
+            offset: other.offset,
+        }
+    }
+}
+impl Default for ScopeBuilder {
     fn default() -> Self {
         Self {
             yaw: Angle::Radians(0.0),
@@ -24,7 +53,7 @@ impl Default for Scope {
     }
 }
 
-impl ScopeBuilder for SimulationBuilder {
+impl ScopeAdjuster for SimulationBuilder {
     fn set_height(mut self, value: Numeric) -> Result<Self> {
         self.scope.height = Length::Inches(value);
         Ok(self)

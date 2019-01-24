@@ -1,47 +1,6 @@
-use crate::model::core::{
-    dragtables::*, Atmosphere, BcKind, BcKind::*, Flags, Projectile, Scope, Shooter, Simulation,
-    Wind,
-};
+use crate::model::core::{BcKind, BcKind::*, Simulation, SimulationBuilder};
+use crate::model::core::bc::set_bc;
 use crate::util::*;
-
-#[derive(Debug)]
-pub struct SimulationBuilder {
-    pub flags: Flags,           // Flags to enable/disable certain parts of simulation
-    pub projectile: Projectile, // Use same projectile for zeroing and solving
-    pub scope: Scope,           // Use same scope for zeroing and solving
-    pub atmosphere: Atmosphere, // Different conditions during solving
-    pub wind: Wind,             // Different conditions during solving
-    pub shooter: Shooter,       // Different conditions during solving
-    pub time_step: Numeric,     // Use same timestep for zeroing and solving
-}
-
-impl From<Simulation> for SimulationBuilder {
-    fn from(other: Simulation) -> Self {
-        Self {
-            flags: other.flags,
-            projectile: other.projectile,
-            scope: other.scope,
-            atmosphere: other.atmosphere,
-            wind: other.wind,
-            shooter: other.shooter,
-            time_step: other.time_step,
-        }
-    }
-}
-
-impl Default for SimulationBuilder {
-    fn default() -> Self {
-        Self {
-            flags: Flags::default(),
-            projectile: Projectile::default(),
-            scope: Scope::default(),
-            atmosphere: Atmosphere::default(),
-            wind: Wind::default(),
-            shooter: Shooter::default(),
-            time_step: 0.000_001,
-        }
-    }
-}
 
 impl Builder for SimulationBuilder {
     type Simulation = Simulation;
@@ -61,18 +20,7 @@ impl Builder for SimulationBuilder {
     }
     fn init_with(mut self, value: Numeric, kind: BcKind) -> Result<Self::Simulation> {
         if value.is_sign_positive() {
-            self.projectile.bc.value = value;
-            self.projectile.bc.kind = kind;
-            self.projectile.bc.table = match kind {
-                G1 => g1::init(),
-                G2 => g2::init(),
-                G5 => g5::init(),
-                G6 => g6::init(),
-                G7 => g7::init(),
-                G8 => g8::init(),
-                GI => gi::init(),
-                GS => gs::init(),
-            };
+            self.projectile.bc = set_bc(value, kind);
             Ok(Simulation::from(self))
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -93,7 +41,7 @@ pub trait Builder {
         Self: Sized;
 }
 
-pub trait ScopeBuilder {
+pub trait ScopeAdjuster {
     fn set_height(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -111,7 +59,7 @@ pub trait ScopeBuilder {
         Self: Sized;
 }
 
-pub trait ProjectileBuilder {
+pub trait ProjectileAdjuster {
     fn set_velocity(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -123,7 +71,7 @@ pub trait ProjectileBuilder {
         Self: Sized;
 }
 
-pub trait AtmosphereBuilder {
+pub trait AtmosphereAdjuster {
     fn set_temperature(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -134,7 +82,7 @@ pub trait AtmosphereBuilder {
     where
         Self: Sized;
 }
-pub trait WindBuilder {
+pub trait WindAdjuster {
     fn set_wind_speed(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -142,7 +90,7 @@ pub trait WindBuilder {
     where
         Self: Sized;
 }
-pub trait ShooterBuilder {
+pub trait ShooterAdjuster {
     fn set_shot_angle(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
@@ -157,7 +105,7 @@ pub trait ShooterBuilder {
         Self: Sized;
 }
 
-pub trait FlagsBuilder {
+pub trait FlagsAdjuster {
     fn use_coriolis(self, value: bool) -> Result<Self>
     where
         Self: Sized;

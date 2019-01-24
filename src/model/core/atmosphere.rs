@@ -1,4 +1,4 @@
-use crate::model::core::{AtmosphereBuilder, SimulationBuilder};
+use crate::model::core::{AtmosphereAdjuster, SimulationBuilder};
 use crate::util::*;
 
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
@@ -8,12 +8,35 @@ const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diat
 
 #[derive(Debug)]
 pub struct Atmosphere {
-    temperature: Temperature, // Temperature (F)
-    pressure: Pressure,       // Pressure (InHg)
-    humidity: Numeric,        // Humidity (0-1)
+    pub(crate) temperature: Temperature, // Temperature (F)
+    pub(crate) pressure: Pressure,       // Pressure (InHg)
+    pub(crate) humidity: Numeric,        // Humidity (0-1)
 }
-
-impl Default for Atmosphere {
+#[derive(Debug)]
+pub struct AtmosphereBuilder {
+    pub temperature: Temperature, // Temperature (F)
+    pub pressure: Pressure,       // Pressure (InHg)
+    pub humidity: Numeric,        // Humidity (0-1)
+}
+impl From<AtmosphereBuilder> for Atmosphere{
+    fn from(other: AtmosphereBuilder) -> Self {
+        Self {
+            temperature: other.temperature,
+            pressure: other.pressure,
+            humidity: other.humidity,
+        }
+    }
+}
+impl From<Atmosphere> for AtmosphereBuilder {
+    fn from(other: Atmosphere) -> Self {
+        Self {
+            temperature: other.temperature,
+            pressure: other.pressure,
+            humidity: other.humidity,
+        }
+    }
+}
+impl Default for AtmosphereBuilder {
     fn default() -> Self {
         Self {
             temperature: Temperature::F(68.0),
@@ -22,7 +45,8 @@ impl Default for Atmosphere {
         }
     }
 }
-impl AtmosphereBuilder for SimulationBuilder {
+
+impl AtmosphereAdjuster for SimulationBuilder {
     fn set_temperature(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-112.0, 122.0);
         if value >= min && value <= max {

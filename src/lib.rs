@@ -17,7 +17,7 @@ mod util {
     #[allow(clippy::or_fun_call)]
     #[allow(clippy::let_and_return)]
     mod float_map;
-    mod conversions {
+    pub mod conversions {
         // Terribly inefficient and unsafe/untyped method of unit conversion, only for units needed
         // Really need to replace with some form of dimensional analysis.  May be able to use crate 'uom'
         // for most conversions, but still need something for termperature.  Also, may need something
@@ -50,7 +50,7 @@ pub mod model {
         mod packet;
     }
     pub mod core {
-        pub use crate::util::{Natural, Numeric};
+        pub use crate::util::{Natural, Numeric, conversions::*};
         pub use atmosphere::*;
         pub use bc::*;
         pub use builder::*;

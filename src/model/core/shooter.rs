@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{ShooterBuilder, SimulationBuilder};
+use crate::model::core::{ShooterAdjuster, SimulationBuilder};
 use crate::util::*;
 
 use std::ops::Mul;
@@ -10,26 +10,59 @@ const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 
 #[derive(Debug)]
 pub struct Shooter {
-    yaw: Angle,            // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pitch: Angle,          // Line of Sight angle (degrees)
-    roll: Angle,           // Roll relative to shooters position, ie, scope alligned with rifle
-    lattitude: Angle,      // Lattitude (Coriolis/Eotvos Effect)
-    gravity: Acceleration, // Gravity (m/s^2)
+    pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pub(crate) pitch: Angle, // Line of Sight angle (degrees)
+    pub(crate) roll: Angle, // Roll relative to shooters position, ie, scope alligned with rifle
+    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
-
-impl Default for Shooter {
+#[derive(Debug)]
+pub struct ShooterBuilder {
+    pub yaw: Angle,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pub pitch: Angle,     // Line of Sight angle (degrees)
+    pub roll: Angle,      // Roll relative to shooters position, ie, scope alligned with rifle
+    pub lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub gravity: Acceleration, // Gravity (m/s^2)
+}
+impl From<ShooterBuilder> for Shooter {
+    fn from(other: ShooterBuilder) -> Self {
+        Self {
+            yaw: other.yaw,
+            pitch: other.pitch,
+            roll: other.roll,
+            lattitude: other.lattitude,
+            gravity: other.gravity,
+        }
+    }
+}
+impl From<Shooter> for ShooterBuilder {
+    fn from(other: Shooter) -> Self {
+        Self {
+            yaw: other.yaw,
+            pitch: other.pitch,
+            roll: other.roll,
+            lattitude: other.lattitude,
+            gravity: other.gravity,
+        }
+    }
+}
+impl Default for ShooterBuilder {
     fn default() -> Self {
         Self {
             yaw: Angle::Radians(0.0),
             pitch: Angle::Radians(0.0),
             roll: Angle::Radians(0.0),
             lattitude: Angle::Radians(0.0),
-            gravity: Acceleration::Mps2(GRAVITY),
+            gravity: default_gravity(),
         }
     }
 }
 
-impl ShooterBuilder for SimulationBuilder {
+pub fn default_gravity() -> Acceleration {
+    Acceleration::Mps2(GRAVITY)
+}
+
+impl ShooterAdjuster for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
