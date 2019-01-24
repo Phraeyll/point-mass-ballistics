@@ -85,6 +85,8 @@ pub mod model {
 
     }
     pub mod solver {
+        pub use zero::*;
+
         #[allow(clippy::float_cmp)]
         #[allow(clippy::nonminimal_bool)]
         pub mod zero;
