@@ -1,8 +1,8 @@
 use nalgebra::Vector3;
 
+use super::packet::*;
 use crate::model::core::Simulation;
 use crate::util::*;
-use super::packet::*;
 // Ref iter
 impl Simulation {
     pub fn iter(&self) -> IterSimulation {
@@ -90,11 +90,7 @@ impl IterSimulation<'_> {
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
         if self.simulation.flags.use_coriolis {
-            -2.0 * self
-                .simulation
-                .shooter
-                .omega()
-                .cross(&self.velocity)
+            -2.0 * self.simulation.shooter.omega().cross(&self.velocity)
         } else {
             Vector3::zeros()
         }

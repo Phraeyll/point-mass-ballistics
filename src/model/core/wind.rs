@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{WindBuilder, SimulationBuilder};
+use crate::model::core::{SimulationBuilder, WindBuilder};
 use crate::util::*;
 
 use std::ops::Mul;

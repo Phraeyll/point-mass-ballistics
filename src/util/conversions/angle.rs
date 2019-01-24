@@ -1,8 +1,8 @@
 use crate::util::Numeric;
 use Angle::*;
 
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use std::cmp::PartialEq;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 pub const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;

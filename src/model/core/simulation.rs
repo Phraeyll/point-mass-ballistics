@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 
+use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, SimulationBuilder, Wind};
 use crate::util::*;
-use crate::model::core::{Wind, Atmosphere, Shooter, Flags, Projectile, Scope, SimulationBuilder};
 
 #[derive(Debug)]
 pub struct Simulation {
@@ -46,8 +46,7 @@ impl Simulation {
     // along relative bearing - I don't think many would factor in a 'downhill' wind for example
     // This would be interresting to think of, however.
     pub(crate) fn absolute_wind_velocity(&self) -> Vector3<Numeric> {
-        self
-            .wind
+        self.wind
             .velocity()
             .pivot_y(self.shooter.corrected_azimuth())
     }

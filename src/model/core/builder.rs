@@ -1,4 +1,7 @@
-use crate::model::core::{Simulation, Atmosphere, Wind, Shooter, Flags, Projectile, Scope, BcKind, BcKind::*, dragtables::*};
+use crate::model::core::{
+    dragtables::*, Atmosphere, BcKind, BcKind::*, Flags, Projectile, Scope, Shooter, Simulation,
+    Wind,
+};
 use crate::util::*;
 
 #[derive(Debug)]
@@ -7,9 +10,9 @@ pub struct SimulationBuilder {
     pub projectile: Projectile, // Use same projectile for zeroing and solving
     pub scope: Scope,           // Use same scope for zeroing and solving
     pub atmosphere: Atmosphere, // Different conditions during solving
-    pub wind: Wind, // Different conditions during solving
-    pub shooter: Shooter, // Different conditions during solving
-    pub time_step: Numeric,        // Use same timestep for zeroing and solving
+    pub wind: Wind,             // Different conditions during solving
+    pub shooter: Shooter,       // Different conditions during solving
+    pub time_step: Numeric,     // Use same timestep for zeroing and solving
 }
 
 impl From<Simulation> for SimulationBuilder {

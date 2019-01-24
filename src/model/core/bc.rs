@@ -1,5 +1,5 @@
-pub use BcKind::*;
 use crate::util::*;
+pub use BcKind::*;
 
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {

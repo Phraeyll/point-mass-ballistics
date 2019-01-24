@@ -1,14 +1,14 @@
 use nalgebra::Vector3;
 
-use crate::util::*;
 use crate::model::core::Simulation;
+use crate::util::*;
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'s> {
     pub(crate) simulation: &'s Simulation, //Simulation this came from, used for various calculations
-    pub(crate) time: Numeric,                     // Position in time (s)
-    pub(crate) position: Vector3<Numeric>,        // Position (m)
-    pub(crate) velocity: Vector3<Numeric>,        // Velocity (m/s)
+    pub(crate) time: Numeric,              // Position in time (s)
+    pub(crate) position: Vector3<Numeric>, // Position (m)
+    pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
 
 // Output struct which represents projectiles current position, and velocity
