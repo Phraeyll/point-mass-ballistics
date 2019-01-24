@@ -34,12 +34,13 @@ impl Simulation {
     pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity(&self.scope)
-            .pivot_z(self.shooter.line_of_sight)
-            .pivot_y(self.shooter.corrected_azimuth())
+            .pivot_y(self.shooter.yaw())
+            .pivot_z(self.shooter.pitch())
+            .pivot_x(self.shooter.roll())
     }
     // Projectiles position relative to scope
     pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
-        -self.scope.position().pivot_x(self.scope.roll)
+        -self.scope.position().pivot_x(self.scope.roll())
     }
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
@@ -48,7 +49,9 @@ impl Simulation {
     pub(crate) fn absolute_wind_velocity(&self) -> Vector3<Numeric> {
         self.wind
             .velocity()
-            .pivot_y(self.shooter.corrected_azimuth())
+            .pivot_y(self.shooter.yaw())
+            .pivot_z(self.shooter.pitch())
+            .pivot_x(self.shooter.roll())
     }
     pub fn increment_scope_pitch(&mut self, value: Numeric) {
         self.scope.pitch += Angle::Minutes(value);

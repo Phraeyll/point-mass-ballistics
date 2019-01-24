@@ -43,10 +43,10 @@ pub mod model {
 
     #[allow(clippy::float_cmp)]
     pub mod iter {
-        pub use main::*;
+        pub use iterator::*;
         pub use packet::*;
 
-        mod main;
+        mod iterator;
         mod packet;
     }
     pub mod core {

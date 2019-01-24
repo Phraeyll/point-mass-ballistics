@@ -2,7 +2,7 @@ use crate::util::Numeric;
 use Angle::*;
 
 use std::cmp::PartialEq;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 pub const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;
@@ -79,9 +79,20 @@ impl PartialEq for Angle {
         }
     }
 }
+impl Neg for Angle {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        match self {
+            Degrees(u) => Degrees(-u),
+            Minutes(u) => Minutes(-u),
+            Radians(u) => Radians(-u),
+            Miliradians(u) => Miliradians(-u),
+        }
+    }
+}
 
 impl Add for Angle {
-    type Output = Angle;
+    type Output = Self;
     fn add(self, other: Angle) -> Self::Output {
         match self {
             Degrees(u) => Degrees(u + other.to_degrees().to_num()),
@@ -102,7 +113,7 @@ impl AddAssign for Angle {
     }
 }
 impl Sub for Angle {
-    type Output = Angle;
+    type Output = Self;
     fn sub(self, other: Angle) -> Self::Output {
         match self {
             Degrees(u) => Degrees(u - other.to_degrees().to_num()),
@@ -123,7 +134,7 @@ impl SubAssign for Angle {
     }
 }
 impl Mul for Angle {
-    type Output = Angle;
+    type Output = Self;
     fn mul(self, other: Angle) -> Self::Output {
         match self {
             Degrees(u) => Degrees(u * other.to_degrees().to_num()),
@@ -144,7 +155,7 @@ impl MulAssign for Angle {
     }
 }
 impl Div for Angle {
-    type Output = Angle;
+    type Output = Self;
     fn div(self, other: Angle) -> Self::Output {
         match self {
             Degrees(u) => Degrees(u / other.to_degrees().to_num()),

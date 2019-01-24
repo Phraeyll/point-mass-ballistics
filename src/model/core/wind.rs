@@ -7,15 +7,19 @@ use std::ops::Mul;
 
 #[derive(Debug)]
 pub struct Wind {
-    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
-    pub(crate) yaw: Angle,         // Wind Angle (degrees)
+    yaw: Angle,         // Wind Angle (degrees)
+    pitch: Angle,       // Wind Pitch (degrees)
+    roll: Angle,        // Doesn't make sense, just here for consistency
+    velocity: Velocity, // Wind Velocity (miles/hour)
 }
 
 impl Default for Wind {
     fn default() -> Self {
         Self {
-            velocity: Velocity::Mph(0.0),
             yaw: Angle::Radians(0.0),
+            pitch: Angle::Radians(0.0),
+            roll: Angle::Radians(0.0),
+            velocity: Velocity::Mph(0.0),
         }
     }
 }
@@ -72,14 +76,22 @@ impl Wind {
     //         |
     //         v
     //        (0)
-    pub(crate) fn corrected_yaw(&self) -> Angle {
-        Angle::Radians(-self.yaw.to_radians().to_num() + PI)
+    fn yaw(&self) -> Angle {
+        -self.yaw + Angle::Radians(PI)
+    }
+    fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    fn roll(&self) -> Angle {
+        self.roll
     }
     pub(crate) fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
             .to_mps()
             .to_num()
             .mul(Vector3::x())
-            .pivot_y(self.corrected_yaw())
+            .pivot_y(self.yaw())
+            .pivot_z(self.pitch())
+            .pivot_x(self.roll())
     }
 }

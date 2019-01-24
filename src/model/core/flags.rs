@@ -3,32 +3,44 @@ use crate::util::*;
 
 #[derive(Debug)]
 pub struct Flags {
-    pub(crate) use_coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
-    pub(crate) use_drag: bool,     // Whether or not to calculate drag
-    pub(crate) use_gravity: bool,  // Whether or not to calculate gravity
+    coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
+    drag: bool,     // Whether or not to calculate drag
+    gravity: bool,  // Whether or not to calculate gravity
 }
 
 impl Default for Flags {
     fn default() -> Self {
         Self {
-            use_coriolis: true,
-            use_drag: true,
-            use_gravity: true,
+            coriolis: true,
+            drag: true,
+            gravity: true,
         }
     }
 }
 
 impl FlagsBuilder for SimulationBuilder {
     fn use_coriolis(mut self, value: bool) -> Result<Self> {
-        self.flags.use_coriolis = value;
+        self.flags.coriolis = value;
         Ok(self)
     }
     fn use_drag(mut self, value: bool) -> Result<Self> {
-        self.flags.use_drag = value;
+        self.flags.drag = value;
         Ok(self)
     }
     fn use_gravity(mut self, value: bool) -> Result<Self> {
-        self.flags.use_gravity = value;
+        self.flags.gravity = value;
         Ok(self)
+    }
+}
+
+impl Flags {
+    pub(crate) fn coriolis(&self) -> bool {
+        self.coriolis
+    }
+    pub(crate) fn drag(&self) -> bool {
+        self.drag
+    }
+    pub(crate) fn gravity(&self) -> bool {
+        self.gravity
     }
 }

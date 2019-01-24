@@ -21,8 +21,9 @@ impl Packet<'_> {
     // This is used during zero'ing and is output in the drop table
     pub fn relative_position(&self) -> Vector3<Numeric> {
         self.position
-            .un_pivot_z(self.simulation.shooter.line_of_sight)
-            .un_pivot_y(self.simulation.shooter.corrected_azimuth())
+            .pivot_z(-self.simulation.shooter.pitch())
+            .pivot_y(-self.simulation.shooter.yaw())
+            .pivot_x(-self.simulation.shooter.roll())
     }
     // This gives adjustment - opposite sign relative to desired offset
     pub(crate) fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle {
@@ -46,9 +47,9 @@ impl Packet<'_> {
         let tolerance = tolerance.to_meters().to_num();
 
         let sign = if self.relative_position().z >= (offset - tolerance) {
-            1.0
-        } else {
             -1.0
+        } else {
+            1.0
         };
 
         let position = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);

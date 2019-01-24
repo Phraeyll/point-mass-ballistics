@@ -7,10 +7,10 @@ use std::ops::Mul;
 
 #[derive(Debug)]
 pub struct Projectile {
-    pub(crate) weight: WeightMass, // Weight (grains)
-    pub(crate) caliber: Length,    // Caliber (inches)
-    pub(crate) bc: Bc,             // Ballistic Coefficient
-    pub(crate) velocity: Velocity, // Initial velocity (ft/s)
+    weight: WeightMass, // Weight (grains)
+    caliber: Length,    // Caliber (inches)
+    pub(crate) bc: Bc,  // Ballistic Coefficient
+    velocity: Velocity, // Initial velocity (ft/s)
 }
 
 impl Default for Projectile {
@@ -53,7 +53,7 @@ impl ProjectileBuilder for SimulationBuilder {
 
 impl Projectile {
     // Radius of projectile cross section in meters
-    pub(crate) fn radius(&self) -> Numeric {
+    fn radius(&self) -> Numeric {
         self.caliber.to_meters().to_num() / 2.0
     }
     // Area of projectile in meters, used during drag force calculation
@@ -65,7 +65,7 @@ impl Projectile {
         self.weight.to_kgs().into()
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    pub(crate) fn sd(&self) -> Numeric {
+    fn sd(&self) -> Numeric {
         self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
@@ -77,7 +77,7 @@ impl Projectile {
             .to_mps()
             .to_num()
             .mul(Vector3::x())
-            .pivot_z(scope.pitch)
-            .pivot_y(scope.yaw)
+            .pivot_y(scope.yaw())
+            .pivot_z(scope.pitch())
     }
 }

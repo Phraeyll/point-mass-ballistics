@@ -5,21 +5,21 @@ use crate::util::*;
 
 #[derive(Debug)]
 pub struct Scope {
+    pub(crate) yaw: Angle,
+    pub(crate) pitch: Angle,
+    pub(crate) roll: Angle,    // Scope Roll (Cant) (Degrees)
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
-    pub(crate) pitch: Angle,
-    pub(crate) yaw: Angle,
-    pub(crate) roll: Angle, // Scope Roll (Cant) (Degrees)
 }
 
 impl Default for Scope {
     fn default() -> Self {
         Self {
+            yaw: Angle::Radians(0.0),
+            pitch: Angle::Radians(0.0),
+            roll: Angle::Radians(0.0),
             height: Length::Inches(1.5),
             offset: Length::Inches(0.0),
-            pitch: Angle::Radians(0.0),
-            yaw: Angle::Radians(0.0),
-            roll: Angle::Radians(0.0),
         }
     }
 }
@@ -54,5 +54,14 @@ impl Scope {
             self.height.to_meters().to_num(),
             self.offset.to_meters().to_num(),
         )
+    }
+    pub(crate) fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    pub(crate) fn yaw(&self) -> Angle {
+        -self.yaw
+    }
+    pub(crate) fn roll(&self) -> Angle {
+        -self.roll
     }
 }

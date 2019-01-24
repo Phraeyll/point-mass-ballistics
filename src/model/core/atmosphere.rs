@@ -8,9 +8,9 @@ const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diat
 
 #[derive(Debug)]
 pub struct Atmosphere {
-    pub(crate) temperature: Temperature, // Temperature (F)
-    pub(crate) pressure: Pressure,       // Pressure (InHg)
-    pub(crate) humidity: Numeric,        // Humidity (0-1)
+    temperature: Temperature, // Temperature (F)
+    pressure: Pressure,       // Pressure (InHg)
+    humidity: Numeric,        // Humidity (0-1)
 }
 
 impl Default for Atmosphere {
@@ -61,26 +61,26 @@ impl Atmosphere {
         (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
-    pub(crate) fn pv(&self) -> Numeric {
+    fn pv(&self) -> Numeric {
         self.humidity
             * 611.21
             * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius())))
                 .exp()
     }
     // Pressure of dry air
-    pub(crate) fn pd(&self) -> Numeric {
+    fn pd(&self) -> Numeric {
         self.pa() - self.pv()
     }
     // Total air pressure in pascals
-    pub(crate) fn pa(&self) -> Numeric {
+    fn pa(&self) -> Numeric {
         self.pressure.to_pascals().to_num()
     }
     // Temperature in celsius
-    pub(crate) fn celsius(&self) -> Numeric {
+    fn celsius(&self) -> Numeric {
         self.temperature.to_celsius().to_num()
     }
     // Temperature in kelvin
-    pub(crate) fn kelvin(&self) -> Numeric {
+    fn kelvin(&self) -> Numeric {
         self.temperature.to_kelvin().to_num()
     }
 }

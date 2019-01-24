@@ -10,17 +10,19 @@ const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 
 #[derive(Debug)]
 pub struct Shooter {
-    pub(crate) line_of_sight: Angle,  // Line of Sight angle (degrees)
-    pub(crate) azimuth: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
-    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
+    yaw: Angle,            // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
+    pitch: Angle,          // Line of Sight angle (degrees)
+    roll: Angle,           // Roll relative to shooters position, ie, scope alligned with rifle
+    lattitude: Angle,      // Lattitude (Coriolis/Eotvos Effect)
+    gravity: Acceleration, // Gravity (m/s^2)
 }
 
 impl Default for Shooter {
     fn default() -> Self {
         Self {
-            line_of_sight: Angle::Radians(0.0),
-            azimuth: Angle::Radians(0.0),
+            yaw: Angle::Radians(0.0),
+            pitch: Angle::Radians(0.0),
+            roll: Angle::Radians(0.0),
             lattitude: Angle::Radians(0.0),
             gravity: Acceleration::Mps2(GRAVITY),
         }
@@ -31,7 +33,7 @@ impl ShooterBuilder for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
-            self.shooter.line_of_sight = Angle::Degrees(value);
+            self.shooter.pitch = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
@@ -49,7 +51,7 @@ impl ShooterBuilder for SimulationBuilder {
     fn set_bearing(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
-            self.shooter.azimuth = Angle::Degrees(value);
+            self.shooter.yaw = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange(min, max)))
@@ -83,8 +85,14 @@ impl Shooter {
     //         |
     //         v
     //       (180)
-    pub(crate) fn corrected_azimuth(&self) -> Angle {
-        Angle::Radians(-self.azimuth.to_radians().to_num())
+    pub(crate) fn yaw(&self) -> Angle {
+        -self.yaw
+    }
+    pub(crate) fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    pub(crate) fn roll(&self) -> Angle {
+        -self.roll
     }
     // Angular velocity vector of earth, at current lattitude
     // Can be thought of as vector from center of earth, pointing
