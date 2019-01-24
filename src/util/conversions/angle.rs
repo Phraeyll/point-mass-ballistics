@@ -1,8 +1,9 @@
+use ordered_float::OrderedFloat;
 use crate::util::Numeric;
 use Angle::*;
 
-use std::cmp::PartialEq;
 use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::cmp::Ordering;
 
 pub const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;
@@ -77,6 +78,22 @@ impl PartialEq for Angle {
             Radians(u) => u == other.to_radians().to_num(),
             Miliradians(u) => u == other.to_miliradians().to_num(),
         }
+    }
+}
+impl Eq for Angle {}
+impl Ord for Angle {
+    fn cmp(&self, other: &Angle) -> Ordering {
+        match *self {
+            Degrees(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_degrees().to_num())),
+            Minutes(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_minutes().to_num())),
+            Radians(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_radians().to_num())),
+            Miliradians(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_miliradians().to_num())),
+        }
+    }
+}
+impl PartialOrd for Angle {
+    fn partial_cmp(&self, other: &Angle) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 impl Neg for Angle {
