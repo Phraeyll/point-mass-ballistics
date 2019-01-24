@@ -118,18 +118,19 @@ impl IterSimulation<'_> {
         -0.5 * self.simulation.atmosphere.rho()
             * self.simulation.projectile.area()
             * self.cd()
-            * self.simulation.projectile.i()
             * self.vv()
             * self.vv().norm()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
-        self.simulation
-            .projectile
-            .bc
-            .table()
-            .lerp(self.mach())
-            .expect("cd")
+        self.simulation.projectile.i()
+            * self
+                .simulation
+                .projectile
+                .bc
+                .table()
+                .lerp(self.mach())
+                .expect("cd")
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
