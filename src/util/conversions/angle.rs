@@ -2,7 +2,7 @@ use crate::util::Numeric;
 use Angle::*;
 
 use std::cmp::PartialEq;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 pub const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;
@@ -130,48 +130,6 @@ impl SubAssign for Angle {
             u @ Minutes(_) => u - other,
             u @ Radians(_) => u - other,
             u @ Miliradians(_) => u - other,
-        };
-    }
-}
-impl Mul for Angle {
-    type Output = Self;
-    fn mul(self, other: Angle) -> Self::Output {
-        match self {
-            Degrees(u) => Degrees(u * other.to_degrees().to_num()),
-            Minutes(u) => Minutes(u * other.to_minutes().to_num()),
-            Radians(u) => Radians(u * other.to_radians().to_num()),
-            Miliradians(u) => Miliradians(u * other.to_miliradians().to_num()),
-        }
-    }
-}
-impl MulAssign for Angle {
-    fn mul_assign(&mut self, other: Angle) {
-        *self = match *self {
-            u @ Degrees(_) => u * other,
-            u @ Minutes(_) => u * other,
-            u @ Radians(_) => u * other,
-            u @ Miliradians(_) => u * other,
-        };
-    }
-}
-impl Div for Angle {
-    type Output = Self;
-    fn div(self, other: Angle) -> Self::Output {
-        match self {
-            Degrees(u) => Degrees(u / other.to_degrees().to_num()),
-            Minutes(u) => Minutes(u / other.to_minutes().to_num()),
-            Radians(u) => Radians(u / other.to_radians().to_num()),
-            Miliradians(u) => Miliradians(u / other.to_miliradians().to_num()),
-        }
-    }
-}
-impl DivAssign for Angle {
-    fn div_assign(&mut self, other: Angle) {
-        *self = match *self {
-            u @ Degrees(_) => u / other,
-            u @ Minutes(_) => u / other,
-            u @ Radians(_) => u / other,
-            u @ Miliradians(_) => u / other,
         };
     }
 }
