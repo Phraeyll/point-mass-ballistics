@@ -39,7 +39,7 @@ impl Iterator for IterFindAdjustments<'_> {
         // Ensure angle is changing from previous value - may not for really small floats
         if true
             && self.sim.scope.pitch == pitch
-            && self.sim.scope.pitch == yaw
+            && self.sim.scope.yaw == yaw
             // Ignore first time, since both should be still be 0.0 at this point
             && self.count != 1
         {
@@ -48,10 +48,12 @@ impl Iterator for IterFindAdjustments<'_> {
             //     self.elevation_adjustment.to_degrees(),
             //     muzzle_pitch.to_degrees(),
             //     self.elevation_adjustment.to_degrees());
-            Some(Err(Error::new(ErrorKind::AngleNotChanging(
-                self.count,
-                self.sim.scope.pitch.to_radians().to_num(),
-            ))))
+            Some(Err(Error::new(ErrorKind::AngleNotChanging {
+                count: self.count,
+                pitch: self.sim.scope.pitch.to_minutes(),
+                yaw: self.sim.scope.yaw.to_minutes(),
+            }
+            )))
         } else if true
             && self.sim.scope.pitch >= DEG_45
             && self.sim.scope.pitch <= -DEG_90
@@ -59,10 +61,11 @@ impl Iterator for IterFindAdjustments<'_> {
             && self.sim.scope.yaw <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::AngleRange(
-                self.count,
-                self.sim.scope.pitch.to_radians().to_num(),
-            ))))
+            Some(Err(Error::new(ErrorKind::AngleRange {
+                count: self.count,
+                pitch: self.sim.scope.pitch.to_minutes(),
+                yaw: self.sim.scope.yaw.to_minutes(),
+            })))
         } else if let Some(packet) = self
             .sim
             .into_iter()
@@ -83,10 +86,11 @@ impl Iterator for IterFindAdjustments<'_> {
             )))
         } else {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::TerminalVelocity(
-                self.count,
-                self.sim.scope.pitch.to_radians().to_num(),
-            ))))
+            Some(Err(Error::new(ErrorKind::TerminalVelocity{
+                count: self.count,
+                pitch: self.sim.scope.pitch.to_minutes(),
+                yaw: self.sim.scope.yaw.to_minutes(),
+            })))
         }
     }
 }

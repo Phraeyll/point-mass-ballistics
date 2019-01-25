@@ -64,7 +64,7 @@ impl WindAdjuster for SimulationBuilder {
             self.wind.yaw = Angle::Degrees(value);
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+            Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
 }

@@ -14,7 +14,7 @@ impl Builder for SimulationBuilder {
             self.time_step = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange(min, max)))
+            Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
 }
