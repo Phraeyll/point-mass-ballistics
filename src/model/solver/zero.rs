@@ -9,10 +9,10 @@ const DEG_90: Angle = Angle::Radians(FRAC_PI_2);
 
 struct IterFindAdjustments<'s> {
     sim: &'s mut Simulation,
-    zero_distance: Numeric,
-    zero_elevation_offset: Numeric,
-    zero_windage_offset: Numeric,
-    zero_tolerance: Numeric,
+    distance: Numeric,
+    elevation_offset: Numeric,
+    windage_offset: Numeric,
+    tolerance: Numeric,
     elevation_adjustment: Angle,
     windage_adjustment: Angle,
     count: u64,
@@ -24,9 +24,18 @@ impl Iterator for IterFindAdjustments<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
+            distance,
+            elevation_offset,
+            windage_offset,
+            tolerance,
             sim:
                 &mut Simulation {
-                    scope: Scope { pitch, yaw, .. },
+                    scope:
+                        Scope {
+                            pitch: prev_pitch,
+                            yaw: prev_yaw,
+                            ..
+                        },
                     ..
                 },
             ..
@@ -35,13 +44,16 @@ impl Iterator for IterFindAdjustments<'_> {
         self.count += 1;
         self.sim.scope.pitch += self.elevation_adjustment;
         self.sim.scope.yaw += self.windage_adjustment;
+        let count = self.count;
+        let pitch = self.sim.scope.pitch;
+        let yaw = self.sim.scope.yaw;
 
         // Ensure angle is changing from previous value - may not for really small floats
         if true
-            && self.sim.scope.pitch == pitch
-            && self.sim.scope.yaw == yaw
+            && pitch == prev_pitch
+            && yaw == prev_yaw
             // Ignore first time, since both should be still be 0.0 at this point
-            && self.count != 1
+            && count != 1
         {
             // dbg!((
             //     self.count,
@@ -49,11 +61,10 @@ impl Iterator for IterFindAdjustments<'_> {
             //     muzzle_pitch.to_degrees(),
             //     self.elevation_adjustment.to_degrees());
             Some(Err(Error::new(ErrorKind::AngleNotChanging {
-                count: self.count,
-                pitch: self.sim.scope.pitch.to_minutes(),
-                yaw: self.sim.scope.yaw.to_minutes(),
-            }
-            )))
+                count,
+                pitch,
+                yaw,
+            })))
         } else if true
             && self.sim.scope.pitch >= DEG_45
             && self.sim.scope.pitch <= -DEG_90
@@ -61,35 +72,29 @@ impl Iterator for IterFindAdjustments<'_> {
             && self.sim.scope.yaw <= -DEG_90
         {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::AngleRange {
-                count: self.count,
-                pitch: self.sim.scope.pitch.to_minutes(),
-                yaw: self.sim.scope.yaw.to_minutes(),
-            })))
+            Some(Err(Error::new(ErrorKind::AngleRange { count, pitch, yaw })))
         } else if let Some(packet) = self
             .sim
             .into_iter()
             .fuse()
-            .find(|p| p.relative_position().x >= self.zero_distance)
+            .find(|p| p.relative_position().x >= distance)
         {
-            self.elevation_adjustment =
-                packet.offset_vertical_moa(self.zero_elevation_offset, self.zero_tolerance);
-            self.windage_adjustment =
-                packet.offset_horizontal_moa(self.zero_windage_offset, self.zero_tolerance);
+            self.elevation_adjustment = packet.offset_vertical_moa(elevation_offset, tolerance);
+            self.windage_adjustment = packet.offset_horizontal_moa(windage_offset, tolerance);
             // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
             // eprintln!("");
             Some(Ok((
-                self.sim.scope.pitch,
-                self.sim.scope.yaw,
+                pitch,
+                yaw,
                 packet.relative_position().y,
                 packet.relative_position().z,
             )))
         } else {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
-            Some(Err(Error::new(ErrorKind::TerminalVelocity{
-                count: self.count,
-                pitch: self.sim.scope.pitch.to_minutes(),
-                yaw: self.sim.scope.yaw.to_minutes(),
+            Some(Err(Error::new(ErrorKind::TerminalVelocity {
+                count,
+                pitch,
+                yaw,
             })))
         }
     }
@@ -98,17 +103,17 @@ impl Iterator for IterFindAdjustments<'_> {
 impl Simulation {
     fn find_adjustments(
         &mut self,
-        zero_distance: Numeric,
-        zero_elevation_offset: Numeric,
-        zero_windage_offset: Numeric,
-        zero_tolerance: Numeric,
+        distance: Numeric,
+        elevation_offset: Numeric,
+        windage_offset: Numeric,
+        tolerance: Numeric,
     ) -> IterFindAdjustments {
         IterFindAdjustments {
             sim: self,
-            zero_distance,
-            zero_elevation_offset,
-            zero_windage_offset,
-            zero_tolerance,
+            distance,
+            elevation_offset,
+            windage_offset,
+            tolerance,
             elevation_adjustment: Angle::Radians(0.0),
             windage_adjustment: Angle::Radians(0.0),
             count: 0u64,
@@ -121,52 +126,47 @@ impl Simulation {
     // This should also work for windage adjustments as well
     pub fn zero(
         mut self,
-        zero_distance: Numeric,
-        zero_elevation_offset: Numeric,
-        zero_windage_offset: Numeric,
-        zero_tolerance: Numeric,
+        distance: Numeric,
+        elevation_offset: Numeric,
+        windage_offset: Numeric,
+        tolerance: Numeric,
     ) -> Result<Simulation> {
-        let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
-        let zero_elevation_offset = Length::Inches(zero_elevation_offset).to_meters().to_num();
-        let zero_windage_offset = Length::Inches(zero_windage_offset).to_meters().to_num();
-        let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
-        self.find_adjustments(
-            zero_distance,
-            zero_elevation_offset,
-            zero_windage_offset,
-            zero_tolerance,
-        )
-        .find_map(|result| match result {
-            Ok((_, _, elevation, windage)) => {
-                if true
-                    && elevation >= (zero_elevation_offset - zero_tolerance)
-                    && elevation <= (zero_elevation_offset + zero_tolerance)
-                    && windage >= (zero_windage_offset - zero_tolerance)
-                    && windage <= (zero_windage_offset + zero_tolerance)
-                {
-                    Some(result)
-                } else {
-                    None
+        let distance = Length::Yards(distance).to_meters().to_num();
+        let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
+        let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
+        let tolerance = Length::Inches(tolerance).to_meters().to_num();
+        self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
+            .find_map(|result| match result {
+                Ok((_, _, elevation, windage)) => {
+                    if true
+                        && elevation >= (elevation_offset - tolerance)
+                        && elevation <= (elevation_offset + tolerance)
+                        && windage >= (windage_offset - tolerance)
+                        && windage <= (windage_offset + tolerance)
+                    {
+                        Some(result)
+                    } else {
+                        None
+                    }
                 }
-            }
-            result @ Err(_) => Some(result),
-        })
-        .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
-        .map(|(pitch, yaw, _, _)| {
-            self.scope = Scope {
-                pitch,
-                yaw,
-                ..self.scope
-            }; // Keep roll same, not adjusted during zeroing
-            self
-        })
+                result @ Err(_) => Some(result),
+            })
+            .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
+            .map(|(pitch, yaw, _, _)| {
+                self.scope = Scope {
+                    pitch,
+                    yaw,
+                    ..self.scope
+                }; // Keep roll same, not adjusted during zeroing
+                self
+            })
     }
     pub fn try_mut_zero(
         &mut self,
-        zero_distance: Numeric,
-        zero_elevation_offset: Numeric,
-        zero_windage_offset: Numeric,
-        zero_tolerance: Numeric,
+        distance: Numeric,
+        elevation_offset: Numeric,
+        windage_offset: Numeric,
+        tolerance: Numeric,
     ) -> Result<()> {
         let Scope {
             pitch: prev_pitch,
@@ -178,35 +178,30 @@ impl Simulation {
             yaw: Angle::Radians(0.0),
             ..self.scope
         };
-        let zero_distance = Length::Yards(zero_distance).to_meters().to_num();
-        let zero_elevation_offset = Length::Inches(zero_elevation_offset).to_meters().to_num();
-        let zero_windage_offset = Length::Inches(zero_windage_offset).to_meters().to_num();
-        let zero_tolerance = Length::Inches(zero_tolerance).to_meters().to_num();
-        self.find_adjustments(
-            zero_distance,
-            zero_elevation_offset,
-            zero_windage_offset,
-            zero_tolerance,
-        )
-        .find_map(|result| match result {
-            Ok((_, _, elevation, windage)) => {
-                if true
-                    && elevation >= (zero_elevation_offset - zero_tolerance)
-                    && elevation <= (zero_elevation_offset + zero_tolerance)
-                    && windage >= (zero_windage_offset - zero_tolerance)
-                    && windage <= (zero_windage_offset + zero_tolerance)
-                {
-                    Some(result)
-                } else {
-                    None
+        let distance = Length::Yards(distance).to_meters().to_num();
+        let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
+        let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
+        let tolerance = Length::Inches(tolerance).to_meters().to_num();
+        self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
+            .find_map(|result| match result {
+                Ok((_, _, elevation, windage)) => {
+                    if true
+                        && elevation >= (elevation_offset - tolerance)
+                        && elevation <= (elevation_offset + tolerance)
+                        && windage >= (windage_offset - tolerance)
+                        && windage <= (windage_offset + tolerance)
+                    {
+                        Some(result)
+                    } else {
+                        None
+                    }
                 }
-            }
-            result @ Err(_) => Some(result),
-        })
-        .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
-        .map(|(pitch, yaw, _, _)| {
-            self.scope.pitch = pitch + prev_pitch;
-            self.scope.yaw = yaw + prev_yaw;
-        })
+                result @ Err(_) => Some(result),
+            })
+            .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
+            .map(|(pitch, yaw, _, _)| {
+                self.scope.pitch = pitch + prev_pitch;
+                self.scope.yaw = yaw + prev_yaw;
+            })
     }
 }
