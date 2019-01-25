@@ -41,6 +41,9 @@ impl Iterator for IterFindAdjustments<'_> {
             ..
         } = self;
 
+        // Capture current adjustments/count for use during checks later
+        // Cannot return pitch/yaw here, as zeroth iteration doesn't have
+        // meaningful value for elevation/windage - really have to run iter at least once
         self.count += 1;
         self.sim.scope.pitch += self.elevation_adjustment;
         self.sim.scope.yaw += self.windage_adjustment;
@@ -65,12 +68,7 @@ impl Iterator for IterFindAdjustments<'_> {
                 pitch,
                 yaw,
             })))
-        } else if true
-            && self.sim.scope.pitch >= DEG_45
-            && self.sim.scope.pitch <= -DEG_90
-            && self.sim.scope.yaw >= DEG_90
-            && self.sim.scope.yaw <= -DEG_90
-        {
+        } else if pitch >= DEG_45 && pitch <= -DEG_90 && yaw >= DEG_90 && yaw <= -DEG_90 {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err(Error::new(ErrorKind::AngleRange { count, pitch, yaw })))
         } else if let Some(packet) = self
@@ -81,14 +79,11 @@ impl Iterator for IterFindAdjustments<'_> {
         {
             self.elevation_adjustment = packet.offset_vertical_moa(elevation_offset, tolerance);
             self.windage_adjustment = packet.offset_horizontal_moa(windage_offset, tolerance);
+            let elevation = packet.relative_position().y;
+            let windage = packet.relative_position().z;
             // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
             // eprintln!("");
-            Some(Ok((
-                pitch,
-                yaw,
-                packet.relative_position().y,
-                packet.relative_position().z,
-            )))
+            Some(Ok((pitch, yaw, elevation, windage)))
         } else {
             // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err(Error::new(ErrorKind::TerminalVelocity {
@@ -149,7 +144,7 @@ impl Simulation {
                         None
                     }
                 }
-                result @ Err(_) => Some(result),
+                err @ Err(_) => Some(err),
             })
             .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
             .map(|(pitch, yaw, _, _)| {
@@ -196,7 +191,7 @@ impl Simulation {
                         None
                     }
                 }
-                result @ Err(_) => Some(result),
+                err @ Err(_) => Some(err),
             })
             .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
             .map(|(pitch, yaw, _, _)| {

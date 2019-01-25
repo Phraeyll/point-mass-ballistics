@@ -54,18 +54,26 @@ impl StdDisplay for Error {
         match *self.0 {
             ErrorKind::VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
             ErrorKind::PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
-            ErrorKind::OutOfRange{ref min, ref max} => {
-                write!(f, "Within Range Expected Error => min: {:#?} - {:#?}", min, max)
-            }
-            ErrorKind::AngleRange{count, pitch, yaw} => {
-                write!(f, "{}: Outside Valid Range Error => pitch: {:#?}, yaw: {:#?}", count, pitch, yaw)
-            }
-            ErrorKind::TerminalVelocity{count, pitch, yaw} => {
-                write!(f, "{}: Terminal Velocity Error => pitch: {:#?}, yaw: {:#?}", count, pitch, yaw)
-            }
-            ErrorKind::AngleNotChanging{count, pitch, yaw} => {
-                write!(f, "{}: Angle Not Changing Error => pitch: {:#?}, yaw: {:#?}", count, pitch, yaw)
-            }
+            ErrorKind::OutOfRange { ref min, ref max } => write!(
+                f,
+                "Within Range Expected Error => min: {:#?} - {:#?}",
+                min, max
+            ),
+            ErrorKind::AngleRange { count, pitch, yaw } => write!(
+                f,
+                "{}: Outside Valid Range Error => pitch: {:#?}, yaw: {:#?}",
+                count, pitch, yaw
+            ),
+            ErrorKind::TerminalVelocity { count, pitch, yaw } => write!(
+                f,
+                "{}: Terminal Velocity Error => pitch: {:#?}, yaw: {:#?}",
+                count, pitch, yaw
+            ),
+            ErrorKind::AngleNotChanging { count, pitch, yaw } => write!(
+                f,
+                "{}: Angle Not Changing Error => pitch: {:#?}, yaw: {:#?}",
+                count, pitch, yaw
+            ),
         }
     }
 }
@@ -74,10 +82,10 @@ impl StdError for Error {
         match *self.0 {
             ErrorKind::VelocityLookup(_) => "Velocity out of range",
             ErrorKind::PositiveExpected(..) => "Number needs to be positive greater than 0",
-            ErrorKind::OutOfRange{..} => "Numer needs to be within range",
-            ErrorKind::AngleRange{..} => "Angle out of range",
-            ErrorKind::TerminalVelocity{..} => "Terminal velocity reached",
-            ErrorKind::AngleNotChanging{..} => "Angle not changing curing iteration",
+            ErrorKind::OutOfRange { .. } => "Numer needs to be within range",
+            ErrorKind::AngleRange { .. } => "Angle out of range",
+            ErrorKind::TerminalVelocity { .. } => "Terminal velocity reached",
+            ErrorKind::AngleNotChanging { .. } => "Angle not changing curing iteration",
         }
     }
 }
