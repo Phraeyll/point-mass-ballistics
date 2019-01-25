@@ -4,8 +4,9 @@ use crate::util::*;
 impl Builder for SimulationBuilder {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    fn new() -> Self {
-        Self::default()
+    type Simulation = Simulation;
+    fn init(self) -> Self::Simulation {
+        Self::Simulation::from(self)
     }
     fn time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
@@ -17,25 +18,16 @@ impl Builder for SimulationBuilder {
         }
     }
 }
-impl Finalizer for Result<SimulationBuilder> {
-    type Simulation = Simulation;
-    fn init(self) -> Result<Self::Simulation> {
-        match self {
-            Ok(result) => Ok(Simulation::from(result)),
-            Err(err) => Err(err),
-        }
-    }
-}
-
-pub trait Finalizer {
-    type Simulation;
-    fn init(self) -> Result<Self::Simulation>
-    where
-        Self: Sized;
-}
 
 pub trait Builder {
+    type Simulation;
     fn new() -> Self
+    where
+        Self: Sized + Default,
+    {
+        Self::default()
+    }
+    fn init(self) -> Self::Simulation
     where
         Self: Sized;
     fn time_step(self, value: Numeric) -> Result<Self>
