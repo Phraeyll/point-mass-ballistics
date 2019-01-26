@@ -1,6 +1,8 @@
 use crate::util::conversions::*;
 use crate::util::Numeric;
 
+use ErrorKind::*;
+
 use std::error::Error as StdError;
 use std::fmt;
 use std::fmt::Display as StdDisplay;
@@ -26,6 +28,7 @@ impl Error {
 
 #[derive(Debug)]
 pub enum ErrorKind {
+    BcKindNull,
     VelocityLookup(Numeric),
     PositiveExpected(Numeric),
     OutOfRange {
@@ -52,24 +55,25 @@ pub enum ErrorKind {
 impl StdDisplay for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
-            ErrorKind::VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
-            ErrorKind::PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
-            ErrorKind::OutOfRange { ref min, ref max } => write!(
+            BcKindNull => write!(f, "Bc need to be set before inititializing simulatin"),
+            VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
+            PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
+            OutOfRange { ref min, ref max } => write!(
                 f,
                 "Within Range Expected Error => min: {:#?} - {:#?}",
                 min, max
             ),
-            ErrorKind::AngleRange { count, pitch, yaw } => write!(
+            AngleRange { count, pitch, yaw } => write!(
                 f,
                 "{}: Outside Valid Range Error => pitch: {:#?}, yaw: {:#?}",
                 count, pitch, yaw
             ),
-            ErrorKind::TerminalVelocity { count, pitch, yaw } => write!(
+            TerminalVelocity { count, pitch, yaw } => write!(
                 f,
                 "{}: Terminal Velocity Error => pitch: {:#?}, yaw: {:#?}",
                 count, pitch, yaw
             ),
-            ErrorKind::AngleNotChanging { count, pitch, yaw } => write!(
+            AngleNotChanging { count, pitch, yaw } => write!(
                 f,
                 "{}: Angle Not Changing Error => pitch: {:#?}, yaw: {:#?}",
                 count, pitch, yaw
@@ -80,12 +84,13 @@ impl StdDisplay for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self.0 {
-            ErrorKind::VelocityLookup(_) => "Velocity out of range",
-            ErrorKind::PositiveExpected(..) => "Number needs to be positive greater than 0",
-            ErrorKind::OutOfRange { .. } => "Numer needs to be within range",
-            ErrorKind::AngleRange { .. } => "Angle out of range",
-            ErrorKind::TerminalVelocity { .. } => "Terminal velocity reached",
-            ErrorKind::AngleNotChanging { .. } => "Angle not changing curing iteration",
+            BcKindNull => "BcKind is null",
+            VelocityLookup(_) => "Velocity out of range",
+            PositiveExpected(..) => "Number needs to be positive greater than 0",
+            OutOfRange { .. } => "Numer needs to be within range",
+            AngleRange { .. } => "Angle out of range",
+            TerminalVelocity { .. } => "Terminal velocity reached",
+            AngleNotChanging { .. } => "Angle not changing curing iteration",
         }
     }
 }

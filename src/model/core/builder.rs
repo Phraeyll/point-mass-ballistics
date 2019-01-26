@@ -5,8 +5,11 @@ impl Builder for SimulationBuilder {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     type Simulation = Simulation;
-    fn init(self) -> Self::Simulation {
-        Self::Simulation::from(self)
+    fn init(self) -> Result<Self::Simulation> {
+        match self.projectile.bc.kind {
+            BcKind::Null => Err(Error::new(ErrorKind::BcKindNull)),
+            _ => Ok(Self::Simulation::from(self)),
+        }
     }
     fn time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
@@ -27,15 +30,10 @@ pub trait Builder {
     {
         Self::default()
     }
-    fn init(self) -> Self::Simulation
+    fn init(self) -> Result<Self::Simulation>
     where
         Self: Sized;
     fn time_step(self, value: Numeric) -> Result<Self>
-    where
-        Self: Sized;
-}
-pub trait BcAdjuster {
-    fn set_bc(self, value: Numeric, kind: BcKind) -> Result<Self>
     where
         Self: Sized;
 }
@@ -66,6 +64,9 @@ pub trait ProjectileAdjuster {
     where
         Self: Sized;
     fn set_caliber(self, value: Numeric) -> Result<Self>
+    where
+        Self: Sized;
+    fn set_bc(self, value: Numeric, kind: BcKind) -> Result<Self>
     where
         Self: Sized;
 }

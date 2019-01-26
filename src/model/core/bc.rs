@@ -1,4 +1,4 @@
-use crate::model::core::{dragtables::*, BcAdjuster, SimulationBuilder};
+use crate::model::core::dragtables::*;
 use crate::util::*;
 pub use BcKind::*;
 
@@ -12,6 +12,7 @@ pub enum BcKind {
     G8,
     GI,
     GS,
+    Null,
 }
 #[derive(Debug)]
 pub struct Bc {
@@ -48,22 +49,11 @@ impl Default for BcBuilder {
         // Arbitrary data - intended to be set by with method above at initialization point
         Self {
             value: 0.0,
-            kind: G1,
+            kind: Null,
             table: float_map![],
         }
     }
 }
-impl BcAdjuster for SimulationBuilder {
-    fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
-        if value.is_sign_positive() {
-            self.projectile.bc = BcBuilder::new(value, kind);
-            Ok(self)
-        } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
-        }
-    }
-}
-
 impl Bc {
     pub fn value(&self) -> Numeric {
         self.value
@@ -89,6 +79,7 @@ impl BcBuilder {
                 G8 => g8::init(),
                 GI => gi::init(),
                 GS => gs::init(),
+                Null => float_map![],
             },
         }
     }
