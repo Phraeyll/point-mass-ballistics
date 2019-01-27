@@ -67,7 +67,17 @@ impl<'s> Iterator for IterSimulation<'s> {
     }
 }
 
-pub trait Newtonian<'s> {
+pub trait StandardPointMass<'s>
+where
+    Self: Drag<'s> + Coriolis<'s> + Gravity,
+{
+    fn total_acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
+    }
+}
+impl<'s> StandardPointMass<'s> for IterSimulation<'s> {}
+
+pub trait Newtonian<'s> where Self: StandardPointMass<'s> {
     type Output;
     fn output(
         &self,
@@ -75,20 +85,28 @@ pub trait Newtonian<'s> {
         position: Vector3<Numeric>,
         velocity: Vector3<Numeric>,
     ) -> Self::Output;
-    fn time_step(&self) -> Numeric;
-    fn acceleration(&self) -> Vector3<Numeric>;
-
-    fn time(&self) -> Numeric;
-    fn position(&self) -> Vector3<Numeric>;
-    fn velocity(&self) -> Vector3<Numeric>;
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.total_acceleration()
+    }
 
     fn increment_time(&mut self);
+    fn time(&self) -> Numeric;
+    fn delta_time(&self) -> Numeric;
 
     // 'Second Equation of Motion'
     fn increment_position(&mut self);
+    fn position(&self) -> Vector3<Numeric>;
+    fn delta_position(&self) -> Vector3<Numeric> {
+        self.velocity() * self.delta_time()
+            + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
+    }
 
     // 'First Equation of Motion'
     fn increment_velocity(&mut self);
+    fn velocity(&self) -> Vector3<Numeric>;
+    fn delta_velocity(&self) -> Vector3<Numeric> {
+        self.acceleration() * self.delta_time()
+    }
 }
 
 pub trait Drag<'s>
@@ -166,7 +184,8 @@ pub trait Gravity {
     }
 }
 
-impl<'s> Newtonian<'s> for IterSimulation<'s> {
+impl<'s> Newtonian<'s> for IterSimulation<'s>
+{
     type Output = Packet<'s>;
     fn output(
         &self,
@@ -181,21 +200,17 @@ impl<'s> Newtonian<'s> for IterSimulation<'s> {
             velocity,
         }
     }
-    fn time_step(&self) -> Numeric {
+    fn delta_time(&self) -> Numeric {
         self.simulation.time_step
     }
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
     fn increment_time(&mut self) {
-        self.time += self.time_step();
+        self.time += self.delta_time();
     }
     fn increment_position(&mut self) {
-        self.position += self.velocity() * self.time_step()
-            + 0.5 * (self.acceleration() * self.time_step().powf(2.0));
+        self.position += self.delta_position();
     }
     fn increment_velocity(&mut self) {
-        self.velocity += self.acceleration() * self.time_step();
+        self.velocity += self.delta_velocity();
     }
     fn time(&self) -> Numeric {
         self.time
