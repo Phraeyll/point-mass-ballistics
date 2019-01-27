@@ -38,7 +38,7 @@ impl<'s> IntoIterator for &'s Simulation {
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
-    type Item = <Self as Newtonian<'s>>::Thing;
+    type Item = <Self as Newtonian<'s>>::Output;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let time = Newtonian::time(self);
@@ -68,13 +68,13 @@ impl<'s> Iterator for IterSimulation<'s> {
 }
 
 pub trait Newtonian<'s> {
-    type Thing;
+    type Output;
     fn output(
         &self,
         time: Numeric,
         position: Vector3<Numeric>,
         velocity: Vector3<Numeric>,
-    ) -> Self::Thing;
+    ) -> Self::Output;
     fn delta_time(&self) -> Numeric;
 
     // 'Second Equation of Motion'
@@ -175,14 +175,14 @@ pub trait Gravity {
 }
 
 impl<'s> Newtonian<'s> for IterSimulation<'s> {
-    type Thing = Packet<'s>;
+    type Output = Packet<'s>;
     fn output(
         &self,
         time: Numeric,
         position: Vector3<Numeric>,
         velocity: Vector3<Numeric>,
-    ) -> Self::Thing {
-        Self::Thing {
+    ) -> Self::Output {
+        Self::Output {
             simulation: &self.simulation,
             time,
             position,
