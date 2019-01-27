@@ -38,7 +38,7 @@ impl<'s> IntoIterator for &'s Simulation {
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
-    type Item = <Self as Newtonian<'s>>::Output;
+    type Item = Packet<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let time = Newtonian::time(self);
@@ -60,21 +60,19 @@ impl<'s> Iterator for IterSimulation<'s> {
         // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
         // how to check previous iteration values in standard iterator adaptors.
         if Newtonian::position(self).x != position.x {
-            Some(self.output(time, position, velocity))
+            Some(Self::Item {
+                simulation: &self.simulation,
+                time,
+                position,
+                velocity,
+            })
         } else {
             None
         }
     }
 }
 
-pub trait Newtonian<'s> {
-    type Output;
-    fn output(
-        &self,
-        time: Numeric,
-        position: Vector3<Numeric>,
-        velocity: Vector3<Numeric>,
-    ) -> Self::Output;
+trait Newtonian<'s> {
     fn acceleration(&self) -> Vector3<Numeric>;
 
     fn increment_time(&mut self);
@@ -97,7 +95,7 @@ pub trait Newtonian<'s> {
     }
 }
 
-pub trait Drag<'s>
+trait Drag<'s>
 where
     Self: Newtonian<'s>,
 {
@@ -139,7 +137,7 @@ where
     }
 }
 
-pub trait Coriolis<'s>
+trait Coriolis<'s>
 where
     Self: Newtonian<'s>,
 {
@@ -173,20 +171,6 @@ pub trait Gravity {
 }
 
 impl<'s> Newtonian<'s> for IterSimulation<'s> {
-    type Output = Packet<'s>;
-    fn output(
-        &self,
-        time: Numeric,
-        position: Vector3<Numeric>,
-        velocity: Vector3<Numeric>,
-    ) -> Self::Output {
-        Self::Output {
-            simulation: &self.simulation,
-            time,
-            position,
-            velocity,
-        }
-    }
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
