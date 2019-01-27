@@ -16,7 +16,16 @@ pub struct Simulation {
     pub(crate) shooter: Shooter,
     pub(crate) time_step: Numeric,
 }
-
+#[derive(Debug)]
+pub struct SimulationBuilder {
+    pub flags: FlagsBuilder, // Flags to enable/disable certain parts of simulation
+    pub projectile: ProjectileBuilder, // Use same projectile for zeroing and solving
+    pub scope: ScopeBuilder, // Use same scope for zeroing and solving
+    pub atmosphere: AtmosphereBuilder, // Different conditions during solving
+    pub wind: WindBuilder,   // Different conditions during solving
+    pub shooter: ShooterBuilder, // Different conditions during solving
+    pub time_step: Numeric,  // Use same timestep for zeroing and solving
+}
 impl From<SimulationBuilder> for Simulation {
     fn from(other: SimulationBuilder) -> Self {
         Self {
@@ -30,17 +39,6 @@ impl From<SimulationBuilder> for Simulation {
         }
     }
 }
-#[derive(Debug)]
-pub struct SimulationBuilder {
-    pub flags: FlagsBuilder, // Flags to enable/disable certain parts of simulation
-    pub projectile: ProjectileBuilder, // Use same projectile for zeroing and solving
-    pub scope: ScopeBuilder, // Use same scope for zeroing and solving
-    pub atmosphere: AtmosphereBuilder, // Different conditions during solving
-    pub wind: WindBuilder,   // Different conditions during solving
-    pub shooter: ShooterBuilder, // Different conditions during solving
-    pub time_step: Numeric,  // Use same timestep for zeroing and solving
-}
-
 impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
         Self {
@@ -101,4 +99,15 @@ impl Simulation {
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
     }
+}
+
+#[derive(Debug)]
+pub struct RefSimulation<'a> {
+    pub flags: &'a Flags,
+    pub projectile: &'a Projectile,
+    pub scope: &'a Scope,
+    pub atmosphere: &'a Atmosphere,
+    pub wind: &'a Wind,
+    pub shooter: &'a Shooter,
+    pub time_step: Numeric,
 }
