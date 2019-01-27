@@ -41,13 +41,16 @@ impl<'s> Iterator for IterSimulation<'s> {
     type Item = Packet<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
-        let time = Newtonian::time(self);
-        let position = Newtonian::position(self);
-        let velocity = Newtonian::velocity(self);
+        let &mut Self {
+            time,
+            position,
+            velocity,
+            ..
+        } = self;
 
-        self.increment_time();
-        self.increment_position();
-        self.increment_velocity();
+        self.time += self.delta_time();
+        self.position += self.delta_position();
+        self.velocity += self.delta_velocity();
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -75,12 +78,10 @@ impl<'s> Iterator for IterSimulation<'s> {
 trait Newtonian<'s> {
     fn acceleration(&self) -> Vector3<Numeric>;
 
-    fn increment_time(&mut self);
     fn time(&self) -> Numeric;
     fn delta_time(&self) -> Numeric;
 
     // 'Second Equation of Motion'
-    fn increment_position(&mut self);
     fn position(&self) -> Vector3<Numeric>;
     fn delta_position(&self) -> Vector3<Numeric> {
         self.velocity() * self.delta_time()
@@ -88,7 +89,6 @@ trait Newtonian<'s> {
     }
 
     // 'First Equation of Motion'
-    fn increment_velocity(&mut self);
     fn velocity(&self) -> Vector3<Numeric>;
     fn delta_velocity(&self) -> Vector3<Numeric> {
         self.acceleration() * self.delta_time()
@@ -176,15 +176,6 @@ impl<'s> Newtonian<'s> for IterSimulation<'s> {
     }
     fn delta_time(&self) -> Numeric {
         self.simulation.time_step
-    }
-    fn increment_time(&mut self) {
-        self.time += self.delta_time();
-    }
-    fn increment_position(&mut self) {
-        self.position += self.delta_position();
-    }
-    fn increment_velocity(&mut self) {
-        self.velocity += self.delta_velocity();
     }
     fn time(&self) -> Numeric {
         self.time
