@@ -67,17 +67,7 @@ impl<'s> Iterator for IterSimulation<'s> {
     }
 }
 
-pub trait StandardPointMass<'s>
-where
-    Self: Drag<'s> + Coriolis<'s> + Gravity,
-{
-    fn total_acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
-}
-impl<'s> StandardPointMass<'s> for IterSimulation<'s> {}
-
-pub trait Newtonian<'s> where Self: StandardPointMass<'s> {
+pub trait Newtonian<'s> {
     type Output;
     fn output(
         &self,
@@ -85,9 +75,7 @@ pub trait Newtonian<'s> where Self: StandardPointMass<'s> {
         position: Vector3<Numeric>,
         velocity: Vector3<Numeric>,
     ) -> Self::Output;
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.total_acceleration()
-    }
+    fn acceleration(&self) -> Vector3<Numeric>;
 
     fn increment_time(&mut self);
     fn time(&self) -> Numeric;
@@ -184,8 +172,7 @@ pub trait Gravity {
     }
 }
 
-impl<'s> Newtonian<'s> for IterSimulation<'s>
-{
+impl<'s> Newtonian<'s> for IterSimulation<'s> {
     type Output = Packet<'s>;
     fn output(
         &self,
@@ -199,6 +186,9 @@ impl<'s> Newtonian<'s> for IterSimulation<'s>
             position,
             velocity,
         }
+    }
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
     fn delta_time(&self) -> Numeric {
         self.simulation.time_step
