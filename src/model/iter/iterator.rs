@@ -45,9 +45,9 @@ impl<'s> Iterator for IterSimulation<'s> {
         let position = Newtonian::position(self);
         let velocity = Newtonian::velocity(self);
 
-        self.increment_time(self.delta_time());
-        self.increment_position(self.delta_position());
-        self.increment_velocity(self.delta_velocity());
+        self.increment_time();
+        self.increment_position();
+        self.increment_velocity();
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -75,28 +75,20 @@ pub trait Newtonian<'s> {
         position: Vector3<Numeric>,
         velocity: Vector3<Numeric>,
     ) -> Self::Output;
-    fn delta_time(&self) -> Numeric;
-
-    // 'Second Equation of Motion'
-    fn delta_position(&self) -> Vector3<Numeric> {
-        self.velocity() * self.delta_time()
-            + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
-    }
-
-    // 'First Equation of Motion'
-    fn delta_velocity(&self) -> Vector3<Numeric> {
-        self.acceleration() * self.delta_time()
-    }
-
+    fn time_step(&self) -> Numeric;
     fn acceleration(&self) -> Vector3<Numeric>;
 
     fn time(&self) -> Numeric;
     fn position(&self) -> Vector3<Numeric>;
     fn velocity(&self) -> Vector3<Numeric>;
 
-    fn increment_time(&mut self, value: Numeric);
-    fn increment_position(&mut self, value: Vector3<Numeric>);
-    fn increment_velocity(&mut self, value: Vector3<Numeric>);
+    fn increment_time(&mut self);
+
+    // 'Second Equation of Motion'
+    fn increment_position(&mut self);
+
+    // 'First Equation of Motion'
+    fn increment_velocity(&mut self);
 }
 
 pub trait Drag<'s>
@@ -189,20 +181,21 @@ impl<'s> Newtonian<'s> for IterSimulation<'s> {
             velocity,
         }
     }
-    fn delta_time(&self) -> Numeric {
+    fn time_step(&self) -> Numeric {
         self.simulation.time_step
     }
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
-    fn increment_time(&mut self, value: Numeric) {
-        self.time += value;
+    fn increment_time(&mut self) {
+        self.time += self.time_step();
     }
-    fn increment_position(&mut self, value: Vector3<Numeric>) {
-        self.position += value;
+    fn increment_position(&mut self) {
+        self.position += self.velocity() * self.time_step()
+            + 0.5 * (self.acceleration() * self.time_step().powf(2.0));
     }
-    fn increment_velocity(&mut self, value: Vector3<Numeric>) {
-        self.velocity += value;
+    fn increment_velocity(&mut self) {
+        self.velocity += self.acceleration() * self.time_step();
     }
     fn time(&self) -> Numeric {
         self.time
