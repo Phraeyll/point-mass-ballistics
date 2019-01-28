@@ -48,6 +48,7 @@ pub mod model {
 
         mod iterator;
         mod packet;
+        pub(crate) mod physics;
     }
     pub mod core {
         pub use crate::util::{conversions::*, Natural, Numeric};
