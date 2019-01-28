@@ -40,12 +40,23 @@ where
             .pivot_y(self.shooter().yaw())
     }
 }
+pub trait GetVelocity {
+    fn velocity(&self) -> Vector3<Numeric>;
+}
+impl<I> Newtonian for I
+where
+    I: Coriolis + Drag + Gravity,
+{
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
+    }
+}
 pub trait Newtonian
 where
     Self: SimulationHandle,
+    Self: GetVelocity,
 {
     fn acceleration(&self) -> Vector3<Numeric>;
-    fn velocity(&self) -> Vector3<Numeric>;
     fn delta_time(&self) -> Numeric {
         self.simulation().time_step()
     }
@@ -61,7 +72,7 @@ where
 }
 pub trait Drag
 where
-    Self: Newtonian,
+    Self: GetVelocity,
     Self: SimulationHandle,
 {
     fn drag_flag(&self) -> bool {
@@ -127,7 +138,7 @@ where
 }
 pub trait Coriolis
 where
-    Self: Newtonian,
+    Self: GetVelocity,
     Self: SimulationHandle,
 {
     fn coriolis_flag(&self) -> bool {

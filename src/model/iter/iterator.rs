@@ -108,11 +108,8 @@ impl ParameterHandles for Simulation {
 impl Coriolis for IterSimulation<'_> {}
 impl Drag for IterSimulation<'_> {}
 impl Gravity for IterSimulation<'_> {}
-impl Newtonian for IterSimulation<'_> {
+impl GetVelocity for IterSimulation<'_> {
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
-    }
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
 }
