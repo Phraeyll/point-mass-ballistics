@@ -1,5 +1,3 @@
-use nalgebra::Vector3;
-
 use crate::model::core::{
     Atmosphere, AtmosphereBuilder, Flags, FlagsBuilder, Projectile, ProjectileBuilder, Scope,
     ScopeBuilder, Shooter, ShooterBuilder, Wind, WindBuilder,
@@ -63,41 +61,6 @@ impl Default for SimulationBuilder {
             shooter: ShooterBuilder::default(),
             time_step: 0.000_001,
         }
-    }
-}
-
-impl Simulation {
-    //TODO: I think this actually does need to be euler angles now, look into
-
-    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
-    // Start with velocity value along X unit vector
-    pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
-        self.projectile
-            .velocity(&self.scope)
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
-    }
-    // Projectiles position relative to scope
-    pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
-        -self
-            .scope
-            .position()
-            .pivot_x(self.shooter.roll())
-            .pivot_x(-self.scope.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
-    }
-    // Velocity vector of wind, only horizontal at the moment
-    // Does not adjust according to line of sight, since most would measure wind
-    // along relative bearing - I don't think many would factor in a 'downhill' wind for example
-    // This would be interresting to think of, however.
-    pub(crate) fn absolute_wind_velocity(&self) -> Vector3<Numeric> {
-        self.wind
-            .velocity()
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
     }
 }
 
