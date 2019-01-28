@@ -18,14 +18,11 @@ pub struct IterSimulation<'s> {
 impl Simulation {
     pub fn iter(&self) -> IterSimulation {
         IterSimulation {
-            simulation: self.handle(),
+            simulation: self,
             position: self.absolute_projectile_position(),
             velocity: self.absolute_projectile_velocity(),
             time: 0.0,
         }
-    }
-    fn handle(&self) -> &Self {
-        &self
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
@@ -56,8 +53,9 @@ impl<'s> IntoIterator for &'s Simulation {
         self.iter()
     }
 }
+
 trait SimulationHandle {
-    type Simulation: Handles;
+    type Simulation: ParameterHandles;
     fn simulation(&self) -> &Simulation;
 }
 impl SimulationHandle for IterSimulation<'_> {
@@ -103,7 +101,7 @@ impl<'s> Iterator for IterSimulation<'s> {
         }
     }
 }
-trait Handles {
+trait ParameterHandles {
     fn flags(&self) -> &Flags;
     fn projectile(&self) -> &Projectile;
     fn scope(&self) -> &Scope;
@@ -111,7 +109,7 @@ trait Handles {
     fn atmosphere(&self) -> &Atmosphere;
     fn wind(&self) -> &Wind;
 }
-impl Handles for Simulation {
+impl ParameterHandles for Simulation {
     fn flags(&self) -> &Flags {
         &self.flags
     }
@@ -137,16 +135,17 @@ where
     Self: SimulationHandle,
 {
     fn acceleration(&self) -> Vector3<Numeric>;
+    fn time(&self) -> Numeric;
+    fn position(&self) -> Vector3<Numeric>;
+    fn velocity(&self) -> Vector3<Numeric>;
 
     fn increment_time(&mut self);
-    fn time(&self) -> Numeric;
     fn delta_time(&self) -> Numeric {
         self.simulation().time_step
     }
 
     // 'Second Equation of Motion'
     fn increment_position(&mut self);
-    fn position(&self) -> Vector3<Numeric>;
     fn delta_position(&self) -> Vector3<Numeric> {
         self.velocity() * self.delta_time()
             + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
@@ -154,7 +153,6 @@ where
 
     // 'First Equation of Motion'
     fn increment_velocity(&mut self);
-    fn velocity(&self) -> Vector3<Numeric>;
     fn delta_velocity(&self) -> Vector3<Numeric> {
         self.acceleration() * self.delta_time()
     }
@@ -276,15 +274,6 @@ impl Newtonian for IterSimulation<'_> {
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
-    fn increment_time(&mut self) {
-        self.time += self.delta_time();
-    }
-    fn increment_position(&mut self) {
-        self.position += self.delta_position();
-    }
-    fn increment_velocity(&mut self) {
-        self.velocity += self.delta_velocity();
-    }
     fn time(&self) -> Numeric {
         self.time
     }
@@ -293,6 +282,15 @@ impl Newtonian for IterSimulation<'_> {
     }
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
+    }
+    fn increment_time(&mut self) {
+        self.time += self.delta_time();
+    }
+    fn increment_position(&mut self) {
+        self.position += self.delta_position();
+    }
+    fn increment_velocity(&mut self) {
+        self.velocity += self.delta_velocity();
     }
 }
 impl Coriolis for IterSimulation<'_> {}
