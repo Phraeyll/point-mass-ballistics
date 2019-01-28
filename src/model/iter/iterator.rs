@@ -56,7 +56,7 @@ impl<'s> IntoIterator for &'s Simulation {
 
 trait SimulationHandle {
     type Simulation: ParameterHandles;
-    fn simulation(&self) -> &Simulation;
+    fn simulation(&self) -> &Self::Simulation;
 }
 impl SimulationHandle for IterSimulation<'_> {
     type Simulation = Simulation;
@@ -108,6 +108,7 @@ trait ParameterHandles {
     fn shooter(&self) -> &Shooter;
     fn atmosphere(&self) -> &Atmosphere;
     fn wind(&self) -> &Wind;
+    fn time_step(&self) -> Numeric;
 }
 impl ParameterHandles for Simulation {
     fn flags(&self) -> &Flags {
@@ -128,6 +129,9 @@ impl ParameterHandles for Simulation {
     fn wind(&self) -> &Wind {
         &self.wind
     }
+    fn time_step(&self) -> Numeric {
+        self.time_step
+    }
 }
 
 trait Newtonian
@@ -141,7 +145,7 @@ where
 
     fn increment_time(&mut self);
     fn delta_time(&self) -> Numeric {
-        self.simulation().time_step
+        self.simulation().time_step()
     }
 
     // 'Second Equation of Motion'
@@ -164,19 +168,19 @@ where
     Self: SimulationHandle,
 {
     fn drag_flag(&self) -> bool {
-        self.simulation().flags.drag()
+        self.simulation().flags().drag()
     }
     fn projectile_mass(&self) -> Numeric {
-        self.simulation().projectile.mass()
+        self.simulation().projectile().mass()
     }
     fn projectile_area(&self) -> Numeric {
-        self.simulation().projectile.area()
+        self.simulation().projectile().area()
     }
     fn i(&self) -> Numeric {
-        self.simulation().projectile.i()
+        self.simulation().projectile().i()
     }
     fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation().projectile.bc.table()
+        self.simulation().projectile().bc.table()
     }
     fn wind_velocity(&self) -> Vector3<Numeric> {
         // Velocity vector of wind, only horizontal at the moment
@@ -184,17 +188,17 @@ where
         // along relative bearing - I don't think many would factor in a 'downhill' wind for example
         // This would be interresting to think of, however.
         self.simulation()
-            .wind
+            .wind()
             .velocity()
-            .pivot_x(self.simulation().shooter.roll())
-            .pivot_z(self.simulation().shooter.pitch())
-            .pivot_y(self.simulation().shooter.yaw())
+            .pivot_x(self.simulation().shooter().roll())
+            .pivot_z(self.simulation().shooter().pitch())
+            .pivot_y(self.simulation().shooter().yaw())
     }
     fn speed_of_sound(&self) -> Numeric {
-        self.simulation().atmosphere.speed_of_sound()
+        self.simulation().atmosphere().speed_of_sound()
     }
     fn rho(&self) -> Numeric {
-        self.simulation().atmosphere.rho()
+        self.simulation().atmosphere().rho()
     }
 
     fn drag_acceleration(&self) -> Vector3<Numeric> {
@@ -231,10 +235,10 @@ where
     Self: Newtonian,
 {
     fn coriolis_flag(&self) -> bool {
-        self.simulation().flags.coriolis()
+        self.simulation().flags().coriolis()
     }
     fn omega(&self) -> Vector3<Numeric> {
-        self.simulation().shooter.omega()
+        self.simulation().shooter().omega()
     }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
@@ -256,10 +260,10 @@ where
     Self: SimulationHandle,
 {
     fn gravity_flag(&self) -> bool {
-        self.simulation().flags.gravity()
+        self.simulation().flags().gravity()
     }
     fn gravity(&self) -> Vector3<Numeric> {
-        self.simulation().shooter.gravity()
+        self.simulation().shooter().gravity()
     }
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
         if self.gravity_flag() {
