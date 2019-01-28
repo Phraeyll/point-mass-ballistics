@@ -26,7 +26,7 @@ impl Simulation {
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
-    pub(crate) fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
+    fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
         self.projectile
             .velocity(&self.scope)
             .pivot_x(self.shooter.roll())
@@ -34,7 +34,7 @@ impl Simulation {
             .pivot_y(self.shooter.yaw())
     }
     // Projectiles position relative to scope
-    pub(crate) fn absolute_projectile_position(&self) -> Vector3<Numeric> {
+    fn absolute_projectile_position(&self) -> Vector3<Numeric> {
         -self
             .scope
             .position()
