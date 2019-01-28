@@ -109,8 +109,8 @@ impl Simulation {
             elevation_offset,
             windage_offset,
             tolerance,
-            elevation_adjustment: Angle::Radians(0.0),
-            windage_adjustment: Angle::Radians(0.0),
+            elevation_adjustment: Angle::Minutes(0.0),
+            windage_adjustment: Angle::Minutes(0.0),
             count: 0u64,
         }
     }
@@ -169,8 +169,8 @@ impl Simulation {
             ..
         } = self.scope;
         self.scope = Scope {
-            pitch: Angle::Radians(0.0),
-            yaw: Angle::Radians(0.0),
+            pitch: Angle::Minutes(0.0),
+            yaw: Angle::Minutes(0.0),
             ..self.scope
         };
         let distance = Length::Yards(distance).to_meters().to_num();

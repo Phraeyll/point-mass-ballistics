@@ -53,10 +53,10 @@ impl From<Shooter> for ShooterBuilder {
 impl Default for ShooterBuilder {
     fn default() -> Self {
         Self {
-            yaw: Angle::Radians(0.0),
-            pitch: Angle::Radians(0.0),
-            roll: Angle::Radians(0.0),
-            lattitude: Angle::Radians(0.0),
+            yaw: Angle::Minutes(0.0),
+            pitch: Angle::Minutes(0.0),
+            roll: Angle::Degrees(0.0),
+            lattitude: Angle::Degrees(0.0),
             gravity: default_gravity(),
         }
     }

@@ -42,9 +42,9 @@ impl From<Wind> for WindBuilder {
 impl Default for WindBuilder {
     fn default() -> Self {
         Self {
-            yaw: Angle::Radians(0.0),
-            pitch: Angle::Radians(0.0),
-            roll: Angle::Radians(0.0),
+            yaw: Angle::Degrees(0.0),
+            pitch: Angle::Degrees(0.0),
+            roll: Angle::Degrees(0.0),
             velocity: Velocity::Mph(0.0),
         }
     }
