@@ -11,7 +11,7 @@ pub struct Packet<'s> {
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
 
-pub trait Output {
+pub trait Measurements {
     fn time(&self) -> Numeric;
     fn velocity(&self) -> Numeric;
     fn energy(&self) -> Numeric;
@@ -23,7 +23,7 @@ pub trait Output {
     fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
 }
 // Hard coded Imperial units for now - need to use better library for this eventually
-impl Output for Packet<'_> {
+impl Measurements for Packet<'_> {
     fn time(&self) -> Numeric {
         Time::Seconds(self.time).to_seconds().to_num()
     }

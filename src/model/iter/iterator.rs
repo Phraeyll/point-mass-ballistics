@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 
 use super::packet::*;
-use crate::model::core::Simulation;
+use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind};
 use crate::util::*;
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
@@ -18,11 +18,14 @@ pub struct IterSimulation<'s> {
 impl Simulation {
     pub fn iter(&self) -> IterSimulation {
         IterSimulation {
-            simulation: self,
+            simulation: self.handle(),
             position: self.absolute_projectile_position(),
             velocity: self.absolute_projectile_velocity(),
             time: 0.0,
         }
+    }
+    fn handle(&self) -> &Self {
+        &self
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
@@ -51,6 +54,16 @@ impl<'s> IntoIterator for &'s Simulation {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+trait SimulationHandle {
+    type Simulation: Handles;
+    fn simulation(&self) -> &Simulation;
+}
+impl SimulationHandle for IterSimulation<'_> {
+    type Simulation = Simulation;
+    fn simulation(&self) -> &Self::Simulation {
+        &self.simulation
     }
 }
 
@@ -90,13 +103,46 @@ impl<'s> Iterator for IterSimulation<'s> {
         }
     }
 }
+trait Handles {
+    fn flags(&self) -> &Flags;
+    fn projectile(&self) -> &Projectile;
+    fn scope(&self) -> &Scope;
+    fn shooter(&self) -> &Shooter;
+    fn atmosphere(&self) -> &Atmosphere;
+    fn wind(&self) -> &Wind;
+}
+impl Handles for Simulation {
+    fn flags(&self) -> &Flags {
+        &self.flags
+    }
+    fn projectile(&self) -> &Projectile {
+        &self.projectile
+    }
+    fn scope(&self) -> &Scope {
+        &self.scope
+    }
+    fn shooter(&self) -> &Shooter {
+        &self.shooter
+    }
+    fn atmosphere(&self) -> &Atmosphere {
+        &self.atmosphere
+    }
+    fn wind(&self) -> &Wind {
+        &self.wind
+    }
+}
 
-trait Newtonian {
+trait Newtonian
+where
+    Self: SimulationHandle,
+{
     fn acceleration(&self) -> Vector3<Numeric>;
 
     fn increment_time(&mut self);
     fn time(&self) -> Numeric;
-    fn delta_time(&self) -> Numeric;
+    fn delta_time(&self) -> Numeric {
+        self.simulation().time_step
+    }
 
     // 'Second Equation of Motion'
     fn increment_position(&mut self);
@@ -117,15 +163,41 @@ trait Newtonian {
 trait Drag
 where
     Self: Newtonian,
+    Self: SimulationHandle,
 {
-    fn drag_flag(&self) -> bool;
-    fn projectile_mass(&self) -> Numeric;
-    fn projectile_area(&self) -> Numeric;
-    fn i(&self) -> Numeric;
-    fn cd_table(&self) -> &FloatMap<Numeric>;
-    fn wind_velocity(&self) -> Vector3<Numeric>;
-    fn speed_of_sound(&self) -> Numeric;
-    fn rho(&self) -> Numeric;
+    fn drag_flag(&self) -> bool {
+        self.simulation().flags.drag()
+    }
+    fn projectile_mass(&self) -> Numeric {
+        self.simulation().projectile.mass()
+    }
+    fn projectile_area(&self) -> Numeric {
+        self.simulation().projectile.area()
+    }
+    fn i(&self) -> Numeric {
+        self.simulation().projectile.i()
+    }
+    fn cd_table(&self) -> &FloatMap<Numeric> {
+        self.simulation().projectile.bc.table()
+    }
+    fn wind_velocity(&self) -> Vector3<Numeric> {
+        // Velocity vector of wind, only horizontal at the moment
+        // Does not adjust according to line of sight, since most would measure wind
+        // along relative bearing - I don't think many would factor in a 'downhill' wind for example
+        // This would be interresting to think of, however.
+        self.simulation()
+            .wind
+            .velocity()
+            .pivot_x(self.simulation().shooter.roll())
+            .pivot_z(self.simulation().shooter.pitch())
+            .pivot_y(self.simulation().shooter.yaw())
+    }
+    fn speed_of_sound(&self) -> Numeric {
+        self.simulation().atmosphere.speed_of_sound()
+    }
+    fn rho(&self) -> Numeric {
+        self.simulation().atmosphere.rho()
+    }
 
     fn drag_acceleration(&self) -> Vector3<Numeric> {
         if self.drag_flag() {
@@ -160,8 +232,12 @@ trait Coriolis
 where
     Self: Newtonian,
 {
-    fn coriolis_flag(&self) -> bool;
-    fn omega(&self) -> Vector3<Numeric>;
+    fn coriolis_flag(&self) -> bool {
+        self.simulation().flags.coriolis()
+    }
+    fn omega(&self) -> Vector3<Numeric> {
+        self.simulation().shooter.omega()
+    }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -177,9 +253,16 @@ where
     }
 }
 
-pub trait Gravity {
-    fn gravity_flag(&self) -> bool;
-    fn gravity(&self) -> Vector3<Numeric>;
+trait Gravity
+where
+    Self: SimulationHandle,
+{
+    fn gravity_flag(&self) -> bool {
+        self.simulation().flags.gravity()
+    }
+    fn gravity(&self) -> Vector3<Numeric> {
+        self.simulation().shooter.gravity()
+    }
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
         if self.gravity_flag() {
             self.gravity()
@@ -192,9 +275,6 @@ pub trait Gravity {
 impl Newtonian for IterSimulation<'_> {
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
-    fn delta_time(&self) -> Numeric {
-        self.simulation.time_step
     }
     fn increment_time(&mut self) {
         self.time += self.delta_time();
@@ -215,53 +295,6 @@ impl Newtonian for IterSimulation<'_> {
         self.velocity
     }
 }
-impl Coriolis for IterSimulation<'_> {
-    fn coriolis_flag(&self) -> bool {
-        self.simulation.flags.coriolis()
-    }
-    fn omega(&self) -> Vector3<Numeric> {
-        self.simulation.shooter.omega()
-    }
-}
-impl Drag for IterSimulation<'_> {
-    fn drag_flag(&self) -> bool {
-        self.simulation.flags.drag()
-    }
-    fn projectile_mass(&self) -> Numeric {
-        self.simulation.projectile.mass()
-    }
-    fn projectile_area(&self) -> Numeric {
-        self.simulation.projectile.area()
-    }
-    fn i(&self) -> Numeric {
-        self.simulation.projectile.i()
-    }
-    fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation.projectile.bc.table()
-    }
-    fn wind_velocity(&self) -> Vector3<Numeric> {
-    // Velocity vector of wind, only horizontal at the moment
-    // Does not adjust according to line of sight, since most would measure wind
-    // along relative bearing - I don't think many would factor in a 'downhill' wind for example
-    // This would be interresting to think of, however.
-        self.simulation.wind
-            .velocity()
-            .pivot_x(self.simulation.shooter.roll())
-            .pivot_z(self.simulation.shooter.pitch())
-            .pivot_y(self.simulation.shooter.yaw())
-    }
-    fn speed_of_sound(&self) -> Numeric {
-        self.simulation.atmosphere.speed_of_sound()
-    }
-    fn rho(&self) -> Numeric {
-        self.simulation.atmosphere.rho()
-    }
-}
-impl Gravity for IterSimulation<'_> {
-    fn gravity_flag(&self) -> bool {
-        self.simulation.flags.gravity()
-    }
-    fn gravity(&self) -> Vector3<Numeric> {
-        self.simulation.shooter.gravity()
-    }
-}
+impl Coriolis for IterSimulation<'_> {}
+impl Drag for IterSimulation<'_> {}
+impl Gravity for IterSimulation<'_> {}
