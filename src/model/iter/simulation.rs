@@ -16,9 +16,10 @@ pub struct IterSimulation<'s> {
     velocity: Vector3<Numeric>, // Velocity (m/s)
     time: Numeric,              // Position in time (s)
 }
-impl Simulation {
-    pub fn iter(&self) -> IterSimulation {
-        IterSimulation {
+impl<'s> InitIterator<'s> for Simulation {
+    type Iter = IterSimulation<'s>;
+    fn iter(&'s self) -> Self::Iter {
+        Self::Iter {
             simulation: self,
             position: self.absolute_projectile_position(),
             velocity: self.absolute_projectile_velocity(),
@@ -116,7 +117,6 @@ impl GetMeasurement for IterSimulation<'_> {
         self.time
     }
 }
-impl InitIterator for Simulation {}
 impl Coriolis for IterSimulation<'_> {}
 impl Drag for IterSimulation<'_> {}
 impl Gravity for IterSimulation<'_> {}

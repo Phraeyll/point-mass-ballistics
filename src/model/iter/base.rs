@@ -21,10 +21,12 @@ pub trait ParameterHandles {
     fn wind(&self) -> &Wind;
     fn time_step(&self) -> Numeric;
 }
-pub trait InitIterator
+pub trait InitIterator<'s>
 where
     Self: ParameterHandles,
 {
+    type Iter;
+    fn iter(&'s self) -> Self::Iter;
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
