@@ -39,7 +39,7 @@ impl<'s> IntoIterator for &'s Simulation {
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
-    type Item = Packet<'s>;
+    type Item = Packet<'s, Simulation>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -82,6 +82,7 @@ impl SimulationHandle for IterSimulation<'_> {
         &self.simulation
     }
 }
+
 impl ParameterHandles for Simulation {
     fn flags(&self) -> &Flags {
         &self.flags
@@ -108,8 +109,14 @@ impl ParameterHandles for Simulation {
 impl Coriolis for IterSimulation<'_> {}
 impl Drag for IterSimulation<'_> {}
 impl Gravity for IterSimulation<'_> {}
-impl GetVelocity for IterSimulation<'_> {
+impl GetMeasurement for IterSimulation<'_> {
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
+    }
+    fn position(&self) -> Vector3<Numeric> {
+        self.position
+    }
+    fn time(&self) -> Numeric {
+        self.time
     }
 }
