@@ -31,6 +31,7 @@ impl<S> GetMeasurement for Packet<'_, S> {
         self.time
     }
 }
+impl<S> Measurements for Packet<'_, S> where S: ParameterHandles {}
 
 pub trait Measurements
 where
@@ -120,4 +121,3 @@ where
         Angle::Radians(sign * position.angle(&desired))
     }
 }
-impl<S> Measurements for Packet<'_, S> where S: ParameterHandles {}
