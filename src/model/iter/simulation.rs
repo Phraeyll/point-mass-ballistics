@@ -1,5 +1,6 @@
 use nalgebra::Vector3;
 
+use super::base::*;
 use super::packet::*;
 use super::physics::*;
 use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind};
@@ -15,7 +16,6 @@ pub struct IterSimulation<'s> {
     velocity: Vector3<Numeric>, // Velocity (m/s)
     time: Numeric,              // Position in time (s)
 }
-impl InitIterator for Simulation {}
 impl Simulation {
     pub fn iter(&self) -> IterSimulation {
         IterSimulation {
@@ -82,7 +82,6 @@ impl SimulationHandle for IterSimulation<'_> {
         &self.simulation
     }
 }
-
 impl ParameterHandles for Simulation {
     fn flags(&self) -> &Flags {
         &self.flags
@@ -106,9 +105,6 @@ impl ParameterHandles for Simulation {
         self.time_step
     }
 }
-impl Coriolis for IterSimulation<'_> {}
-impl Drag for IterSimulation<'_> {}
-impl Gravity for IterSimulation<'_> {}
 impl GetMeasurement for IterSimulation<'_> {
     fn s_velocity(&self) -> Vector3<Numeric> {
         self.velocity
@@ -120,3 +116,7 @@ impl GetMeasurement for IterSimulation<'_> {
         self.time
     }
 }
+impl InitIterator for Simulation {}
+impl Coriolis for IterSimulation<'_> {}
+impl Drag for IterSimulation<'_> {}
+impl Gravity for IterSimulation<'_> {}

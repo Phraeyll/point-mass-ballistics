@@ -43,12 +43,13 @@ pub mod model {
 
     #[allow(clippy::float_cmp)]
     pub mod iter {
-        pub use iterator::*;
         pub use packet::*;
+        pub use simulation::*;
 
-        mod iterator;
+        mod base;
         mod packet;
         pub(crate) mod physics;
+        mod simulation;
     }
     pub mod core {
         pub use crate::util::{conversions::*, Natural, Numeric};

@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use super::physics::*;
+use super::base::*;
 use crate::util::*;
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
@@ -10,28 +10,6 @@ pub struct Packet<'s, S> {
     pub(crate) position: Vector3<Numeric>, // Position (m)
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
-
-impl<S> SimulationHandle for Packet<'_, S>
-where
-    S: ParameterHandles,
-{
-    type Simulation = S;
-    fn simulation(&self) -> &Self::Simulation {
-        &self.simulation
-    }
-}
-impl<S> GetMeasurement for Packet<'_, S> {
-    fn s_velocity(&self) -> Vector3<Numeric> {
-        self.velocity
-    }
-    fn s_position(&self) -> Vector3<Numeric> {
-        self.position
-    }
-    fn s_time(&self) -> Numeric {
-        self.time
-    }
-}
-impl<S> Measurements for Packet<'_, S> where S: ParameterHandles {}
 
 pub trait Measurements
 where
@@ -121,3 +99,24 @@ where
         Angle::Radians(sign * position.angle(&desired))
     }
 }
+impl<S> SimulationHandle for Packet<'_, S>
+where
+    S: ParameterHandles,
+{
+    type Simulation = S;
+    fn simulation(&self) -> &Self::Simulation {
+        &self.simulation
+    }
+}
+impl<S> GetMeasurement for Packet<'_, S> {
+    fn s_velocity(&self) -> Vector3<Numeric> {
+        self.velocity
+    }
+    fn s_position(&self) -> Vector3<Numeric> {
+        self.position
+    }
+    fn s_time(&self) -> Numeric {
+        self.time
+    }
+}
+impl<S> Measurements for Packet<'_, S> where S: ParameterHandles {}
