@@ -110,13 +110,13 @@ impl Coriolis for IterSimulation<'_> {}
 impl Drag for IterSimulation<'_> {}
 impl Gravity for IterSimulation<'_> {}
 impl GetMeasurement for IterSimulation<'_> {
-    fn velocity(&self) -> Vector3<Numeric> {
+    fn s_velocity(&self) -> Vector3<Numeric> {
         self.velocity
     }
-    fn position(&self) -> Vector3<Numeric> {
+    fn s_position(&self) -> Vector3<Numeric> {
         self.position
     }
-    fn time(&self) -> Numeric {
+    fn s_time(&self) -> Numeric {
         self.time
     }
 }

@@ -11,32 +11,44 @@ pub struct Packet<'s, S> {
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
 
-pub trait Measurements {
-    fn time(&self) -> Numeric;
-    fn velocity(&self) -> Numeric;
-    fn energy(&self) -> Numeric;
-    fn distance(&self) -> Numeric;
-    fn elevation(&self) -> Numeric;
-    fn windage(&self) -> Numeric;
-    fn moa(&self) -> Numeric;
-    fn vertical_moa(&self, tolerance: Numeric) -> Numeric;
-    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
-}
-// Hard coded Imperial units for now - need to use better library for this eventually
-impl<S> Measurements for Packet<'_, S>
+impl<S> SimulationHandle for Packet<'_, S>
 where
     S: ParameterHandles,
 {
+    type Simulation = S;
+    fn simulation(&self) -> &Self::Simulation {
+        &self.simulation
+    }
+}
+impl<S> GetMeasurement for Packet<'_, S> {
+    fn s_velocity(&self) -> Vector3<Numeric> {
+        self.velocity
+    }
+    fn s_position(&self) -> Vector3<Numeric> {
+        self.position
+    }
+    fn s_time(&self) -> Numeric {
+        self.time
+    }
+}
+
+pub trait Measurements
+where
+    Self: SimulationHandle,
+    Self: GetMeasurement,
+{
     fn time(&self) -> Numeric {
-        Time::Seconds(self.time).to_seconds().to_num()
+        Time::Seconds(self.s_time()).to_seconds().to_num()
     }
     fn velocity(&self) -> Numeric {
-        Velocity::Mps(self.velocity.norm()).to_fps().to_num()
+        Velocity::Mps(self.s_velocity().norm()).to_fps().to_num()
     }
     fn energy(&self) -> Numeric {
-        Energy::Joules(self.simulation.projectile().mass() * self.velocity.norm().powf(2.0) / 2.0)
-            .to_ftlbs()
-            .to_num()
+        Energy::Joules(
+            self.simulation().projectile().mass() * self.s_velocity().norm().powf(2.0) / 2.0,
+        )
+        .to_ftlbs()
+        .to_num()
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Numeric {
@@ -69,28 +81,19 @@ where
             .to_minutes()
             .to_num()
     }
-}
-
-// Output struct which represents projectiles current position, and velocity
-// Basically same values used internally during iteration
-// Along with a ref to the simulation which was iterated over
-impl<S> Packet<'_, S>
-where
-    S: ParameterHandles
-{
     // During the simulation, the velocity of the projectile is rotated to allign with
     // the shooter's bearing (azimuth and line of sight)
     // This function returns the position rotated back to the initial frame of reference
     // This is used during zero'ing and is output in the drop table
-    pub fn relative_position(&self) -> Vector3<Numeric> {
-        self.position
-            .pivot_y(-self.simulation.shooter().yaw())
-            .pivot_z(-self.simulation.shooter().pitch())
-            .pivot_x(-self.simulation.shooter().roll())
+    fn relative_position(&self) -> Vector3<Numeric> {
+        self.s_position()
+            .pivot_y(-self.simulation().shooter().yaw())
+            .pivot_z(-self.simulation().shooter().pitch())
+            .pivot_x(-self.simulation().shooter().roll())
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    pub(crate) fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
+    fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().y >= (offset - tolerance) {
             -1.0
         } else {
@@ -104,7 +107,7 @@ where
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    pub(crate) fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
+    fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().z >= (offset - tolerance) {
             -1.0
         } else {
@@ -117,3 +120,4 @@ where
         Angle::Radians(sign * position.angle(&desired))
     }
 }
+impl<S> Measurements for Packet<'_, S> where S: ParameterHandles {}

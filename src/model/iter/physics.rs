@@ -41,9 +41,9 @@ where
     }
 }
 pub trait GetMeasurement {
-    fn velocity(&self) -> Vector3<Numeric>;
-    fn position(&self) -> Vector3<Numeric>;
-    fn time(&self) -> Numeric;
+    fn s_velocity(&self) -> Vector3<Numeric>;
+    fn s_position(&self) -> Vector3<Numeric>;
+    fn s_time(&self) -> Numeric;
 }
 impl<I> Newtonian for I
 where
@@ -64,7 +64,7 @@ where
     }
     // 'Second Equation of Motion'
     fn delta_position(&self) -> Vector3<Numeric> {
-        self.velocity() * self.delta_time()
+        self.s_velocity() * self.delta_time()
             + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
     }
     // 'First Equation of Motion'
@@ -121,11 +121,11 @@ where
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
-        self.velocity() - self.wind_velocity()
+        self.s_velocity() - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
-        self.velocity().norm() / self.speed_of_sound()
+        self.s_velocity().norm() / self.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
@@ -157,7 +157,7 @@ where
     // Bearing West results in lower elevation (-y relative/absolute)
     fn coriolis_acceleration(&self) -> Vector3<Numeric> {
         if self.coriolis_flag() {
-            -2.0 * self.omega().cross(&self.velocity())
+            -2.0 * self.omega().cross(&self.s_velocity())
         } else {
             Vector3::zeros()
         }
