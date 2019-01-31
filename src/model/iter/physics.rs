@@ -32,8 +32,8 @@ where
 }
 pub trait Drag
 where
-    Self: GetMeasurement,
     Self: SimulationHandle,
+    Self: GetMeasurement,
 {
     fn drag_flag(&self) -> bool {
         self.simulation().flags().drag()
@@ -68,14 +68,6 @@ where
     fn rho(&self) -> Numeric {
         self.simulation().atmosphere().rho()
     }
-    fn drag_acceleration(&self) -> Vector3<Numeric> {
-        if self.drag_flag() {
-            // Acceleration from drag force and gravity (F = ma)
-            self.drag_force() / self.projectile_mass()
-        } else {
-            Vector3::zeros()
-        }
-    }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
@@ -95,11 +87,19 @@ where
     fn drag_force(&self) -> Vector3<Numeric> {
         -0.5 * self.rho() * self.vv() * self.vv().norm() * self.cd() * self.projectile_area()
     }
+    fn drag_acceleration(&self) -> Vector3<Numeric> {
+        if self.drag_flag() {
+            // Acceleration from drag force and gravity (F = ma)
+            self.drag_force() / self.projectile_mass()
+        } else {
+            Vector3::zeros()
+        }
+    }
 }
 pub trait Coriolis
 where
-    Self: GetMeasurement,
     Self: SimulationHandle,
+    Self: GetMeasurement,
 {
     fn coriolis_flag(&self) -> bool {
         self.simulation().flags().coriolis()
