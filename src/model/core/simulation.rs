@@ -68,7 +68,9 @@ impl Simulation {
         Density::Kgpm3(self.atmosphere.rho()).to_lbpf3().to_num()
     }
     pub fn speed_of_sound(&self) -> Numeric {
-        Velocity::Mps(self.atmosphere.speed_of_sound()).to_fps().to_num()
+        Velocity::Mps(self.atmosphere.speed_of_sound())
+            .to_fps()
+            .to_num()
     }
 }
 
