@@ -41,8 +41,8 @@ where
         -self
             .scope()
             .position()
-            .pivot_x(self.shooter().roll())
             .pivot_x(-self.scope().roll())
+            .pivot_x(self.shooter().roll())
             .pivot_z(self.shooter().pitch())
             .pivot_y(self.shooter().yaw())
     }
