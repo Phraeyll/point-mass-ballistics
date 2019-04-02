@@ -48,7 +48,7 @@ where
         self.simulation().projectile().i()
     }
     fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation().projectile().bc.table()
+        self.simulation().projectile().bc().table()
     }
     fn wind_velocity(&self) -> Vector3<Numeric> {
         // Velocity vector of wind, only horizontal at the moment

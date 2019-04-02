@@ -105,6 +105,10 @@ impl Projectile {
     pub(crate) fn i(&self) -> Numeric {
         self.sd() / self.bc.value()
     }
+    // Handle to BC table
+    pub(crate) fn bc(&self) -> &Bc {
+        &self.bc
+    }
     pub(crate) fn velocity(&self, scope: &Scope) -> Vector3<Numeric> {
         self.velocity
             .to_mps()
