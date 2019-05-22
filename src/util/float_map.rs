@@ -3,11 +3,7 @@ use ordered_float::OrderedFloat;
 use crate::error::{Error, ErrorKind, Result};
 use crate::util::Numeric;
 
-use std::{
-    collections::{btree_map, BTreeMap},
-    iter::FromIterator,
-    ops::RangeBounds,
-};
+use std::{collections::BTreeMap, iter::FromIterator, ops::RangeBounds};
 
 #[derive(Clone)]
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);
@@ -50,8 +46,8 @@ impl<V> FloatMap<V> {
     pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
         self.0.insert(OrderedFloat(key), value)
     }
-    pub fn iter(&self) -> btree_map::Iter<OrderedFloat<Numeric>, V> {
-        self.0.iter()
+    pub fn iter(&self) -> impl Iterator<Item = (&Numeric, &V)> {
+        self.0.iter().map(|(OrderedFloat(key), val)| (key, val))
     }
     pub fn range<R>(&self, range: R) -> impl DoubleEndedIterator<Item = (&Numeric, &V)>
     where
@@ -70,7 +66,8 @@ impl FloatMap<Numeric> {
     // Works for exact values of 'x' as well
     pub fn lerp(&self, x: Numeric) -> Result<Numeric> {
         let key = OrderedFloat(x);
-        self.range(..key).rev()
+        self.range(..key)
+            .rev()
             .zip(self.range(key..))
             .next()
             .map(|((x0, y0), (x1, y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
