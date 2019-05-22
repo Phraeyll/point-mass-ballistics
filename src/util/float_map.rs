@@ -46,8 +46,8 @@ impl<V> FloatMap<V> {
     pub fn insert(&mut self, key: Numeric, value: V) -> Option<V> {
         self.0.insert(OrderedFloat(key), value)
     }
-    pub fn iter(&self) -> impl Iterator<Item = (&Numeric, &V)> {
-        self.0.iter().map(|(OrderedFloat(key), val)| (key, val))
+    pub fn iter(&self) -> impl Iterator<Item = (&OrderedFloat<Numeric>, &V)> {
+        self.0.iter()
     }
     pub fn range<R>(&self, range: R) -> impl DoubleEndedIterator<Item = (&Numeric, &V)>
     where
