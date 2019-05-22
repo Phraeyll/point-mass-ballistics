@@ -4,9 +4,9 @@ use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind};
 use crate::util::*;
 
 pub trait GetMeasurement {
-    fn s_velocity(&self) -> Vector3<Numeric>;
-    fn s_position(&self) -> Vector3<Numeric>;
-    fn s_time(&self) -> Numeric;
+    fn get_velocity(&self) -> Vector3<Numeric>;
+    fn get_position(&self) -> Vector3<Numeric>;
+    fn get_time(&self) -> Numeric;
 }
 pub trait SimulationHandle {
     type Simulation: ParameterHandles;

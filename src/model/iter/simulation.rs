@@ -107,13 +107,13 @@ impl ParameterHandles for Simulation {
     }
 }
 impl GetMeasurement for IterSimulation<'_> {
-    fn s_velocity(&self) -> Vector3<Numeric> {
+    fn get_velocity(&self) -> Vector3<Numeric> {
         self.velocity
     }
-    fn s_position(&self) -> Vector3<Numeric> {
+    fn get_position(&self) -> Vector3<Numeric> {
         self.position
     }
-    fn s_time(&self) -> Numeric {
+    fn get_time(&self) -> Numeric {
         self.time
     }
 }

@@ -17,14 +17,14 @@ where
     Self: GetMeasurement,
 {
     fn time(&self) -> Numeric {
-        Time::Seconds(self.s_time()).to_seconds().to_num()
+        Time::Seconds(self.get_time()).to_seconds().to_num()
     }
     fn velocity(&self) -> Numeric {
-        Velocity::Mps(self.s_velocity().norm()).to_fps().to_num()
+        Velocity::Mps(self.get_velocity().norm()).to_fps().to_num()
     }
     fn energy(&self) -> Numeric {
         Energy::Joules(
-            self.simulation().projectile().mass() * self.s_velocity().norm().powf(2.0) / 2.0,
+            self.simulation().projectile().mass() * self.get_velocity().norm().powf(2.0) / 2.0,
         )
         .to_ftlbs()
         .to_num()
@@ -65,7 +65,7 @@ where
     // This function returns the position rotated back to the initial frame of reference
     // This is used during zero'ing and is output in the drop table
     fn relative_position(&self) -> Vector3<Numeric> {
-        self.s_position()
+        self.get_position()
             .pivot_y(-self.simulation().shooter().yaw())
             .pivot_z(-self.simulation().shooter().pitch())
             .pivot_x(-self.simulation().shooter().roll())
@@ -109,13 +109,13 @@ where
     }
 }
 impl<S> GetMeasurement for Packet<'_, S> {
-    fn s_velocity(&self) -> Vector3<Numeric> {
+    fn get_velocity(&self) -> Vector3<Numeric> {
         self.velocity
     }
-    fn s_position(&self) -> Vector3<Numeric> {
+    fn get_position(&self) -> Vector3<Numeric> {
         self.position
     }
-    fn s_time(&self) -> Numeric {
+    fn get_time(&self) -> Numeric {
         self.time
     }
 }
