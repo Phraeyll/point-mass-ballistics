@@ -70,10 +70,10 @@ impl FloatMap<Numeric> {
     // Works for exact values of 'x' as well
     pub fn lerp(&self, x: Numeric) -> Result<Numeric> {
         let key = OrderedFloat(x);
-        self.range(key..)
-            .zip(self.range(..key).rev())
+        self.range(..key).rev()
+            .zip(self.range(key..))
             .next()
-            .map(|((x1, y1), (x0, y0))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+            .map(|((x0, y0), (x1, y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             .ok_or(Error::new(ErrorKind::VelocityLookup(x)))
     }
 }
