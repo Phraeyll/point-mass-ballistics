@@ -1,10 +1,10 @@
 use nalgebra::Vector3;
 
-use super::base::*;
-use super::packet::*;
-use super::physics::*;
-use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind};
-use crate::util::*;
+use super::{base::*, packet::*, physics::*};
+use crate::{
+    model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
+    util::*,
+};
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
@@ -36,7 +36,6 @@ impl<'s> IntoIterator for &'s Simulation {
         self.iter()
     }
 }
-
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {

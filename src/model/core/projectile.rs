@@ -1,9 +1,7 @@
-use nalgebra::Vector3;
-
-use crate::model::core::{Bc, BcBuilder, BcKind, ProjectileAdjuster, Scope, SimulationBuilder};
-use crate::util::*;
-
-use std::ops::Mul;
+use crate::{
+    model::core::{Bc, BcBuilder, BcKind, ProjectileAdjuster, SimulationBuilder},
+    util::*,
+};
 
 #[derive(Debug)]
 pub struct Projectile {
@@ -81,40 +79,5 @@ impl ProjectileAdjuster for SimulationBuilder {
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
-    }
-}
-
-impl Projectile {
-    // Radius of projectile cross section in meters
-    fn radius(&self) -> Numeric {
-        self.caliber.to_meters().to_num() / 2.0
-    }
-    // Area of projectile in meters, used during drag force calculation
-    pub(crate) fn area(&self) -> Numeric {
-        PI * self.radius().powf(2.0)
-    }
-    // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
-    pub(crate) fn mass(&self) -> Numeric {
-        self.weight.to_kgs().into()
-    }
-    // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    fn sd(&self) -> Numeric {
-        self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
-    }
-    // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
-    pub(crate) fn i(&self) -> Numeric {
-        self.sd() / self.bc.value()
-    }
-    // Handle to BC table
-    pub(crate) fn bc(&self) -> &Bc {
-        &self.bc
-    }
-    pub(crate) fn velocity(&self, scope: &Scope) -> Vector3<Numeric> {
-        self.velocity
-            .to_mps()
-            .to_num()
-            .mul(Vector3::x())
-            .pivot_y(scope.yaw())
-            .pivot_z(scope.pitch())
     }
 }

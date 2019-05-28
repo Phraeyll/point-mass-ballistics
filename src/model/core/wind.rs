@@ -1,9 +1,7 @@
-use nalgebra::Vector3;
-
-use crate::model::core::{SimulationBuilder, WindAdjuster};
-use crate::util::*;
-
-use std::ops::Mul;
+use crate::{
+    model::core::{SimulationBuilder, WindAdjuster},
+    util::*,
+};
 
 #[derive(Debug)]
 pub struct Wind {
@@ -66,57 +64,5 @@ impl WindAdjuster for SimulationBuilder {
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
-    }
-}
-
-impl Wind {
-    // This vector indicates direction of wind flow, not source of wind
-    // so rotate by PI (adding or subtraction should have the same affect)
-    // Negative indicates 90 degree wind is from east=>west
-    // 0 degree wind is from north=>south (conventional)
-    //        (0)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //       (180)
-    //
-    //  {after rotation(+ PI)}
-    //
-    //       (180)
-    //         ^
-    //         |
-    // (-90) <---> (+90)
-    //         |
-    //         v
-    //        (0)
-    //
-    //  {after negation(-)}
-    //
-    //       (180)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //        (0)
-    fn yaw(&self) -> Angle {
-        -self.yaw + Angle::Radians(PI)
-    }
-    fn pitch(&self) -> Angle {
-        self.pitch
-    }
-    fn roll(&self) -> Angle {
-        self.roll
-    }
-    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
-        self.velocity
-            .to_mps()
-            .to_num()
-            .mul(Vector3::x())
-            .pivot_y(self.yaw())
-            .pivot_z(self.pitch())
-            .pivot_x(self.roll())
     }
 }

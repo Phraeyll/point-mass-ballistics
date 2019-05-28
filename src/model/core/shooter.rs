@@ -1,11 +1,8 @@
-use nalgebra::Vector3;
+use crate::{
+    model::core::{ShooterAdjuster, SimulationBuilder},
+    util::*,
+};
 
-use crate::model::core::{ShooterAdjuster, SimulationBuilder};
-use crate::util::*;
-
-use std::ops::Mul;
-
-const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
 
 pub fn default_gravity() -> Acceleration {
@@ -92,47 +89,5 @@ impl ShooterAdjuster for SimulationBuilder {
     fn set_gravity(mut self, value: Numeric) -> Result<Self> {
         self.shooter.gravity = Acceleration::Fps2(value);
         Ok(self)
-    }
-}
-
-impl Shooter {
-    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
-        self.gravity.to_mps2().to_num().mul(Vector3::y())
-    }
-    // Flip, since circle functions rotate counter-clockwise,
-    // 90 degrees is east by compass bearing, but west(left) in trig
-    //        (0)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //       (180)
-    //
-    //  {after negation(-)}
-    //
-    //        (0)
-    //         ^
-    //         |
-    // (-90) <---> (+90)
-    //         |
-    //         v
-    //       (180)
-    pub(crate) fn yaw(&self) -> Angle {
-        -self.yaw
-    }
-    pub(crate) fn pitch(&self) -> Angle {
-        self.pitch
-    }
-    pub(crate) fn roll(&self) -> Angle {
-        -self.roll
-    }
-    // Angular velocity vector of earth, at current lattitude
-    // Can be thought of as vector from center of earth, pointing
-    // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
-    pub(crate) fn omega(&self) -> Vector3<Numeric> {
-        ANGULAR_VELOCITY_EARTH
-            .mul(Vector3::x())
-            .pivot_z(self.lattitude)
     }
 }

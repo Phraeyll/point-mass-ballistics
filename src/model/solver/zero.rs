@@ -1,6 +1,10 @@
-use crate::model::core::{Scope, Simulation};
-use crate::model::iter::Measurements;
-use crate::util::*;
+use crate::{
+    model::{
+        core::{Scope, Simulation},
+        iter::Measurements,
+    },
+    util::*,
+};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Angle = Angle::Radians(FRAC_PI_4);

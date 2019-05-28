@@ -1,8 +1,10 @@
-use crate::model::core::{
-    Atmosphere, AtmosphereBuilder, Flags, FlagsBuilder, Projectile, ProjectileBuilder, Scope,
-    ScopeBuilder, Shooter, ShooterBuilder, Wind, WindBuilder,
+use crate::{
+    model::core::{
+        Atmosphere, AtmosphereBuilder, Flags, FlagsBuilder, Projectile, ProjectileBuilder, Scope,
+        ScopeBuilder, Shooter, ShooterBuilder, Wind, WindBuilder,
+    },
+    util::*,
 };
-use crate::util::*;
 
 #[derive(Debug)]
 pub struct Simulation {

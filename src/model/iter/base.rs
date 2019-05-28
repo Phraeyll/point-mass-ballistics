@@ -1,7 +1,9 @@
 use nalgebra::Vector3;
 
-use crate::model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind};
-use crate::util::*;
+use crate::{
+    model::core::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind},
+    util::*,
+};
 
 pub trait GetMeasurement {
     fn get_velocity(&self) -> Vector3<Numeric>;

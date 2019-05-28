@@ -1,6 +1,6 @@
+use self::{Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
 use super::{length::*, time::*, weight_mass::*};
 use crate::util::Numeric;
-use {Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
 
 //Energy
 pub const JOULE_TO_FTLB: Numeric = 0.737_56;

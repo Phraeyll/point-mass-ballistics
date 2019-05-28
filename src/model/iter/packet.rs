@@ -2,6 +2,7 @@ use nalgebra::Vector3;
 
 use super::base::*;
 use crate::util::*;
+
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'s, S> {
@@ -10,7 +11,6 @@ pub struct Packet<'s, S> {
     pub(crate) position: Vector3<Numeric>, // Position (m)
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
-
 pub trait Measurements
 where
     Self: SimulationHandle,

@@ -1,7 +1,7 @@
-use nalgebra::Vector3;
-
-use crate::model::core::{ScopeAdjuster, SimulationBuilder};
-use crate::util::*;
+use crate::{
+    model::core::{ScopeAdjuster, SimulationBuilder},
+    util::*,
+};
 
 #[derive(Debug)]
 pub struct Scope {
@@ -72,24 +72,5 @@ impl ScopeAdjuster for SimulationBuilder {
     fn set_scope_roll(mut self, value: Numeric) -> Result<Self> {
         self.scope.roll = Angle::Degrees(value);
         Ok(self)
-    }
-}
-
-impl Scope {
-    pub(crate) fn position(&self) -> Vector3<Numeric> {
-        Vector3::new(
-            0.0,
-            self.height.to_meters().to_num(),
-            self.offset.to_meters().to_num(),
-        )
-    }
-    pub(crate) fn pitch(&self) -> Angle {
-        self.pitch
-    }
-    pub(crate) fn yaw(&self) -> Angle {
-        -self.yaw
-    }
-    pub(crate) fn roll(&self) -> Angle {
-        -self.roll
     }
 }

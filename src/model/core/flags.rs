@@ -1,5 +1,7 @@
-use crate::model::core::{FlagsAdjuster, SimulationBuilder};
-use crate::util::*;
+use crate::{
+    model::core::{FlagsAdjuster, SimulationBuilder},
+    util::*,
+};
 
 #[derive(Debug)]
 pub struct Flags {
@@ -52,17 +54,5 @@ impl FlagsAdjuster for SimulationBuilder {
     fn use_gravity(mut self, value: bool) -> Result<Self> {
         self.flags.gravity = value;
         Ok(self)
-    }
-}
-
-impl Flags {
-    pub(crate) fn coriolis(&self) -> bool {
-        self.coriolis
-    }
-    pub(crate) fn drag(&self) -> bool {
-        self.drag
-    }
-    pub(crate) fn gravity(&self) -> bool {
-        self.gravity
     }
 }

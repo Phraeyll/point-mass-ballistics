@@ -1,14 +1,13 @@
 #[macro_use]
 mod util {
+    pub use self::{conversions::*, float_map::*, nalgebra_helpers::*};
     pub use crate::error::*;
-    pub use conversions::*;
-    pub use float_map::*;
-    pub use nalgebra_helpers::*;
+
+    use std::f64::consts;
 
     pub type Numeric = f64;
     pub type Natural = u32;
 
-    use std::f64::consts;
     pub const PI: Numeric = consts::PI;
     pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
     pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
@@ -23,7 +22,7 @@ mod util {
         // for most conversions, but still need something for termperature.  Also, may need something
         // different for arbitrary units, such as those use in air density calculation.  uom has only
         // a few common units specified.  May be able to work around at run time.
-        pub use {angle::*, derived::*, length::*, temperature::*, time::*, weight_mass::*};
+        pub use self::{angle::*, derived::*, length::*, temperature::*, time::*, weight_mass::*};
 
         mod angle;
         mod derived;
@@ -35,43 +34,24 @@ mod util {
     mod nalgebra_helpers;
 }
 pub mod error;
-
 pub mod model {
-    pub use self::core::*;
-    pub use iter::*;
-    pub use solver::*;
+    pub use self::{core::*, iter::*, solver::*};
 
     #[allow(clippy::float_cmp)]
     pub mod iter {
-        pub use packet::*;
-        pub use simulation::*;
+        pub use self::{packet::*, simulation::*};
 
         mod base;
         mod packet;
-        pub(crate) mod physics;
+        mod physics;
         mod simulation;
     }
     pub mod core {
+        pub use self::{
+            atmosphere::*, bc::*, builder::*, flags::*, projectile::*, scope::*, shooter::*,
+            simulation::*, wind::*,
+        };
         pub use crate::util::{conversions::*, Natural, Numeric};
-        pub use atmosphere::*;
-        pub use bc::*;
-        pub use builder::*;
-        pub use flags::*;
-        pub use projectile::*;
-        pub use scope::*;
-        pub use shooter::*;
-        pub use simulation::*;
-        pub use wind::*;
-
-        mod atmosphere;
-        mod bc;
-        mod builder;
-        mod flags;
-        mod projectile;
-        mod scope;
-        mod shooter;
-        mod simulation;
-        mod wind;
 
         #[allow(clippy::approx_constant)]
         pub(crate) mod dragtables {
@@ -84,10 +64,18 @@ pub mod model {
             pub mod gi;
             pub mod gs;
         }
-
+        mod atmosphere;
+        mod bc;
+        mod builder;
+        mod flags;
+        mod projectile;
+        mod scope;
+        mod shooter;
+        mod simulation;
+        mod wind;
     }
     pub mod solver {
-        pub use zero::*;
+        pub use self::zero::*;
 
         #[allow(clippy::float_cmp)]
         #[allow(clippy::nonminimal_bool)]

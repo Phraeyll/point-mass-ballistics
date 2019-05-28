@@ -1,16 +1,22 @@
 use nalgebra::Vector3;
 
 use super::base::*;
-use crate::util::*;
+use crate::{
+    model::core::{
+        dragtables::*, Atmosphere, Bc, BcBuilder, BcKind, BcKind::*, Flags, Projectile, Scope,
+        Shooter, Wind,
+    },
+    util::*,
+};
 
-impl<I> Newtonian for I
-where
-    I: Coriolis + Drag + Gravity,
-{
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
-}
+use std::ops::Mul;
+
+const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
+const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
+const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
+const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
+const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
+
 pub trait Newtonian
 where
     Self: SimulationHandle,
@@ -137,5 +143,221 @@ where
         } else {
             Vector3::zeros()
         }
+    }
+}
+impl<I> Newtonian for I
+where
+    I: Coriolis + Drag + Gravity,
+{
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
+    }
+}
+
+impl BcBuilder {
+    pub fn new(value: Numeric, kind: BcKind) -> BcBuilder {
+        BcBuilder {
+            value,
+            kind,
+            table: match kind {
+                G1 => g1::init(),
+                G2 => g2::init(),
+                G5 => g5::init(),
+                G6 => g6::init(),
+                G7 => g7::init(),
+                G8 => g8::init(),
+                GI => gi::init(),
+                GS => gs::init(),
+                Null => float_map![],
+            },
+        }
+    }
+}
+impl Atmosphere {
+    // Density of air, using pressure, humidity, and temperature
+    pub(crate) fn rho(&self) -> Numeric {
+        ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
+    }
+    // Speed of sound at given air density and pressure
+    pub(crate) fn speed_of_sound(&self) -> Numeric {
+        (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
+    }
+    // Pressure of water vapor, Arden Buck equation
+    fn pv(&self) -> Numeric {
+        self.humidity
+            * 611.21
+            * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius())))
+                .exp()
+    }
+    // Pressure of dry air
+    fn pd(&self) -> Numeric {
+        self.pa() - self.pv()
+    }
+    // Total air pressure in pascals
+    fn pa(&self) -> Numeric {
+        self.pressure.to_pascals().to_num()
+    }
+    // Temperature in celsius
+    fn celsius(&self) -> Numeric {
+        self.temperature.to_celsius().to_num()
+    }
+    // Temperature in kelvin
+    fn kelvin(&self) -> Numeric {
+        self.temperature.to_kelvin().to_num()
+    }
+}
+impl Flags {
+    pub(crate) fn coriolis(&self) -> bool {
+        self.coriolis
+    }
+    pub(crate) fn drag(&self) -> bool {
+        self.drag
+    }
+    pub(crate) fn gravity(&self) -> bool {
+        self.gravity
+    }
+}
+impl Projectile {
+    // Radius of projectile cross section in meters
+    fn radius(&self) -> Numeric {
+        self.caliber.to_meters().to_num() / 2.0
+    }
+    // Area of projectile in meters, used during drag force calculation
+    pub(crate) fn area(&self) -> Numeric {
+        PI * self.radius().powf(2.0)
+    }
+    // Mass of projectile in kgs, used during acceleration calculation in simulation iteration
+    pub(crate) fn mass(&self) -> Numeric {
+        self.weight.to_kgs().into()
+    }
+    // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
+    fn sd(&self) -> Numeric {
+        self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
+    }
+    // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
+    pub(crate) fn i(&self) -> Numeric {
+        self.sd() / self.bc.value()
+    }
+    // Handle to BC table
+    pub(crate) fn bc(&self) -> &Bc {
+        &self.bc
+    }
+    pub(crate) fn velocity(&self, scope: &Scope) -> Vector3<Numeric> {
+        self.velocity
+            .to_mps()
+            .to_num()
+            .mul(Vector3::x())
+            .pivot_y(scope.yaw())
+            .pivot_z(scope.pitch())
+    }
+}
+impl Scope {
+    pub(crate) fn position(&self) -> Vector3<Numeric> {
+        Vector3::new(
+            0.0,
+            self.height.to_meters().to_num(),
+            self.offset.to_meters().to_num(),
+        )
+    }
+    pub(crate) fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    pub(crate) fn yaw(&self) -> Angle {
+        -self.yaw
+    }
+    pub(crate) fn roll(&self) -> Angle {
+        -self.roll
+    }
+}
+impl Shooter {
+    pub(crate) fn gravity(&self) -> Vector3<Numeric> {
+        self.gravity.to_mps2().to_num().mul(Vector3::y())
+    }
+    // Flip, since circle functions rotate counter-clockwise,
+    // 90 degrees is east by compass bearing, but west(left) in trig
+    //        (0)
+    //         ^
+    //         |
+    // (+90) <---> (-90)
+    //         |
+    //         v
+    //       (180)
+    //
+    //  {after negation(-)}
+    //
+    //        (0)
+    //         ^
+    //         |
+    // (-90) <---> (+90)
+    //         |
+    //         v
+    //       (180)
+    pub(crate) fn yaw(&self) -> Angle {
+        -self.yaw
+    }
+    pub(crate) fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    pub(crate) fn roll(&self) -> Angle {
+        -self.roll
+    }
+    // Angular velocity vector of earth, at current lattitude
+    // Can be thought of as vector from center of earth, pointing
+    // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
+    pub(crate) fn omega(&self) -> Vector3<Numeric> {
+        ANGULAR_VELOCITY_EARTH
+            .mul(Vector3::x())
+            .pivot_z(self.lattitude)
+    }
+}
+impl Wind {
+    // This vector indicates direction of wind flow, not source of wind
+    // so rotate by PI (adding or subtraction should have the same affect)
+    // Negative indicates 90 degree wind is from east=>west
+    // 0 degree wind is from north=>south (conventional)
+    //        (0)
+    //         ^
+    //         |
+    // (+90) <---> (-90)
+    //         |
+    //         v
+    //       (180)
+    //
+    //  {after rotation(+ PI)}
+    //
+    //       (180)
+    //         ^
+    //         |
+    // (-90) <---> (+90)
+    //         |
+    //         v
+    //        (0)
+    //
+    //  {after negation(-)}
+    //
+    //       (180)
+    //         ^
+    //         |
+    // (+90) <---> (-90)
+    //         |
+    //         v
+    //        (0)
+    fn yaw(&self) -> Angle {
+        -self.yaw + Angle::Radians(PI)
+    }
+    fn pitch(&self) -> Angle {
+        self.pitch
+    }
+    fn roll(&self) -> Angle {
+        self.roll
+    }
+    pub(crate) fn velocity(&self) -> Vector3<Numeric> {
+        self.velocity
+            .to_mps()
+            .to_num()
+            .mul(Vector3::x())
+            .pivot_y(self.yaw())
+            .pivot_z(self.pitch())
+            .pivot_x(self.roll())
     }
 }

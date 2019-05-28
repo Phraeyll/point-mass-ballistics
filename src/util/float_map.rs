@@ -1,7 +1,9 @@
 use ordered_float::OrderedFloat;
 
-use crate::error::{Error, ErrorKind, Result};
-use crate::util::Numeric;
+use crate::{
+    error::{Error, ErrorKind, Result},
+    util::Numeric,
+};
 
 use std::{collections::BTreeMap, iter::FromIterator, ops::RangeBounds};
 

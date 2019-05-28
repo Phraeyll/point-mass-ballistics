@@ -1,6 +1,5 @@
-use crate::model::core::dragtables::*;
+pub use self::BcKind::*;
 use crate::util::*;
-pub use BcKind::*;
 
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -63,24 +62,5 @@ impl Bc {
     }
     pub fn kind(&self) -> BcKind {
         self.kind
-    }
-}
-impl BcBuilder {
-    pub fn new(value: Numeric, kind: BcKind) -> BcBuilder {
-        BcBuilder {
-            value,
-            kind,
-            table: match kind {
-                G1 => g1::init(),
-                G2 => g2::init(),
-                G5 => g5::init(),
-                G6 => g6::init(),
-                G7 => g7::init(),
-                G8 => g8::init(),
-                GI => gi::init(),
-                GS => gs::init(),
-                Null => float_map![],
-            },
-        }
     }
 }

@@ -1,5 +1,7 @@
-use crate::model::core::{BcKind, Simulation, SimulationBuilder};
-use crate::util::*;
+use crate::{
+    model::core::{BcKind, Simulation, SimulationBuilder},
+    util::*,
+};
 
 impl Builder for SimulationBuilder {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
