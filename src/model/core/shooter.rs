@@ -3,12 +3,6 @@ use crate::{
     util::*,
 };
 
-const GRAVITY: Numeric = -9.806_65; // Local gravity in m/s
-
-pub fn default_gravity() -> Acceleration {
-    Acceleration::Mps2(GRAVITY)
-}
-
 #[derive(Debug)]
 pub struct Shooter {
     pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
@@ -54,7 +48,7 @@ impl Default for ShooterBuilder {
             pitch: Angle::Minutes(0.0),
             roll: Angle::Degrees(0.0),
             lattitude: Angle::Degrees(0.0),
-            gravity: default_gravity(),
+            gravity: Acceleration::Mps2(-9.806_65),
         }
     }
 }
