@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use super::base::*;
+use super::packet::GetMeasurement;
 use crate::{
     model::core::{
         dragtables::*, Atmosphere, Bc, BcBuilder, BcKind, BcKind::*, Flags, Projectile, Scope,
@@ -17,15 +17,15 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
+pub trait TimeStep {
+    fn delta_time(&self) -> Numeric;
+}
 pub trait Newtonian
 where
-    Self: SimulationHandle,
+    Self: TimeStep,
     Self: GetMeasurement,
 {
     fn acceleration(&self) -> Vector3<Numeric>;
-    fn delta_time(&self) -> Numeric {
-        self.simulation().time_step()
-    }
     // 'Second Equation of Motion'
     fn delta_position(&self) -> Vector3<Numeric> {
         self.get_velocity() * self.delta_time()
@@ -38,42 +38,16 @@ where
 }
 pub trait Drag
 where
-    Self: SimulationHandle,
     Self: GetMeasurement,
 {
-    fn drag_flag(&self) -> bool {
-        self.simulation().flags().drag()
-    }
-    fn projectile_mass(&self) -> Numeric {
-        self.simulation().projectile().mass()
-    }
-    fn projectile_area(&self) -> Numeric {
-        self.simulation().projectile().area()
-    }
-    fn i(&self) -> Numeric {
-        self.simulation().projectile().i()
-    }
-    fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation().projectile().bc().table()
-    }
-    fn wind_velocity(&self) -> Vector3<Numeric> {
-        // Velocity vector of wind, only horizontal at the moment
-        // Does not adjust according to line of sight, since most would measure wind
-        // along relative bearing - I don't think many would factor in a 'downhill' wind for example
-        // This would be interresting to think of, however.
-        self.simulation()
-            .wind()
-            .velocity()
-            .pivot_x(self.simulation().shooter().roll())
-            .pivot_z(self.simulation().shooter().pitch())
-            .pivot_y(self.simulation().shooter().yaw())
-    }
-    fn speed_of_sound(&self) -> Numeric {
-        self.simulation().atmosphere().speed_of_sound()
-    }
-    fn rho(&self) -> Numeric {
-        self.simulation().atmosphere().rho()
-    }
+    fn drag_flag(&self) -> bool;
+    fn projectile_mass(&self) -> Numeric;
+    fn projectile_area(&self) -> Numeric;
+    fn i(&self) -> Numeric;
+    fn cd_table(&self) -> &FloatMap<Numeric>;
+    fn wind_velocity(&self) -> Vector3<Numeric>;
+    fn speed_of_sound(&self) -> Numeric;
+    fn rho(&self) -> Numeric;
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
@@ -104,15 +78,10 @@ where
 }
 pub trait Coriolis
 where
-    Self: SimulationHandle,
     Self: GetMeasurement,
 {
-    fn coriolis_flag(&self) -> bool {
-        self.simulation().flags().coriolis()
-    }
-    fn omega(&self) -> Vector3<Numeric> {
-        self.simulation().shooter().omega()
-    }
+    fn coriolis_flag(&self) -> bool;
+    fn omega(&self) -> Vector3<Numeric>;
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -128,15 +97,9 @@ where
     }
 }
 pub trait Gravity
-where
-    Self: SimulationHandle,
 {
-    fn gravity_flag(&self) -> bool {
-        self.simulation().flags().gravity()
-    }
-    fn gravity(&self) -> Vector3<Numeric> {
-        self.simulation().shooter().gravity()
-    }
+    fn gravity_flag(&self) -> bool;
+    fn gravity(&self) -> Vector3<Numeric>;
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
         if self.gravity_flag() {
             self.gravity()
@@ -147,13 +110,12 @@ where
 }
 impl<I> Newtonian for I
 where
-    I: Coriolis + Drag + Gravity,
+    I: Coriolis + Drag + Gravity + TimeStep,
 {
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
 }
-
 impl BcBuilder {
     pub fn new(value: Numeric, kind: BcKind) -> BcBuilder {
         BcBuilder {

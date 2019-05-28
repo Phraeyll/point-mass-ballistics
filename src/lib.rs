@@ -41,7 +41,6 @@ pub mod model {
     pub mod iter {
         pub use self::{packet::*, simulation::*};
 
-        mod base;
         mod packet;
         mod physics;
         mod simulation;

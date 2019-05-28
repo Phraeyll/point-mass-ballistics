@@ -1,7 +1,9 @@
 use nalgebra::Vector3;
 
-use super::base::*;
-use crate::util::*;
+use crate::{
+    model::core::{Projectile, Scope, Shooter},
+    util::*,
+};
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
@@ -11,6 +13,21 @@ pub struct Packet<'s, S> {
     pub(crate) position: Vector3<Numeric>, // Position (m)
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
+pub trait SimulationHandle {
+    type Simulation: ParameterHandles;
+    fn simulation(&self) -> &Self::Simulation;
+}
+pub trait ParameterHandles {
+    fn projectile(&self) -> &Projectile;
+    fn shooter(&self) -> &Shooter;
+    fn scope(&self) -> &Scope;
+}
+pub trait GetMeasurement {
+    fn get_velocity(&self) -> Vector3<Numeric>;
+    fn get_position(&self) -> Vector3<Numeric>;
+    fn get_time(&self) -> Numeric;
+}
+
 pub trait Measurements
 where
     Self: SimulationHandle,
