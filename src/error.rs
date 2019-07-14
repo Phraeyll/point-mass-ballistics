@@ -1,9 +1,9 @@
 use self::ErrorKind::*;
 use crate::util::*;
 
-use std::{error::Error as StdError, fmt, fmt::Display as StdDisplay, result, str};
+use std::{error::Error as StdError, fmt, result::Result as StdResult};
 
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;
 
 #[derive(Debug)]
 pub struct Error(Box<ErrorKind>);
@@ -46,7 +46,7 @@ pub enum ErrorKind {
     },
 }
 
-impl StdDisplay for Error {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             BcKindNull => write!(f, "Bc need to be set before inititializing simulatin"),
