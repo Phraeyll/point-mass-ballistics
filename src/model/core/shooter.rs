@@ -43,7 +43,7 @@ impl ShooterAdjuster for SimulationBuilder {
         if value.is_sign_negative() {
             self.builder.shooter.gravity = Acceleration::Fps2(value);
             Ok(self)
-        else {
+        } else {
             Err(Error::new(ErrorKind::NegativeExpected(value)))
         }
     }
