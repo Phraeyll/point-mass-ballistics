@@ -96,8 +96,7 @@ where
         }
     }
 }
-pub trait Gravity
-{
+pub trait Gravity {
     fn gravity_flag(&self) -> bool;
     fn gravity(&self) -> Vector3<Numeric>;
     fn gravity_acceleration(&self) -> Vector3<Numeric> {
