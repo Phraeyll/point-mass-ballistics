@@ -15,7 +15,7 @@ pub struct Simulation {
 }
 #[derive(Debug)]
 pub struct SimulationBuilder {
-    pub (crate) builder: Simulation,
+    pub(crate) builder: Simulation,
 }
 impl From<SimulationBuilder> for Simulation {
     fn from(other: SimulationBuilder) -> Self {
@@ -41,7 +41,7 @@ impl From<Simulation> for SimulationBuilder {
                 wind: other.wind,
                 shooter: other.shooter,
                 time_step: other.time_step,
-            }
+            },
         }
     }
 }
@@ -90,7 +90,7 @@ impl Default for SimulationBuilder {
                     gravity: Acceleration::Mps2(-9.806_65),
                 },
                 time_step: 0.000_001,
-            }
+            },
         }
     }
 }
