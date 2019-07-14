@@ -15,7 +15,7 @@ impl ShooterAdjuster for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
-            self.shooter.pitch = Angle::Degrees(value);
+            self.builder.shooter.pitch = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -24,7 +24,7 @@ impl ShooterAdjuster for SimulationBuilder {
     fn set_lattitude(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
-            self.shooter.lattitude = Angle::Degrees(value);
+            self.builder.shooter.lattitude = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -33,14 +33,14 @@ impl ShooterAdjuster for SimulationBuilder {
     fn set_bearing(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
-            self.shooter.yaw = Angle::Degrees(value);
+            self.builder.shooter.yaw = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
     fn set_gravity(mut self, value: Numeric) -> Result<Self> {
-        self.shooter.gravity = Acceleration::Fps2(value);
+        self.builder.shooter.gravity = Acceleration::Fps2(value);
         Ok(self)
     }
 }

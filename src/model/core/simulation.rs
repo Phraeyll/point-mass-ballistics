@@ -5,16 +5,6 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Simulation {
-    pub(crate) flags: Flags,
-    pub(crate) projectile: Projectile,
-    pub(crate) scope: Scope,
-    pub(crate) atmosphere: Atmosphere,
-    pub(crate) wind: Wind,
-    pub(crate) shooter: Shooter,
-    pub(crate) time_step: Numeric,
-}
-#[derive(Debug)]
-pub struct SimulationBuilder {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
     pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
@@ -23,76 +13,84 @@ pub struct SimulationBuilder {
     pub(crate) shooter: Shooter, // Different conditions during solving
     pub(crate) time_step: Numeric, // Use same timestep for zeroing and solving
 }
+#[derive(Debug)]
+pub struct SimulationBuilder {
+    pub (crate) builder: Simulation,
+}
 impl From<SimulationBuilder> for Simulation {
     fn from(other: SimulationBuilder) -> Self {
         Self {
-            flags: other.flags,
-            projectile: other.projectile,
-            scope: other.scope,
-            atmosphere: other.atmosphere,
-            wind: other.wind,
-            shooter: other.shooter,
-            time_step: other.time_step,
+            flags: other.builder.flags,
+            projectile: other.builder.projectile,
+            scope: other.builder.scope,
+            atmosphere: other.builder.atmosphere,
+            wind: other.builder.wind,
+            shooter: other.builder.shooter,
+            time_step: other.builder.time_step,
         }
     }
 }
 impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
         Self {
-            flags: other.flags,
-            projectile: other.projectile,
-            scope: other.scope,
-            atmosphere: other.atmosphere,
-            wind: other.wind,
-            shooter: other.shooter,
-            time_step: other.time_step,
+            builder: Simulation {
+                flags: other.flags,
+                projectile: other.projectile,
+                scope: other.scope,
+                atmosphere: other.atmosphere,
+                wind: other.wind,
+                shooter: other.shooter,
+                time_step: other.time_step,
+            }
         }
     }
 }
 impl Default for SimulationBuilder {
     fn default() -> Self {
         Self {
-            flags: Flags {
-                coriolis: true,
-                drag: true,
-                gravity: true,
-            },
-            projectile: Projectile {
-                caliber: Length::Inches(0.264),
-                weight: WeightMass::Grains(140.0),
-                bc: Bc {
-                    value: 0.0,
-                    kind: BcKind::Null,
-                    table: float_map![],
+            builder: Simulation {
+                flags: Flags {
+                    coriolis: true,
+                    drag: true,
+                    gravity: true,
                 },
-                velocity: Velocity::Fps(2710.0),
-            },
-            scope: Scope {
-                yaw: Angle::Minutes(0.0),
-                pitch: Angle::Minutes(0.0),
-                roll: Angle::Degrees(0.0),
-                height: Length::Inches(1.5),
-                offset: Length::Inches(0.0),
-            },
-            atmosphere: Atmosphere {
-                temperature: Temperature::F(68.0),
-                pressure: Pressure::Inhg(29.92),
-                humidity: 0.0,
-            },
-            wind: Wind {
-                yaw: Angle::Degrees(0.0),
-                pitch: Angle::Degrees(0.0),
-                roll: Angle::Degrees(0.0),
-                velocity: Velocity::Mph(0.0),
-            },
-            shooter: Shooter {
-                yaw: Angle::Minutes(0.0),
-                pitch: Angle::Minutes(0.0),
-                roll: Angle::Degrees(0.0),
-                lattitude: Angle::Degrees(0.0),
-                gravity: Acceleration::Mps2(-9.806_65),
-            },
-            time_step: 0.000_001,
+                projectile: Projectile {
+                    caliber: Length::Inches(0.264),
+                    weight: WeightMass::Grains(140.0),
+                    bc: Bc {
+                        value: 0.0,
+                        kind: BcKind::Null,
+                        table: float_map![],
+                    },
+                    velocity: Velocity::Fps(2710.0),
+                },
+                scope: Scope {
+                    yaw: Angle::Minutes(0.0),
+                    pitch: Angle::Minutes(0.0),
+                    roll: Angle::Degrees(0.0),
+                    height: Length::Inches(1.5),
+                    offset: Length::Inches(0.0),
+                },
+                atmosphere: Atmosphere {
+                    temperature: Temperature::F(68.0),
+                    pressure: Pressure::Inhg(29.92),
+                    humidity: 0.0,
+                },
+                wind: Wind {
+                    yaw: Angle::Degrees(0.0),
+                    pitch: Angle::Degrees(0.0),
+                    roll: Angle::Degrees(0.0),
+                    velocity: Velocity::Mph(0.0),
+                },
+                shooter: Shooter {
+                    yaw: Angle::Minutes(0.0),
+                    pitch: Angle::Minutes(0.0),
+                    roll: Angle::Degrees(0.0),
+                    lattitude: Angle::Degrees(0.0),
+                    gravity: Acceleration::Mps2(-9.806_65),
+                },
+                time_step: 0.000_001,
+            }
         }
     }
 }
@@ -102,7 +100,7 @@ impl Builder for SimulationBuilder {
     // Starting from flat fire pitch (0.0)
     type Simulation = Simulation;
     fn init(self) -> Result<Self::Simulation> {
-        match self.projectile.bc.kind {
+        match self.builder.projectile.bc.kind {
             BcKind::Null => Err(Error::new(ErrorKind::BcKindNull)),
             _ => Ok(Self::Simulation::from(self)),
         }
@@ -110,7 +108,7 @@ impl Builder for SimulationBuilder {
     fn time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
         if value > min && value <= max {
-            self.time_step = value;
+            self.builder.time_step = value;
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -124,7 +122,7 @@ pub trait Builder {
     where
         Self: Sized + Default,
     {
-        Self::default()
+        Default::default()
     }
     fn init(self) -> Result<Self::Simulation>
     where

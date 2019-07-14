@@ -43,7 +43,7 @@ impl Bc {
 impl ProjectileAdjuster for SimulationBuilder {
     fn set_caliber(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.projectile.caliber = Length::Inches(value);
+            self.builder.projectile.caliber = Length::Inches(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -51,7 +51,7 @@ impl ProjectileAdjuster for SimulationBuilder {
     }
     fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.projectile.velocity = Velocity::Fps(value);
+            self.builder.projectile.velocity = Velocity::Fps(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -59,7 +59,7 @@ impl ProjectileAdjuster for SimulationBuilder {
     }
     fn set_grains(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.projectile.weight = WeightMass::Grains(value);
+            self.builder.projectile.weight = WeightMass::Grains(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -67,7 +67,7 @@ impl ProjectileAdjuster for SimulationBuilder {
     }
     fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
-            self.projectile.bc = Bc {
+            self.builder.projectile.bc = Bc {
                 value,
                 kind,
                 table: match kind {

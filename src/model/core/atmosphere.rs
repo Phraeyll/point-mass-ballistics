@@ -13,7 +13,7 @@ impl AtmosphereAdjuster for SimulationBuilder {
     fn set_temperature(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-112.0, 122.0);
         if value >= min && value <= max {
-            self.atmosphere.temperature = Temperature::F(value);
+            self.builder.atmosphere.temperature = Temperature::F(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -21,7 +21,7 @@ impl AtmosphereAdjuster for SimulationBuilder {
     }
     fn set_pressure(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.atmosphere.pressure = Pressure::Inhg(value);
+            self.builder.atmosphere.pressure = Pressure::Inhg(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -30,7 +30,7 @@ impl AtmosphereAdjuster for SimulationBuilder {
     fn set_humidity(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 1.0);
         if value >= min && value <= max {
-            self.atmosphere.humidity = value;
+            self.builder.atmosphere.humidity = value;
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))

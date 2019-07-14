@@ -11,15 +11,15 @@ pub struct Flags {
 }
 impl FlagsAdjuster for SimulationBuilder {
     fn use_coriolis(mut self, value: bool) -> Result<Self> {
-        self.flags.coriolis = value;
+        self.builder.flags.coriolis = value;
         Ok(self)
     }
     fn use_drag(mut self, value: bool) -> Result<Self> {
-        self.flags.drag = value;
+        self.builder.flags.drag = value;
         Ok(self)
     }
     fn use_gravity(mut self, value: bool) -> Result<Self> {
-        self.flags.gravity = value;
+        self.builder.flags.gravity = value;
         Ok(self)
     }
 }

@@ -13,7 +13,7 @@ pub struct Wind {
 impl WindAdjuster for SimulationBuilder {
     fn set_wind_speed(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.wind.velocity = Velocity::Mph(value);
+            self.builder.wind.velocity = Velocity::Mph(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -22,7 +22,7 @@ impl WindAdjuster for SimulationBuilder {
     fn set_wind_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
-            self.wind.yaw = Angle::Degrees(value);
+            self.builder.wind.yaw = Angle::Degrees(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
