@@ -19,30 +19,12 @@ pub struct SimulationBuilder {
 }
 impl From<SimulationBuilder> for Simulation {
     fn from(other: SimulationBuilder) -> Self {
-        Self {
-            flags: other.builder.flags,
-            projectile: other.builder.projectile,
-            scope: other.builder.scope,
-            atmosphere: other.builder.atmosphere,
-            wind: other.builder.wind,
-            shooter: other.builder.shooter,
-            time_step: other.builder.time_step,
-        }
+        Self { ..other.builder }
     }
 }
 impl From<Simulation> for SimulationBuilder {
     fn from(other: Simulation) -> Self {
-        Self {
-            builder: Simulation {
-                flags: other.flags,
-                projectile: other.projectile,
-                scope: other.scope,
-                atmosphere: other.atmosphere,
-                wind: other.wind,
-                shooter: other.shooter,
-                time_step: other.time_step,
-            },
-        }
+        Self { builder: other }
     }
 }
 impl Default for SimulationBuilder {
