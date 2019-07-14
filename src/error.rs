@@ -25,6 +25,7 @@ pub enum ErrorKind {
     BcKindNull,
     VelocityLookup(Numeric),
     PositiveExpected(Numeric),
+    NegativeExpected(Numeric),
     OutOfRange {
         min: Numeric,
         max: Numeric,
@@ -52,6 +53,7 @@ impl fmt::Display for Error {
             BcKindNull => write!(f, "Bc need to be set before inititializing simulatin"),
             VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
             PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
+            NegativeExpected(ref err) => write!(f, "Negative Expected Error: {}", err),
             OutOfRange { ref min, ref max } => write!(
                 f,
                 "Within Range Expected Error => min: {:#?} - {:#?}",
@@ -81,6 +83,7 @@ impl StdError for Error {
             BcKindNull => "BcKind is null",
             VelocityLookup(_) => "Velocity out of range",
             PositiveExpected(..) => "Number needs to be positive greater than 0",
+            NegativeExpected(..) => "Number needs to be positive less than 0",
             OutOfRange { .. } => "Numer needs to be within range",
             AngleRange { .. } => "Angle out of range",
             TerminalVelocity { .. } => "Terminal velocity reached",
