@@ -115,19 +115,19 @@ pub trait Builder {
 }
 
 pub trait ScopeAdjuster {
-    fn set_scope_height(self, value: Numeric) -> Result<Self>
+    fn set_scope_height(self, value: Numeric) -> Self
     where
         Self: Sized;
-    fn set_scope_offset(self, value: Numeric) -> Result<Self>
+    fn set_scope_offset(self, value: Numeric) -> Self
     where
         Self: Sized;
-    fn set_scope_pitch(self, value: Numeric) -> Result<Self>
+    fn set_scope_pitch(self, value: Numeric) -> Self
     where
         Self: Sized;
-    fn set_scope_yaw(self, value: Numeric) -> Result<Self>
+    fn set_scope_yaw(self, value: Numeric) -> Self
     where
         Self: Sized;
-    fn set_scope_roll(self, value: Numeric) -> Result<Self>
+    fn set_scope_roll(self, value: Numeric) -> Self
     where
         Self: Sized;
 }
@@ -176,19 +176,19 @@ pub trait ShooterAdjuster {
     fn set_bearing(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_gravity(self, value: Numeric) -> Result<Self>
+    fn set_gravity(self, value: Numeric) -> Self
     where
         Self: Sized;
 }
 
 pub trait FlagsAdjuster {
-    fn use_coriolis(self, value: bool) -> Result<Self>
+    fn use_coriolis(self, value: bool) -> Self
     where
         Self: Sized;
-    fn use_drag(self, value: bool) -> Result<Self>
+    fn use_drag(self, value: bool) -> Self
     where
         Self: Sized;
-    fn use_gravity(self, value: bool) -> Result<Self>
+    fn use_gravity(self, value: bool) -> Self
     where
         Self: Sized;
 }

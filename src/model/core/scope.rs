@@ -12,24 +12,24 @@ pub struct Scope {
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
 impl ScopeAdjuster for SimulationBuilder {
-    fn set_scope_height(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_height(mut self, value: Numeric) -> Self {
         self.builder.scope.height = Length::Inches(value);
-        Ok(self)
+        self
     }
-    fn set_scope_offset(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_offset(mut self, value: Numeric) -> Self {
         self.builder.scope.offset = Length::Inches(value);
-        Ok(self)
+        self
     }
-    fn set_scope_pitch(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_pitch(mut self, value: Numeric) -> Self {
         self.builder.scope.pitch = Angle::Minutes(value);
-        Ok(self)
+        self
     }
-    fn set_scope_yaw(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_yaw(mut self, value: Numeric) -> Self {
         self.builder.scope.yaw = Angle::Minutes(value);
-        Ok(self)
+        self
     }
-    fn set_scope_roll(mut self, value: Numeric) -> Result<Self> {
+    fn set_scope_roll(mut self, value: Numeric) -> Self {
         self.builder.scope.roll = Angle::Degrees(value);
-        Ok(self)
+        self
     }
 }

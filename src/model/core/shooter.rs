@@ -39,8 +39,8 @@ impl ShooterAdjuster for SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
-    fn set_gravity(mut self, value: Numeric) -> Result<Self> {
+    fn set_gravity(mut self, value: Numeric) -> Self {
         self.builder.shooter.gravity = Acceleration::Fps2(value);
-        Ok(self)
+        self
     }
 }
