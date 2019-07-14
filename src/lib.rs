@@ -47,8 +47,7 @@ pub mod model {
     }
     pub mod core {
         pub use self::{
-            atmosphere::*, bc::*, builder::*, flags::*, projectile::*, scope::*, shooter::*,
-            simulation::*, wind::*,
+            atmosphere::*, flags::*, projectile::*, scope::*, shooter::*, simulation::*, wind::*,
         };
         pub use crate::util::{conversions::*, Natural, Numeric};
 
@@ -64,8 +63,6 @@ pub mod model {
             pub mod gs;
         }
         mod atmosphere;
-        mod bc;
-        mod builder;
         mod flags;
         mod projectile;
         mod scope;

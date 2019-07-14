@@ -11,47 +11,6 @@ pub struct Shooter {
     pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
     pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
-#[derive(Debug)]
-pub struct ShooterBuilder {
-    pub yaw: Angle,       // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub pitch: Angle,     // Line of Sight angle (degrees)
-    pub roll: Angle,      // Roll relative to shooters position, ie, scope alligned with rifle
-    pub lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
-    pub gravity: Acceleration, // Gravity (m/s^2)
-}
-impl From<ShooterBuilder> for Shooter {
-    fn from(other: ShooterBuilder) -> Self {
-        Self {
-            yaw: other.yaw,
-            pitch: other.pitch,
-            roll: other.roll,
-            lattitude: other.lattitude,
-            gravity: other.gravity,
-        }
-    }
-}
-impl From<Shooter> for ShooterBuilder {
-    fn from(other: Shooter) -> Self {
-        Self {
-            yaw: other.yaw,
-            pitch: other.pitch,
-            roll: other.roll,
-            lattitude: other.lattitude,
-            gravity: other.gravity,
-        }
-    }
-}
-impl Default for ShooterBuilder {
-    fn default() -> Self {
-        Self {
-            yaw: Angle::Minutes(0.0),
-            pitch: Angle::Minutes(0.0),
-            roll: Angle::Degrees(0.0),
-            lattitude: Angle::Degrees(0.0),
-            gravity: Acceleration::Mps2(-9.806_65),
-        }
-    }
-}
 impl ShooterAdjuster for SimulationBuilder {
     fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);

@@ -1,5 +1,6 @@
+pub use self::BcKind::*;
 use crate::{
-    model::core::{Bc, BcBuilder, BcKind, ProjectileAdjuster, SimulationBuilder},
+    model::core::{dragtables::*, ProjectileAdjuster, SimulationBuilder},
     util::*,
 };
 
@@ -11,40 +12,32 @@ pub struct Projectile {
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
-pub struct ProjectileBuilder {
-    pub caliber: Length,    // Caliber (inches)
-    pub weight: WeightMass, // Weight (grains)
-    pub bc: BcBuilder,      // Ballistic Coefficient
-    pub velocity: Velocity, // Initial velocity (ft/s)
+pub struct Bc {
+    pub(crate) value: Numeric,
+    pub(crate) kind: BcKind,
+    pub(crate) table: FloatMap<Numeric>,
 }
-impl From<ProjectileBuilder> for Projectile {
-    fn from(other: ProjectileBuilder) -> Self {
-        Self {
-            caliber: other.caliber,
-            weight: other.weight,
-            bc: Bc::from(other.bc),
-            velocity: other.velocity,
-        }
+#[derive(Debug, Copy, Clone)]
+pub enum BcKind {
+    G1,
+    G2,
+    G5,
+    G6,
+    G7,
+    G8,
+    GI,
+    GS,
+    Null,
+}
+impl Bc {
+    pub fn value(&self) -> Numeric {
+        self.value
     }
-}
-impl From<Projectile> for ProjectileBuilder {
-    fn from(other: Projectile) -> Self {
-        Self {
-            caliber: other.caliber,
-            weight: other.weight,
-            bc: BcBuilder::from(other.bc),
-            velocity: other.velocity,
-        }
+    pub fn table(&self) -> &FloatMap<Numeric> {
+        &self.table
     }
-}
-impl Default for ProjectileBuilder {
-    fn default() -> Self {
-        Self {
-            caliber: Length::Inches(0.264),
-            weight: WeightMass::Grains(140.0),
-            bc: BcBuilder::default(),
-            velocity: Velocity::Fps(2710.0),
-        }
+    pub fn kind(&self) -> BcKind {
+        self.kind
     }
 }
 impl ProjectileAdjuster for SimulationBuilder {
@@ -74,7 +67,21 @@ impl ProjectileAdjuster for SimulationBuilder {
     }
     fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
-            self.projectile.bc = BcBuilder::new(value, kind);
+            self.projectile.bc = Bc {
+                value,
+                kind,
+                table: match kind {
+                    G1 => g1::init(),
+                    G2 => g2::init(),
+                    G5 => g5::init(),
+                    G6 => g6::init(),
+                    G7 => g7::init(),
+                    G8 => g8::init(),
+                    GI => gi::init(),
+                    GS => gs::init(),
+                    Null => float_map![],
+                },
+            };
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))

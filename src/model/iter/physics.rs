@@ -2,10 +2,7 @@ use nalgebra::Vector3;
 
 use super::packet::GetMeasurement;
 use crate::{
-    model::core::{
-        dragtables::*, Atmosphere, Bc, BcBuilder, BcKind, BcKind::*, Flags, Projectile, Scope,
-        Shooter, Wind,
-    },
+    model::core::{Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind},
     util::*,
 };
 
@@ -113,25 +110,6 @@ where
 {
     fn acceleration(&self) -> Vector3<Numeric> {
         self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
-}
-impl BcBuilder {
-    pub fn new(value: Numeric, kind: BcKind) -> BcBuilder {
-        BcBuilder {
-            value,
-            kind,
-            table: match kind {
-                G1 => g1::init(),
-                G2 => g2::init(),
-                G5 => g5::init(),
-                G6 => g6::init(),
-                G7 => g7::init(),
-                G8 => g8::init(),
-                GI => gi::init(),
-                GS => gs::init(),
-                Null => float_map![],
-            },
-        }
     }
 }
 impl Atmosphere {
