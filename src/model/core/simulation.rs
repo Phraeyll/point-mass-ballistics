@@ -176,7 +176,7 @@ pub trait ShooterAdjuster {
     fn set_bearing(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
-    fn set_gravity(self, value: Numeric) -> Self
+    fn set_gravity(self, value: Numeric) -> Result<Self>
     where
         Self: Sized;
 }
