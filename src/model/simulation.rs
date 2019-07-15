@@ -158,7 +158,7 @@ impl SimulationBuilder {
             _ => Ok(Simulation::from(self)),
         }
     }
-    pub fn set_time_step(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_time_step(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (0.0, 0.1);
         if value > min && value <= max {
             self.builder.time_step = value;
@@ -169,7 +169,7 @@ impl SimulationBuilder {
     }
 
     // Atmosphere
-    pub fn set_temperature(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_temperature(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (-112.0, 122.0);
         if value >= min && value <= max {
             self.builder.atmosphere.temperature = Temperature::F(value);
@@ -178,7 +178,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
-    pub fn set_pressure(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_pressure(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.atmosphere.pressure = Pressure::Inhg(value);
             Ok(self)
@@ -186,7 +186,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_humidity(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_humidity(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (0.0, 1.0);
         if value >= min && value <= max {
             self.builder.atmosphere.humidity = value;
@@ -197,21 +197,21 @@ impl SimulationBuilder {
     }
 
     // Flags
-    pub fn use_coriolis(mut self, value: bool) -> Self {
+    pub fn use_coriolis(&mut self, value: bool) -> &mut Self {
         self.builder.flags.coriolis = value;
         self
     }
-    pub fn use_drag(mut self, value: bool) -> Self {
+    pub fn use_drag(&mut self, value: bool) -> &mut Self {
         self.builder.flags.drag = value;
         self
     }
-    pub fn use_gravity(mut self, value: bool) -> Self {
+    pub fn use_gravity(&mut self, value: bool) -> &mut Self {
         self.builder.flags.gravity = value;
         self
     }
 
     // Shooter
-    pub fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_shot_angle(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
             self.builder.shooter.pitch = Angle::Degrees(value);
@@ -220,7 +220,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
-    pub fn set_lattitude(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_lattitude(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
             self.builder.shooter.lattitude = Angle::Degrees(value);
@@ -229,7 +229,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
-    pub fn set_bearing(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_bearing(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
             self.builder.shooter.yaw = Angle::Degrees(value);
@@ -238,7 +238,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
         }
     }
-    pub fn set_gravity(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_gravity(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_negative() {
             self.builder.shooter.gravity = Acceleration::Fps2(value);
             Ok(self)
@@ -248,7 +248,7 @@ impl SimulationBuilder {
     }
 
     // Wind
-    pub fn set_wind_speed(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_wind_speed(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.wind.velocity = Velocity::Mph(value);
             Ok(self)
@@ -256,7 +256,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_wind_angle(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_wind_angle(&mut self, value: Numeric) -> Result<&mut Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
             self.builder.wind.yaw = Angle::Degrees(value);
@@ -267,29 +267,29 @@ impl SimulationBuilder {
     }
 
     //Scope
-    pub fn set_scope_height(mut self, value: Numeric) -> Self {
+    pub fn set_scope_height(&mut self, value: Numeric) -> &mut Self {
         self.builder.scope.height = Length::Inches(value);
         self
     }
-    pub fn set_scope_offset(mut self, value: Numeric) -> Self {
+    pub fn set_scope_offset(&mut self, value: Numeric) -> &mut Self {
         self.builder.scope.offset = Length::Inches(value);
         self
     }
-    pub fn set_scope_pitch(mut self, value: Numeric) -> Self {
+    pub fn set_scope_pitch(&mut self, value: Numeric) -> &mut Self {
         self.builder.scope.pitch = Angle::Minutes(value);
         self
     }
-    pub fn set_scope_yaw(mut self, value: Numeric) -> Self {
+    pub fn set_scope_yaw(&mut self, value: Numeric) -> &mut Self {
         self.builder.scope.yaw = Angle::Minutes(value);
         self
     }
-    pub fn set_scope_roll(mut self, value: Numeric) -> Self {
+    pub fn set_scope_roll(&mut self, value: Numeric) -> &mut Self {
         self.builder.scope.roll = Angle::Degrees(value);
         self
     }
 
     //Projectile
-    pub fn set_caliber(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_caliber(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.projectile.caliber = Length::Inches(value);
             Ok(self)
@@ -297,7 +297,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_velocity(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_velocity(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.projectile.velocity = Velocity::Fps(value);
             Ok(self)
@@ -305,7 +305,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_grains(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_grains(&mut self, value: Numeric) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.projectile.weight = WeightMass::Grains(value);
             Ok(self)
@@ -313,7 +313,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+    pub fn set_bc(&mut self, value: Numeric, kind: BcKind) -> Result<&mut Self> {
         if value.is_sign_positive() {
             self.builder.projectile.bc = Bc {
                 value,
