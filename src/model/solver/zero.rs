@@ -1,5 +1,5 @@
 use crate::{
-    model::{Scope, Simulation},
+    model::{Scope, Simulation, iter::Measurements},
     util::*,
 };
 

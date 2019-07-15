@@ -11,45 +11,45 @@ pub struct Packet<'s> {
     pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
 }
 
-impl Packet<'_> {
-    pub fn time(&self) -> Numeric {
+impl Measurements for Packet<'_> {
+    fn time(&self) -> Numeric {
         Time::Seconds(self.time).to_seconds().to_num()
     }
-    pub fn velocity(&self) -> Numeric {
+    fn velocity(&self) -> Numeric {
         Velocity::Mps(self.velocity.norm()).to_fps().to_num()
     }
-    pub fn energy(&self) -> Numeric {
+    fn energy(&self) -> Numeric {
         Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
             .to_ftlbs()
             .to_num()
     }
     // Positions relative to line of sight (shooter_pitch)
-    pub fn distance(&self) -> Numeric {
+    fn distance(&self) -> Numeric {
         Length::Meters(self.relative_position().x)
             .to_yards()
             .to_num()
     }
-    pub fn elevation(&self) -> Numeric {
+    fn elevation(&self) -> Numeric {
         Length::Meters(self.relative_position().y)
             .to_inches()
             .to_num()
     }
-    pub fn windage(&self) -> Numeric {
+    fn windage(&self) -> Numeric {
         Length::Meters(self.relative_position().z)
             .to_inches()
             .to_num()
     }
-    pub fn moa(&self) -> Numeric {
+    fn moa(&self) -> Numeric {
         Angle::Radians(self.relative_position().angle(&Vector3::x_axis()))
             .to_minutes()
             .to_num()
     }
-    pub fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
         self.offset_vertical_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
             .to_minutes()
             .to_num()
     }
-    pub fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
         self.offset_horizontal_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
             .to_minutes()
             .to_num()
@@ -58,7 +58,7 @@ impl Packet<'_> {
     // the shooter's bearing (azimuth and line of sight)
     // This function returns the position rotated back to the initial frame of reference
     // This is used during zero'ing and is output in the drop table
-    pub fn relative_position(&self) -> Vector3<Numeric> {
+    fn relative_position(&self) -> Vector3<Numeric> {
         self.position
             .pivot_y(-self.simulation.shooter.yaw())
             .pivot_z(-self.simulation.shooter.pitch())
@@ -66,7 +66,7 @@ impl Packet<'_> {
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    pub fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
+    fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().y >= (offset - tolerance) {
             -1.0
         } else {
@@ -80,7 +80,7 @@ impl Packet<'_> {
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    pub fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
+    fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle {
         let sign = if self.relative_position().z >= (offset - tolerance) {
             -1.0
         } else {
@@ -92,4 +92,19 @@ impl Packet<'_> {
 
         Angle::Radians(sign * position.angle(&desired))
     }
+}
+
+pub trait Measurements {
+    fn time(&self) -> Numeric;
+    fn velocity(&self) -> Numeric;
+    fn energy(&self) -> Numeric;
+    fn distance(&self) -> Numeric;
+    fn elevation(&self) -> Numeric;
+    fn windage(&self) -> Numeric;
+    fn moa(&self) -> Numeric;
+    fn vertical_moa(&self, tolerance: Numeric) -> Numeric;
+    fn horizontal_moa(&self, tolerance: Numeric) -> Numeric;
+    fn relative_position(&self) -> Vector3<Numeric>;
+    fn offset_vertical_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle;
+    fn offset_horizontal_moa(&self, offset: Numeric, tolerance: Numeric) -> Angle;
 }
