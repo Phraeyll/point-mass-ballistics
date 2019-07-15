@@ -33,9 +33,11 @@ mod util {
     }
     mod nalgebra_helpers;
 }
+
 pub mod error;
 pub mod model {
-    pub use self::{core::*, iter::*, solver::*};
+    pub use self::{iter::*, simulation::*, solver::*};
+    pub use crate::util::{conversions::*, Natural, Numeric};
 
     #[allow(clippy::float_cmp)]
     pub mod iter {
@@ -45,36 +47,24 @@ pub mod model {
         mod physics;
         mod simulation;
     }
-    pub mod core {
-        pub use self::{
-            atmosphere::*, flags::*, projectile::*, scope::*, shooter::*, simulation::*, wind::*,
-        };
-        pub use crate::util::{conversions::*, Natural, Numeric};
-
-        #[allow(clippy::approx_constant)]
-        pub(crate) mod dragtables {
-            pub mod g1;
-            pub mod g2;
-            pub mod g5;
-            pub mod g6;
-            pub mod g7;
-            pub mod g8;
-            pub mod gi;
-            pub mod gs;
-        }
-        mod atmosphere;
-        mod flags;
-        mod projectile;
-        mod scope;
-        mod shooter;
-        mod simulation;
-        mod wind;
-    }
+    pub mod simulation;
     pub mod solver {
         pub use self::zero::*;
 
         #[allow(clippy::float_cmp)]
         #[allow(clippy::nonminimal_bool)]
         pub mod zero;
+    }
+
+    #[allow(clippy::approx_constant)]
+    pub(crate) mod dragtables {
+        pub mod g1;
+        pub mod g2;
+        pub mod g5;
+        pub mod g6;
+        pub mod g7;
+        pub mod g8;
+        pub mod gi;
+        pub mod gs;
     }
 }

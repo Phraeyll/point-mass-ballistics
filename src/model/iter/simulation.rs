@@ -1,20 +1,17 @@
 use nalgebra::Vector3;
 
-use super::{packet::*, physics::*};
-use crate::{
-    model::core::{Projectile, Scope, Shooter, Simulation},
-    util::*,
-};
+use super::{packet::*};
+use crate::{model::Simulation, util::*};
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
 pub struct IterSimulation<'s> {
-    simulation: &'s Simulation, // Reference to model used for calculations
-    position: Vector3<Numeric>, // Position (m)
-    velocity: Vector3<Numeric>, // Velocity (m/s)
-    time: Numeric,              // Position in time (s)
+    pub(crate) simulation: &'s Simulation, // Reference to model used for calculations
+    pub(crate) position: Vector3<Numeric>, // Position (m)
+    pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
+    pub(crate) time: Numeric,              // Position in time (s)
 }
 impl Simulation {
     pub fn iter(&self) -> IterSimulation<'_> {
@@ -45,11 +42,6 @@ impl Simulation {
             .pivot_y(self.shooter.yaw())
     }
 }
-impl TimeStep for IterSimulation<'_> {
-    fn delta_time(&self) -> Numeric {
-        self.simulation.time_step
-    }
-}
 // Create an new iterator over Simulation
 impl<'s> IntoIterator for &'s Simulation {
     type Item = <IterSimulation<'s> as Iterator>::Item;
@@ -62,7 +54,7 @@ impl<'s> IntoIterator for &'s Simulation {
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'s> Iterator for IterSimulation<'s> {
-    type Item = Packet<'s, Simulation>;
+    type Item = Packet<'s>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -99,76 +91,21 @@ impl<'s> Iterator for IterSimulation<'s> {
     }
 }
 
-impl ParameterHandles for Simulation {
-    fn projectile(&self) -> &Projectile {
-        &self.projectile
+impl IterSimulation<'_> {
+    fn delta_time(&self) -> Numeric {
+        self.simulation.time_step
     }
-    fn scope(&self) -> &Scope {
-        &self.scope
+    // 'Second Equation of Motion'
+    fn delta_position(&self) -> Vector3<Numeric> {
+        self.velocity * self.delta_time()
+            + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
     }
-    fn shooter(&self) -> &Shooter {
-        &self.shooter
+    // 'First Equation of Motion'
+    fn delta_velocity(&self) -> Vector3<Numeric> {
+        self.acceleration() * self.delta_time()
     }
-}
-impl GetMeasurement for IterSimulation<'_> {
-    fn get_velocity(&self) -> Vector3<Numeric> {
-        self.velocity
-    }
-    fn get_position(&self) -> Vector3<Numeric> {
-        self.position
-    }
-    fn get_time(&self) -> Numeric {
-        self.time
-    }
-}
-impl Gravity for IterSimulation<'_> {
-    fn gravity_flag(&self) -> bool {
-        self.simulation.flags.gravity()
-    }
-    fn gravity(&self) -> Vector3<Numeric> {
-        self.simulation.shooter.gravity()
-    }
-}
-impl Drag for IterSimulation<'_> {
-    fn drag_flag(&self) -> bool {
-        self.simulation.flags.drag()
-    }
-    fn projectile_mass(&self) -> Numeric {
-        self.simulation.projectile.mass()
-    }
-    fn projectile_area(&self) -> Numeric {
-        self.simulation.projectile.area()
-    }
-    fn i(&self) -> Numeric {
-        self.simulation.projectile.i()
-    }
-    fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation.projectile.bc().table()
-    }
-    fn wind_velocity(&self) -> Vector3<Numeric> {
-        // Velocity vector of wind, only horizontal at the moment
-        // Does not adjust according to line of sight, since most would measure wind
-        // along relative bearing - I don't think many would factor in a 'downhill' wind for example
-        // This would be interresting to think of, however.
-        self.simulation
-            .wind
-            .velocity()
-            .pivot_x(self.simulation.shooter.roll())
-            .pivot_z(self.simulation.shooter.pitch())
-            .pivot_y(self.simulation.shooter.yaw())
-    }
-    fn speed_of_sound(&self) -> Numeric {
-        self.simulation.atmosphere.speed_of_sound()
-    }
-    fn rho(&self) -> Numeric {
-        self.simulation.atmosphere.rho()
-    }
-}
-impl Coriolis for IterSimulation<'_> {
-    fn coriolis_flag(&self) -> bool {
-        self.simulation.flags.coriolis()
-    }
-    fn omega(&self) -> Vector3<Numeric> {
-        self.simulation.shooter.omega()
+
+    fn acceleration(&self) -> Vector3<Numeric> {
+        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
     }
 }

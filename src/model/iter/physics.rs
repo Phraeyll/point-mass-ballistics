@@ -1,8 +1,7 @@
 use nalgebra::Vector3;
 
-use super::packet::GetMeasurement;
 use crate::{
-    model::core::{Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind},
+    model::{iter::IterSimulation, Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind},
     util::*,
 };
 
@@ -14,45 +13,45 @@ const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
-pub trait TimeStep {
-    fn delta_time(&self) -> Numeric;
-}
-pub trait Newtonian
-where
-    Self: TimeStep,
-    Self: GetMeasurement,
-{
-    fn acceleration(&self) -> Vector3<Numeric>;
-    // 'Second Equation of Motion'
-    fn delta_position(&self) -> Vector3<Numeric> {
-        self.get_velocity() * self.delta_time()
-            + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
+impl IterSimulation<'_> {
+    fn projectile_mass(&self) -> Numeric {
+        self.simulation.projectile.mass()
     }
-    // 'First Equation of Motion'
-    fn delta_velocity(&self) -> Vector3<Numeric> {
-        self.acceleration() * self.delta_time()
+    fn projectile_area(&self) -> Numeric {
+        self.simulation.projectile.area()
     }
-}
-pub trait Drag
-where
-    Self: GetMeasurement,
-{
-    fn drag_flag(&self) -> bool;
-    fn projectile_mass(&self) -> Numeric;
-    fn projectile_area(&self) -> Numeric;
-    fn i(&self) -> Numeric;
-    fn cd_table(&self) -> &FloatMap<Numeric>;
-    fn wind_velocity(&self) -> Vector3<Numeric>;
-    fn speed_of_sound(&self) -> Numeric;
-    fn rho(&self) -> Numeric;
+    fn i(&self) -> Numeric {
+        self.simulation.projectile.i()
+    }
+    fn cd_table(&self) -> &FloatMap<Numeric> {
+        self.simulation.projectile.bc().table()
+    }
+    fn wind_velocity(&self) -> Vector3<Numeric> {
+        // Velocity vector of wind, only horizontal at the moment
+        // Does not adjust according to line of sight, since most would measure wind
+        // along relative bearing - I don't think many would factor in a 'downhill' wind for example
+        // This would be interresting to think of, however.
+        self.simulation
+            .wind
+            .velocity()
+            .pivot_x(self.simulation.shooter.roll())
+            .pivot_z(self.simulation.shooter.pitch())
+            .pivot_y(self.simulation.shooter.yaw())
+    }
+    fn speed_of_sound(&self) -> Numeric {
+        self.simulation.atmosphere.speed_of_sound()
+    }
+    fn rho(&self) -> Numeric {
+        self.simulation.atmosphere.rho()
+    }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self) -> Vector3<Numeric> {
-        self.get_velocity() - self.wind_velocity()
+        self.velocity - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self) -> Numeric {
-        self.get_velocity().norm() / self.speed_of_sound()
+        self.velocity.norm() / self.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self) -> Numeric {
@@ -64,8 +63,8 @@ where
     fn drag_force(&self) -> Vector3<Numeric> {
         -0.5 * self.rho() * self.vv() * self.vv().norm() * self.cd() * self.projectile_area()
     }
-    fn drag_acceleration(&self) -> Vector3<Numeric> {
-        if self.drag_flag() {
+    pub(crate) fn drag_acceleration(&self) -> Vector3<Numeric> {
+        if self.simulation.flags.drag() {
             // Acceleration from drag force and gravity (F = ma)
             self.drag_force() / self.projectile_mass()
         } else {
@@ -73,45 +72,35 @@ where
         }
     }
 }
-pub trait Coriolis
-where
-    Self: GetMeasurement,
-{
-    fn coriolis_flag(&self) -> bool;
-    fn omega(&self) -> Vector3<Numeric>;
+
+impl IterSimulation<'_> {
+    fn omega(&self) -> Vector3<Numeric> {
+        self.simulation.shooter.omega()
+    }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
     // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
     // Bearing East results in higher elevation (+y absolute/relative)
     // Bearing West results in lower elevation (-y relative/absolute)
-    fn coriolis_acceleration(&self) -> Vector3<Numeric> {
-        if self.coriolis_flag() {
-            -2.0 * self.omega().cross(&self.get_velocity())
+    pub(crate) fn coriolis_acceleration(&self) -> Vector3<Numeric> {
+        if self.simulation.flags.coriolis() {
+            -2.0 * self.omega().cross(&self.velocity)
         } else {
             Vector3::zeros()
         }
     }
 }
-pub trait Gravity {
-    fn gravity_flag(&self) -> bool;
-    fn gravity(&self) -> Vector3<Numeric>;
-    fn gravity_acceleration(&self) -> Vector3<Numeric> {
-        if self.gravity_flag() {
-            self.gravity()
+impl IterSimulation<'_> {
+    pub(crate) fn gravity_acceleration(&self) -> Vector3<Numeric> {
+        if self.simulation.flags.gravity() {
+            self.simulation.shooter.gravity()
         } else {
             Vector3::zeros()
         }
     }
 }
-impl<I> Newtonian for I
-where
-    I: Coriolis + Drag + Gravity + TimeStep,
-{
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
-    }
-}
+
 impl Atmosphere {
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> Numeric {
@@ -145,6 +134,7 @@ impl Atmosphere {
         self.temperature.to_kelvin().to_num()
     }
 }
+
 impl Flags {
     pub(crate) fn coriolis(&self) -> bool {
         self.coriolis
