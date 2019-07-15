@@ -36,19 +36,15 @@ mod util {
 
 pub mod error;
 pub mod model {
-    pub use self::{iter::*, simulation::*, solver::*};
+    pub use self::{iter::*, simulation::*, output::*, solvers::*};
     pub use crate::util::{conversions::*, Natural, Numeric};
 
+    mod physics;
+    pub mod output;
     #[allow(clippy::float_cmp)]
-    pub mod iter {
-        pub use self::{packet::*, simulation::*};
-
-        mod packet;
-        mod physics;
-        mod simulation;
-    }
+    pub mod iter;
     pub mod simulation;
-    pub mod solver {
+    pub mod solvers {
         pub use self::zero::*;
 
         #[allow(clippy::float_cmp)]
