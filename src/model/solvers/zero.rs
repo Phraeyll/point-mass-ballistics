@@ -1,5 +1,5 @@
 use crate::{
-    model::{Scope, Simulation, output::Measurements},
+    model::{output::Measurements, Scope, Simulation},
     util::*,
 };
 
