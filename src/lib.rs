@@ -2,7 +2,7 @@ pub use self::{
     error::{Error, ErrorKind, Result},
     iter::IterSimulation,
     output::Measurements,
-    simulation::{BcKind, Simulation, SimulationBuilder},
+    simulation::{Bc, BcKind, Simulation, SimulationBuilder},
     util::{FloatMap, Natural, Numeric},
 };
 
