@@ -1,8 +1,9 @@
 use nalgebra::Vector3;
 
 use crate::{
-    model::{iter::IterSimulation, simulation::{Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind}},
+    simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind},
     util::*,
+    IterSimulation,
 };
 
 use std::ops::Mul;
@@ -24,7 +25,7 @@ impl IterSimulation<'_> {
         self.simulation.projectile.i()
     }
     fn cd_table(&self) -> &FloatMap<Numeric> {
-        self.simulation.projectile.bc().table()
+        &self.simulation.projectile.bc.table
     }
     fn wind_velocity(&self) -> Vector3<Numeric> {
         // Velocity vector of wind, only horizontal at the moment
@@ -165,11 +166,7 @@ impl Projectile {
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     pub(crate) fn i(&self) -> Numeric {
-        self.sd() / self.bc.value()
-    }
-    // Handle to BC table
-    pub(crate) fn bc(&self) -> &Bc {
-        &self.bc
+        self.sd() / self.bc.value
     }
     pub(crate) fn velocity(&self, scope: &Scope) -> Vector3<Numeric> {
         self.velocity

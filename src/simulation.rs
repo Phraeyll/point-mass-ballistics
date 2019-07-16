@@ -1,5 +1,5 @@
 pub use self::BcKind::*;
-use crate::{model::dragtables::*, util::*, error::{Error, ErrorKind, Result}};
+use crate::{dragtables::*, util::*, Error, ErrorKind, Result};
 
 #[derive(Debug)]
 pub struct Simulation {
@@ -58,17 +58,6 @@ pub struct Bc {
     pub(crate) value: Numeric,
     pub(crate) kind: BcKind,
     pub(crate) table: FloatMap<Numeric>,
-}
-impl Bc {
-    pub fn value(&self) -> Numeric {
-        self.value
-    }
-    pub fn table(&self) -> &FloatMap<Numeric> {
-        &self.table
-    }
-    pub fn kind(&self) -> BcKind {
-        self.kind
-    }
 }
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {

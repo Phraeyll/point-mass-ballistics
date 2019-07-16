@@ -1,8 +1,8 @@
 use nalgebra::Vector3;
 
 use crate::{
-    model::{output::*, simulation::Simulation},
     util::*,
+    {output::Packet, Simulation},
 };
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors

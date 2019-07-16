@@ -1,10 +1,7 @@
 use crate::{
-    error::{Error, ErrorKind, Result},
-    model::{
-        output::Measurements,
-        simulation::{Scope, Simulation},
-    },
+    simulation::{Scope, Simulation},
     util::*,
+    Error, ErrorKind, Measurements, Result,
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -148,17 +145,19 @@ impl Simulation {
         let tolerance = Length::Inches(tolerance).to_meters().to_num();
         self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
             .find_map(|result| match result {
-                Ok((_, _, elevation, windage))
+                Ok((_, _, elevation, windage)) => {
                     if true
                         && elevation >= (elevation_offset - tolerance)
                         && elevation <= (elevation_offset + tolerance)
                         && windage >= (windage_offset - tolerance)
-                        && windage <= (windage_offset + tolerance) =>
-                {
-                    Some(result)
+                        && windage <= (windage_offset + tolerance)
+                    {
+                        Some(result)
+                    } else {
+                        None
+                    }
                 }
                 err @ Err(_) => Some(err),
-                _ => None,
             })
             .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
             .map(|(pitch, yaw, _, _)| {

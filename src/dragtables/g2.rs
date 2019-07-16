@@ -1,4 +1,4 @@
-use crate::util::{FloatMap, Numeric};
+use crate::{FloatMap, Numeric};
 
 pub fn init() -> FloatMap<Numeric> {
     float_map![
