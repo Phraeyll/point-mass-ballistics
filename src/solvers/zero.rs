@@ -141,7 +141,8 @@ impl<'t> Simulation<'t> {
         let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
         let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
         let tolerance = Length::Inches(tolerance).to_meters().to_num();
-        let (pitch, yaw, _, _) = self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
+        let (pitch, yaw, _, _) = self
+            .find_adjustments(distance, elevation_offset, windage_offset, tolerance)
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {
                     if true
