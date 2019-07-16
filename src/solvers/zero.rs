@@ -126,7 +126,7 @@ impl<'t> Simulation<'t> {
         elevation_offset: Numeric,
         windage_offset: Numeric,
         tolerance: Numeric,
-    ) -> Result<(Angle, Angle)> {
+    ) -> Result<(Numeric, Numeric)> {
         let Scope {
             pitch: prev_pitch,
             yaw: prev_yaw,
@@ -159,6 +159,8 @@ impl<'t> Simulation<'t> {
                 err @ Err(_) => Some(err),
             })
             .unwrap()?; // Always unwraps Some - None above indicates continuing iteration in find_map
-        Ok((pitch + prev_pitch, yaw + prev_yaw))
+        let new_pitch = (prev_pitch + pitch).to_minutes().to_num();
+        let new_yaw = (prev_yaw + yaw).to_minutes().to_num();
+        Ok((new_pitch, new_yaw))
     }
 }
