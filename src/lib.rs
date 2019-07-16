@@ -2,9 +2,10 @@ pub use self::{
     error::{Error, ErrorKind, Result},
     iter::IterSimulation,
     output::Measurements,
-    simulation::{Simulation, SimulationBuilder},
+    simulation::{BcKind, Simulation, SimulationBuilder},
     util::{FloatMap, Natural, Numeric},
 };
+
 #[macro_use]
 mod util {
     pub use self::{conversions::*, float_map::*, nalgebra_helpers::*};

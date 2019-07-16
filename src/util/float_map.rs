@@ -1,11 +1,11 @@
-use ordered_float::OrderedFloat;
-
 use crate::{
     error::{Error, ErrorKind, Result},
     util::Numeric,
 };
 
 use std::{collections::BTreeMap, iter::FromIterator, ops::RangeBounds};
+
+use ordered_float::OrderedFloat;
 
 #[derive(Clone)]
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);

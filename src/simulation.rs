@@ -1,4 +1,4 @@
-pub use self::BcKind::*;
+use self::BcKind::*;
 use crate::{dragtables::*, util::*, Error, ErrorKind, Result};
 
 #[derive(Debug)]

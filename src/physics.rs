@@ -1,5 +1,3 @@
-use nalgebra::Vector3;
-
 use crate::{
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Wind},
     util::*,
@@ -7,6 +5,8 @@ use crate::{
 };
 
 use std::ops::Mul;
+
+use nalgebra::Vector3;
 
 const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
 const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
