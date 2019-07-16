@@ -1,10 +1,13 @@
 use self::BcKind::*;
 use crate::{dragtables::*, util::*, Error, ErrorKind, Result};
 
+#[macro_use]
+use lazy_static::lazy_static;
+
 #[derive(Debug)]
-pub struct Simulation {
+pub struct Simulation<'t> {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
+    pub(crate) projectile: Projectile<'t>, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
@@ -47,10 +50,10 @@ pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 #[derive(Debug)]
-pub struct Projectile {
+pub struct Projectile<'t> {
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: WeightMass, // Weight (grains)
-    pub(crate) bc: Bc,             // Ballistic Coefficient
+    pub(crate) bc: &'t Bc,         // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
@@ -71,22 +74,52 @@ pub enum BcKind {
     GS,
     Null,
 }
-#[derive(Debug)]
-pub struct SimulationBuilder {
-    pub(crate) builder: Simulation,
+impl Bc {
+    pub fn new(value: Numeric, kind: BcKind) -> Result<Self> {
+        if value.is_sign_positive() {
+            Ok(Self {
+                value,
+                kind,
+                table: match kind {
+                    G1 => g1::init(),
+                    G2 => g2::init(),
+                    G5 => g5::init(),
+                    G6 => g6::init(),
+                    G7 => g7::init(),
+                    G8 => g8::init(),
+                    GI => gi::init(),
+                    GS => gs::init(),
+                    _ => return Err(Error::new(ErrorKind::BcKindNull)),
+                },
+            })
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
+    }
 }
-impl From<SimulationBuilder> for Simulation {
-    fn from(other: SimulationBuilder) -> Self {
+#[derive(Debug)]
+pub struct SimulationBuilder<'t> {
+    pub(crate) builder: Simulation<'t>,
+}
+impl<'t> From<SimulationBuilder<'t>> for Simulation<'t> {
+    fn from(other: SimulationBuilder<'t>) -> Self {
         Self { ..other.builder }
     }
 }
-impl From<Simulation> for SimulationBuilder {
-    fn from(other: Simulation) -> Self {
+impl<'t> From<Simulation<'t>> for SimulationBuilder<'t> {
+    fn from(other: Simulation<'t>) -> Self {
         Self { builder: other }
     }
 }
-impl Default for SimulationBuilder {
+impl Default for SimulationBuilder<'_> {
     fn default() -> Self {
+        lazy_static! {
+            static ref BC: Bc = Bc {
+                value: 0.0,
+                kind: BcKind::Null,
+                table: float_map![],
+            };
+        };
         Self {
             builder: Simulation {
                 flags: Flags {
@@ -97,11 +130,7 @@ impl Default for SimulationBuilder {
                 projectile: Projectile {
                     caliber: Length::Inches(0.264),
                     weight: WeightMass::Grains(140.0),
-                    bc: Bc {
-                        value: 0.0,
-                        kind: BcKind::Null,
-                        table: float_map![],
-                    },
+                    bc: &BC,
                     velocity: Velocity::Fps(2710.0),
                 },
                 scope: Scope {
@@ -135,13 +164,13 @@ impl Default for SimulationBuilder {
     }
 }
 
-impl SimulationBuilder {
+impl<'t> SimulationBuilder<'t> {
     pub fn new() -> Self {
         Default::default()
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(self) -> Result<Simulation> {
+    pub fn init(self) -> Result<Simulation<'t>> {
         match self.builder.projectile.bc.kind {
             BcKind::Null => Err(Error::new(ErrorKind::BcKindNull)),
             _ => Ok(Simulation::from(self)),
@@ -302,31 +331,13 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_bc(&mut self, value: Numeric, kind: BcKind) -> Result<&mut Self> {
-        if value.is_sign_positive() {
-            self.builder.projectile.bc = Bc {
-                value,
-                kind,
-                table: match kind {
-                    G1 => g1::init(),
-                    G2 => g2::init(),
-                    G5 => g5::init(),
-                    G6 => g6::init(),
-                    G7 => g7::init(),
-                    G8 => g8::init(),
-                    GI => gi::init(),
-                    GS => gs::init(),
-                    Null => float_map![],
-                },
-            };
-            Ok(self)
-        } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
-        }
+    pub fn set_bc(&mut self, bc: &'t Bc) -> &mut Self {
+        self.builder.projectile.bc = bc;
+        self
     }
 }
 
-impl Simulation {
+impl Simulation<'_> {
     pub fn air_desnity(&self) -> Numeric {
         Density::Kgpm3(self.atmosphere.rho()).to_lbpf3().to_num()
     }

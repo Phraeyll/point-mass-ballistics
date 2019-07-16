@@ -6,13 +6,13 @@ use nalgebra::Vector3;
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct IterSimulation<'s> {
-    pub(crate) simulation: &'s Simulation, // Reference to model used for calculations
-    pub(crate) position: Vector3<Numeric>, // Position (m)
-    pub(crate) velocity: Vector3<Numeric>, // Velocity (m/s)
-    pub(crate) time: Numeric,              // Position in time (s)
+pub struct IterSimulation<'t> {
+    pub(crate) simulation: &'t Simulation<'t>, // Reference to model used for calculations
+    pub(crate) position: Vector3<Numeric>,     // Position (m)
+    pub(crate) velocity: Vector3<Numeric>,     // Velocity (m/s)
+    pub(crate) time: Numeric,                  // Position in time (s)
 }
-impl Simulation {
+impl Simulation<'_> {
     pub fn iter(&self) -> IterSimulation<'_> {
         IterSimulation {
             simulation: self,
@@ -42,9 +42,9 @@ impl Simulation {
     }
 }
 // Create an new iterator over Simulation
-impl<'s> IntoIterator for &'s Simulation {
-    type Item = <IterSimulation<'s> as Iterator>::Item;
-    type IntoIter = IterSimulation<'s>;
+impl<'t> IntoIterator for &'t Simulation<'t> {
+    type Item = <IterSimulation<'t> as Iterator>::Item;
+    type IntoIter = IterSimulation<'t>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -52,8 +52,8 @@ impl<'s> IntoIterator for &'s Simulation {
 }
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
-impl<'s> Iterator for IterSimulation<'s> {
-    type Item = Packet<'s>;
+impl<'t> Iterator for IterSimulation<'t> {
+    type Item = Packet<'t>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {

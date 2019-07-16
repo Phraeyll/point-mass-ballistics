@@ -6,8 +6,8 @@ const DEG_45: Angle = Angle::Radians(FRAC_PI_4);
 // Also should never try to pitch this low - not sure if this ever happens in practice
 const DEG_90: Angle = Angle::Radians(FRAC_PI_2);
 
-struct IterFindAdjustments<'s> {
-    sim: &'s mut Simulation,
+struct IterFindAdjustments<'t> {
+    sim: &'t mut Simulation<'t>,
     distance: Numeric,
     elevation_offset: Numeric,
     windage_offset: Numeric,
@@ -94,14 +94,14 @@ impl Iterator for IterFindAdjustments<'_> {
     }
 }
 
-impl Simulation {
+impl<'t> Simulation<'t> {
     fn find_adjustments(
-        &mut self,
+        &'t mut self,
         distance: Numeric,
         elevation_offset: Numeric,
         windage_offset: Numeric,
         tolerance: Numeric,
-    ) -> IterFindAdjustments {
+    ) -> IterFindAdjustments<'t> {
         IterFindAdjustments {
             sim: self,
             distance,
@@ -113,18 +113,20 @@ impl Simulation {
             count: 0u64,
         }
     }
+}
+impl<'t> Simulation<'t> {
     // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
     // ran once for most practical inputs.  Can also handle larger ranges, and will just continue to re-adjust
     // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
     // This should also work for windage adjustments as well
-    pub fn try_mut_zero(
-        &mut self,
+    pub fn find_zero_angles(
+        &'t mut self,
         distance: Numeric,
         elevation_offset: Numeric,
         windage_offset: Numeric,
         tolerance: Numeric,
-    ) -> Result<()> {
+    ) -> Result<(Angle, Angle)> {
         let Scope {
             pitch: prev_pitch,
             yaw: prev_yaw,
@@ -139,7 +141,7 @@ impl Simulation {
         let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
         let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
         let tolerance = Length::Inches(tolerance).to_meters().to_num();
-        self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
+        let (pitch, yaw, _, _) = self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {
                     if true
@@ -155,10 +157,7 @@ impl Simulation {
                 }
                 err @ Err(_) => Some(err),
             })
-            .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
-            .map(|(pitch, yaw, _, _)| {
-                self.scope.pitch = pitch + prev_pitch;
-                self.scope.yaw = yaw + prev_yaw;
-            })
+            .unwrap()?; // Always unwraps Some - None above indicates continuing iteration in find_map
+        Ok((pitch + prev_pitch, yaw + prev_yaw))
     }
 }

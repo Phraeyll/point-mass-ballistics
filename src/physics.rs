@@ -147,7 +147,7 @@ impl Flags {
         self.gravity
     }
 }
-impl Projectile {
+impl Projectile<'_> {
     // Radius of projectile cross section in meters
     fn radius(&self) -> Numeric {
         self.caliber.to_meters().to_num() / 2.0
