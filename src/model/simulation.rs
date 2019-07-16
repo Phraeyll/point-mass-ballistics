@@ -1,5 +1,5 @@
 pub use self::BcKind::*;
-use crate::{model::dragtables::*, util::*};
+use crate::{model::dragtables::*, util::*, error::{Error, ErrorKind, Result}};
 
 #[derive(Debug)]
 pub struct Simulation {

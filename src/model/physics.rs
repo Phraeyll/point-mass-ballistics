@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 
 use crate::{
-    model::{iter::IterSimulation, Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind},
+    model::{iter::IterSimulation, simulation::{Atmosphere, Bc, Flags, Projectile, Scope, Shooter, Wind}},
     util::*,
 };
 

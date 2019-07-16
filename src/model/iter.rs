@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 
 use crate::{
-    model::{output::*, Simulation},
+    model::{output::*, simulation::Simulation},
     util::*,
 };
 

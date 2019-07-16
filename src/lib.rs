@@ -1,7 +1,6 @@
 #[macro_use]
 mod util {
     pub use self::{conversions::*, float_map::*, nalgebra_helpers::*};
-    pub use crate::error::*;
 
     use std::f64::consts;
 
@@ -36,7 +35,6 @@ mod util {
 
 pub mod error;
 pub mod model {
-    pub use self::{iter::*, output::*, simulation::*, solvers::*};
     pub use crate::util::{conversions::*, Natural, Numeric};
 
     #[allow(clippy::float_cmp)]
@@ -53,7 +51,7 @@ pub mod model {
     }
 
     #[allow(clippy::approx_constant)]
-    pub(crate) mod dragtables {
+    mod dragtables {
         pub mod g1;
         pub mod g2;
         pub mod g5;

@@ -3,7 +3,7 @@ use crate::util::*;
 
 use std::{error::Error as StdError, fmt, result::Result as StdResult};
 
-pub type Result<T> = StdResult<T, Error>;
+pub type Result<T, E = Error> = StdResult<T, E>;
 
 #[derive(Debug)]
 pub struct Error(Box<ErrorKind>);

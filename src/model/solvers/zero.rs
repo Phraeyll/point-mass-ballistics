@@ -1,5 +1,9 @@
 use crate::{
-    model::{output::Measurements, Scope, Simulation},
+    error::{Error, ErrorKind, Result},
+    model::{
+        output::Measurements,
+        simulation::{Scope, Simulation},
+    },
     util::*,
 };
 
@@ -121,43 +125,6 @@ impl Simulation {
     // ran once for most practical inputs.  Can also handle larger ranges, and will just continue to re-adjust
     // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
     // This should also work for windage adjustments as well
-    pub fn zero(
-        mut self,
-        distance: Numeric,
-        elevation_offset: Numeric,
-        windage_offset: Numeric,
-        tolerance: Numeric,
-    ) -> Result<Simulation> {
-        let distance = Length::Yards(distance).to_meters().to_num();
-        let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
-        let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
-        let tolerance = Length::Inches(tolerance).to_meters().to_num();
-        self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
-            .find_map(|result| match result {
-                Ok((_, _, elevation, windage)) => {
-                    if true
-                        && elevation >= (elevation_offset - tolerance)
-                        && elevation <= (elevation_offset + tolerance)
-                        && windage >= (windage_offset - tolerance)
-                        && windage <= (windage_offset + tolerance)
-                    {
-                        Some(result)
-                    } else {
-                        None
-                    }
-                }
-                err @ Err(_) => Some(err),
-            })
-            .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
-            .map(|(pitch, yaw, _, _)| {
-                self.scope = Scope {
-                    pitch,
-                    yaw,
-                    ..self.scope
-                }; // Keep roll same, not adjusted during zeroing
-                self
-            })
-    }
     pub fn try_mut_zero(
         &mut self,
         distance: Numeric,
@@ -181,19 +148,17 @@ impl Simulation {
         let tolerance = Length::Inches(tolerance).to_meters().to_num();
         self.find_adjustments(distance, elevation_offset, windage_offset, tolerance)
             .find_map(|result| match result {
-                Ok((_, _, elevation, windage)) => {
+                Ok((_, _, elevation, windage))
                     if true
                         && elevation >= (elevation_offset - tolerance)
                         && elevation <= (elevation_offset + tolerance)
                         && windage >= (windage_offset - tolerance)
-                        && windage <= (windage_offset + tolerance)
-                    {
-                        Some(result)
-                    } else {
-                        None
-                    }
+                        && windage <= (windage_offset + tolerance) =>
+                {
+                    Some(result)
                 }
                 err @ Err(_) => Some(err),
+                _ => None,
             })
             .unwrap() // Always unwraps Some - None above indicates continuing iteration in find_map
             .map(|(pitch, yaw, _, _)| {

@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{model::Simulation, util::*};
+use crate::{model::simulation::Simulation, util::*};
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
