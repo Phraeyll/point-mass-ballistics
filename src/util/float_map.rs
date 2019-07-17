@@ -3,7 +3,11 @@ use crate::{
     util::Numeric,
 };
 
-use std::{collections::BTreeMap, iter::FromIterator, ops::{RangeBounds, Bound}};
+use std::{
+    collections::BTreeMap,
+    iter::FromIterator,
+    ops::{Bound, RangeBounds},
+};
 
 use ordered_float::OrderedFloat;
 
@@ -51,10 +55,7 @@ impl<V> FloatMap<V> {
     pub fn iter(&self) -> impl Iterator<Item = (&Numeric, &V)> {
         self.0.iter().map(|(OrderedFloat(key), val)| (key, val))
     }
-    pub fn range<R>(
-        &self,
-        range: R,
-    ) -> impl DoubleEndedIterator<Item = (&Numeric, &V)>
+    pub fn range<R>(&self, range: R) -> impl DoubleEndedIterator<Item = (&Numeric, &V)>
     where
         R: RangeBounds<Numeric>,
     {
@@ -69,7 +70,9 @@ impl<V> FloatMap<V> {
         let start = wrap_bound(range.start_bound());
         let end = wrap_bound(range.end_bound());
 
-        self.0.range((start, end)).map(|(OrderedFloat(key), val)| (key, val))
+        self.0
+            .range((start, end))
+            .map(|(OrderedFloat(key), val)| (key, val))
     }
 }
 
@@ -83,9 +86,7 @@ impl FloatMap<Numeric> {
             .rev()
             .zip(self.range(x..))
             .next()
-            .map(|((x0, y0), (x1, y1))| {
-                y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
-            })
+            .map(|((x0, y0), (x1, y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             .ok_or(Error::new(ErrorKind::VelocityLookup(x)))
     }
 }
