@@ -37,8 +37,8 @@ impl<V> Iterator for IntoIter<V> {
 }
 
 impl<V> IntoIterator for FloatMap<V> {
-    type Item = (Numeric, V);
     type IntoIter = IntoIter<V>;
+    type Item = <IntoIter<V> as Iterator>::Item;
     fn into_iter(self) -> Self::IntoIter {
         IntoIter(self.0.into_iter())
     }
