@@ -26,11 +26,21 @@ impl<V> Default for FloatMap<V> {
     }
 }
 
+pub struct IntoIter<V>(<BTreeMap<OrderedFloat<Numeric>, V> as IntoIterator>::IntoIter);
+
+impl<V> Iterator for IntoIter<V> {
+    type Item = (Numeric, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|(OrderedFloat(key), val)| (key, val))
+    }
+}
+
 impl<V> IntoIterator for FloatMap<V> {
-    type Item = (OrderedFloat<Numeric>, V);
-    type IntoIter = <BTreeMap<OrderedFloat<Numeric>, V> as IntoIterator>::IntoIter;
+    type Item = (Numeric, V);
+    type IntoIter = IntoIter<V>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+        IntoIter(self.0.into_iter())
     }
 }
 
