@@ -337,11 +337,12 @@ impl<'t> SimulationBuilder<'t> {
     }
 }
 
+// Not sure how to handle/name these things yet - should be in a trait, as it's a public API
 impl Simulation<'_> {
-    pub fn air_desnity(&self) -> Numeric {
+    pub fn public_air_desnity(&self) -> Numeric {
         Density::Kgpm3(self.atmosphere.rho()).to_lbpf3().to_num()
     }
-    pub fn speed_of_sound(&self) -> Numeric {
+    pub fn public_speed_of_sound(&self) -> Numeric {
         Velocity::Mps(self.atmosphere.speed_of_sound())
             .to_fps()
             .to_num()

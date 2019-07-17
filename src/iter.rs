@@ -6,18 +6,20 @@ use nalgebra::Vector3;
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct IterSimulation<'t> {
-    pub(crate) simulation: &'t Simulation<'t>, // Reference to model used for calculations
-    pub(crate) position: Vector3<Numeric>,     // Position (m)
-    pub(crate) velocity: Vector3<Numeric>,     // Velocity (m/s)
-    pub(crate) time: Numeric,                  // Position in time (s)
+pub struct Iter<'t> {
+    simulation: &'t Simulation<'t>, // Reference to model used for calculations
+    position: Vector3<Numeric>,     // Position (m)
+    velocity: Vector3<Numeric>,     // Velocity (m/s)
+    time: Numeric,                  // Position in time (s)
 }
-impl Simulation<'_> {
-    pub fn iter(&self) -> IterSimulation<'_> {
-        IterSimulation {
+impl<'t> Simulation<'t> {
+    pub fn iter(&self) -> Iter<'_> {
+        let position = self.absolute_projectile_position();
+        let velocity = self.absolute_projectile_velocity();
+        Iter {
             simulation: self,
-            position: self.absolute_projectile_position(),
-            velocity: self.absolute_projectile_velocity(),
+            position,
+            velocity,
             time: 0.0,
         }
     }
@@ -43,8 +45,8 @@ impl Simulation<'_> {
 }
 // Create an new iterator over Simulation
 impl<'t> IntoIterator for &'t Simulation<'t> {
-    type Item = <IterSimulation<'t> as Iterator>::Item;
-    type IntoIter = IterSimulation<'t>;
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = Iter<'t>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -52,7 +54,7 @@ impl<'t> IntoIterator for &'t Simulation<'t> {
 }
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
-impl<'t> Iterator for IterSimulation<'t> {
+impl<'t> Iterator for Iter<'t> {
     type Item = Packet<'t>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
@@ -60,12 +62,12 @@ impl<'t> Iterator for IterSimulation<'t> {
             time,
             position,
             velocity,
-            ..
+            simulation,
         } = self;
 
-        self.time += self.delta_time();
-        self.position += self.delta_position();
-        self.velocity += self.delta_velocity();
+        self.time += simulation.delta_time();
+        self.position += simulation.delta_position(&velocity);
+        self.velocity += simulation.delta_velocity(&velocity);
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -90,21 +92,22 @@ impl<'t> Iterator for IterSimulation<'t> {
     }
 }
 
-impl IterSimulation<'_> {
+impl Simulation<'_> {
+    fn acceleration(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
+        self.coriolis_acceleration(velocity)
+            + self.drag_acceleration(velocity)
+            + self.gravity_acceleration()
+    }
     fn delta_time(&self) -> Numeric {
-        self.simulation.time_step
+        self.time_step
     }
     // 'Second Equation of Motion'
-    fn delta_position(&self) -> Vector3<Numeric> {
-        self.velocity * self.delta_time()
-            + 0.5 * (self.acceleration() * self.delta_time().powf(2.0))
+    fn delta_position(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
+        velocity * self.delta_time()
+            + 0.5 * (self.acceleration(velocity) * self.delta_time().powf(2.0))
     }
     // 'First Equation of Motion'
-    fn delta_velocity(&self) -> Vector3<Numeric> {
-        self.acceleration() * self.delta_time()
-    }
-
-    fn acceleration(&self) -> Vector3<Numeric> {
-        self.coriolis_acceleration() + self.drag_acceleration() + self.gravity_acceleration()
+    fn delta_velocity(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
+        self.acceleration(velocity) * self.delta_time()
     }
 }

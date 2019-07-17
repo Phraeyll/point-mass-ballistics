@@ -1,6 +1,6 @@
 pub use self::{
     error::{Error, ErrorKind, Result},
-    iter::IterSimulation,
+    iter::Iter,
     output::Measurements,
     simulation::{Bc, BcKind, Simulation, SimulationBuilder},
     util::{FloatMap, Natural, Numeric},
