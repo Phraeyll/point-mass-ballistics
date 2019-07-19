@@ -37,7 +37,13 @@ impl Simulation<'_> {
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: &Vector3<Numeric>) -> Numeric {
-        self.projectile.i() * self.projectile.bc.table.lerp(self.mach(velocity)).expect("cd")
+        self.projectile.i()
+            * self
+                .projectile
+                .bc
+                .table
+                .lerp(self.mach(velocity))
+                .expect("cd")
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
