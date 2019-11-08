@@ -1,7 +1,6 @@
 use self::BcKind::*;
 use crate::{dragtables::*, util::*, Error, ErrorKind, Result};
 
-#[macro_use]
 use lazy_static::lazy_static;
 
 #[derive(Debug)]
