@@ -53,14 +53,14 @@ pub struct Wind {
 pub struct Projectile<'t> {
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: WeightMass, // Weight (grains)
-    pub(crate) bc: &'t Bc,         // Ballistic Coefficient
+    pub(crate) bc: Bc<'t>,         // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
-pub struct Bc {
+pub struct Bc<'t> {
     pub(crate) value: Numeric,
     pub(crate) kind: BcKind,
-    pub(crate) table: FloatMap<Numeric>,
+    pub(crate) table: Option<&'t FloatMap<Numeric>>,
 }
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -72,25 +72,36 @@ pub enum BcKind {
     G8,
     GI,
     GS,
-    Null,
 }
-impl Bc {
-    pub fn new(value: Numeric, kind: BcKind) -> Result<Self> {
+impl Bc<'_> {
+    fn init(&mut self) {
+        lazy_static! {
+            static ref G1_TABLE: FloatMap<Numeric> = g1::init();
+            static ref G2_TABLE: FloatMap<Numeric> = g2::init();
+            static ref G5_TABLE: FloatMap<Numeric> = g5::init();
+            static ref G6_TABLE: FloatMap<Numeric> = g6::init();
+            static ref G7_TABLE: FloatMap<Numeric> = g7::init();
+            static ref G8_TABLE: FloatMap<Numeric> = g8::init();
+            static ref GI_TABLE: FloatMap<Numeric> = gi::init();
+            static ref GS_TABLE: FloatMap<Numeric> = gs::init();
+        };
+        self.table = Some(match self.kind {
+            G1 => &G1_TABLE,
+            G2 => &G2_TABLE,
+            G5 => &G5_TABLE,
+            G6 => &G6_TABLE,
+            G7 => &G7_TABLE,
+            G8 => &G8_TABLE,
+            GI => &GI_TABLE,
+            GS => &GS_TABLE,
+        });
+    }
+    fn new(value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
             Ok(Self {
                 value,
                 kind,
-                table: match kind {
-                    G1 => g1::init(),
-                    G2 => g2::init(),
-                    G5 => g5::init(),
-                    G6 => g6::init(),
-                    G7 => g7::init(),
-                    G8 => g8::init(),
-                    GI => gi::init(),
-                    GS => gs::init(),
-                    Null => return Err(Error::new(ErrorKind::BcKindNull)),
-                },
+                table: None,
             })
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -113,13 +124,6 @@ impl<'t> From<Simulation<'t>> for SimulationBuilder<'t> {
 }
 impl Default for SimulationBuilder<'_> {
     fn default() -> Self {
-        lazy_static! {
-            static ref BC: Bc = Bc {
-                value: 0.0,
-                kind: BcKind::Null,
-                table: float_map![],
-            };
-        };
         Self {
             builder: Simulation {
                 flags: Flags {
@@ -130,7 +134,7 @@ impl Default for SimulationBuilder<'_> {
                 projectile: Projectile {
                     caliber: Length::Inches(0.264),
                     weight: WeightMass::Grains(140.0),
-                    bc: &BC,
+                    bc: Bc::new(0.0, BcKind::G7).expect("?"),
                     velocity: Velocity::Fps(2710.0),
                 },
                 scope: Scope {
@@ -170,8 +174,9 @@ impl<'t> SimulationBuilder<'t> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init_with_bc(mut self, bc: &'t Bc) -> Result<Simulation<'t>> {
-        self.builder.projectile.bc = bc;
+    pub fn init_with_bc(mut self, value: Numeric, kind: BcKind) -> Result<Simulation<'t>> {
+        self.builder.projectile.bc = Bc::new(value, kind)?;
+        self.builder.projectile.bc.init();
         Ok(From::from(self))
     }
     pub fn set_time_step(mut self, value: Numeric) -> Result<Self> {
@@ -329,7 +334,7 @@ impl<'t> SimulationBuilder<'t> {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_bc(mut self, bc: &'t Bc) -> Self {
+    pub fn set_bc(mut self, bc: Bc<'t>) -> Self {
         self.builder.projectile.bc = bc;
         self
     }

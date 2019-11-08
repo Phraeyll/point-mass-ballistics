@@ -42,8 +42,9 @@ impl Simulation<'_> {
                 .projectile
                 .bc
                 .table
+                .expect("BC")
                 .lerp(self.mach(velocity))
-                .expect("cd")
+                .expect("CD")
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
