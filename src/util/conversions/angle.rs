@@ -38,7 +38,7 @@ impl Angle {
         match self {
             u @ Degrees(_) => u,
             Minutes(u) => Degrees(u * MINUTES_TO_DEGREES),
-            Radians(u) => Degrees(u.to_radians()),
+            Radians(u) => Degrees(u.to_degrees()),
             Miliradians(u) => Degrees((u * MILIRADIANS_TO_RADIANS).to_degrees()),
         }
     }
