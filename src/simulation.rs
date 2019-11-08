@@ -171,16 +171,6 @@ impl<'t> SimulationBuilder<'t> {
         self.builder.projectile.bc.init();
         From::from(self)
     }
-    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
-        if value.is_sign_positive() {
-            self.builder.projectile.bc.value = value;
-            self.builder.projectile.bc.kind = kind;
-            self.builder.projectile.bc.init();
-            Ok(self)
-        } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
-        }
-    }
     pub fn set_time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
         if value > min && value <= max {
@@ -331,6 +321,16 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_grains(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.weight = WeightMass::Grains(value);
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
+    }
+    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.builder.projectile.bc.value = value;
+            self.builder.projectile.bc.kind = kind;
+            self.builder.projectile.bc.init();
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
