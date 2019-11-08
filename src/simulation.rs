@@ -124,7 +124,7 @@ impl Default for SimulationBuilder<'_> {
                     caliber: Length::Inches(0.264),
                     weight: WeightMass::Grains(140.0),
                     bc: Bc {
-                        value: 0.0,
+                        value: 0.305,
                         kind: BcKind::G7,
                         table: None,
                     },
@@ -167,7 +167,8 @@ impl<'t> SimulationBuilder<'t> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(self) -> Simulation<'t> {
+    pub fn init(mut self) -> Simulation<'t> {
+        self.builder.projectile.bc.init();
         From::from(self)
     }
     pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
