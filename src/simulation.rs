@@ -96,17 +96,6 @@ impl Bc<'_> {
             GS => &GS_TABLE,
         });
     }
-    fn new(value: Numeric, kind: BcKind) -> Result<Self> {
-        if value.is_sign_positive() {
-            Ok(Self {
-                value,
-                kind,
-                table: None,
-            })
-        } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
-        }
-    }
 }
 #[derive(Debug)]
 pub struct SimulationBuilder<'t> {
@@ -134,7 +123,11 @@ impl Default for SimulationBuilder<'_> {
                 projectile: Projectile {
                     caliber: Length::Inches(0.264),
                     weight: WeightMass::Grains(140.0),
-                    bc: Bc::new(0.0, BcKind::G7).expect("?"),
+                    bc: Bc {
+                        value: 0.0,
+                        kind: BcKind::G7,
+                        table: None,
+                    },
                     velocity: Velocity::Fps(2710.0),
                 },
                 scope: Scope {
@@ -174,10 +167,18 @@ impl<'t> SimulationBuilder<'t> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init_with_bc(mut self, value: Numeric, kind: BcKind) -> Result<Simulation<'t>> {
-        self.builder.projectile.bc = Bc::new(value, kind)?;
-        self.builder.projectile.bc.init();
+    pub fn init(self) -> Result<Simulation<'t>> {
         Ok(From::from(self))
+    }
+    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+        if value.is_sign_positive() {
+            self.builder.projectile.bc.value = value;
+            self.builder.projectile.bc.kind = kind;
+            self.builder.projectile.bc.init();
+            Ok(self)
+        } else {
+            Err(Error::new(ErrorKind::PositiveExpected(value)))
+        }
     }
     pub fn set_time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
@@ -333,10 +334,6 @@ impl<'t> SimulationBuilder<'t> {
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
-    }
-    pub fn set_bc(mut self, bc: Bc<'t>) -> Self {
-        self.builder.projectile.bc = bc;
-        self
     }
 }
 
