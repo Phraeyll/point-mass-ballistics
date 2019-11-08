@@ -167,8 +167,8 @@ impl<'t> SimulationBuilder<'t> {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(self) -> Result<Simulation<'t>> {
-        Ok(From::from(self))
+    pub fn init(self) -> Simulation<'t> {
+        From::from(self)
     }
     pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
