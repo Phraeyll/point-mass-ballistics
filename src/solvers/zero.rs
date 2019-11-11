@@ -1,4 +1,6 @@
-use crate::{simulation::Scope, util::*, Error, ErrorKind, Measurements, Result, Simulation};
+use crate::{
+    output::Packet, simulation::Scope, util::*, Error, ErrorKind, Measurements, Result, Simulation,
+};
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
 const DEG_45: Angle = Angle::Radians(FRAC_PI_4);
@@ -6,27 +8,34 @@ const DEG_45: Angle = Angle::Radians(FRAC_PI_4);
 // Also should never try to pitch this low - not sure if this ever happens in practice
 const DEG_90: Angle = Angle::Radians(FRAC_PI_2);
 
-struct IterFindAdjustments<'t> {
+struct IterFindAdjustments<'t, F, E, W>
+where
+    F: Fn(&Packet) -> bool,
+    E: Fn(&Packet) -> Angle,
+    W: Fn(&Packet) -> Angle,
+{
     sim: &'t mut Simulation<'t>,
-    distance: Numeric,
-    elevation_offset: Numeric,
-    windage_offset: Numeric,
-    tolerance: Numeric,
+
+    finder: F,
+    elevation_adjuster: E,
+    windage_adjuster: W,
+
     elevation_adjustment: Angle,
     windage_adjustment: Angle,
     count: u64,
 }
 // This never returns None - it returns Some(Result) which can indicate failure instead
 // This is just to capture reason why iteration stopped
-impl Iterator for IterFindAdjustments<'_> {
+impl<F, E, W> Iterator for IterFindAdjustments<'_, F, E, W>
+where
+    F: Fn(&Packet) -> bool,
+    E: Fn(&Packet) -> Angle,
+    W: Fn(&Packet) -> Angle,
+{
     type Item = Result<(Angle, Angle, Numeric, Numeric)>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
-            distance,
-            elevation_offset,
-            windage_offset,
-            tolerance,
             sim:
                 &mut Simulation {
                     scope:
@@ -57,34 +66,20 @@ impl Iterator for IterFindAdjustments<'_> {
             // Ignore first time, since both should be still be 0.0 at this point
             && count != 1
         {
-            // dbg!((
-            //     self.count,
-            //     self.elevation_adjustment.to_degrees(),
-            //     muzzle_pitch.to_degrees(),
-            //     self.elevation_adjustment.to_degrees());
             Some(Err(Error::new(ErrorKind::AngleNotChanging {
                 count,
                 pitch,
                 yaw,
             })))
-        } else if pitch >= DEG_45 && pitch <= -DEG_90 && yaw >= DEG_90 && yaw <= -DEG_90 {
-            // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
+        } else if (pitch >= DEG_45 && pitch <= -DEG_90) || (yaw >= DEG_90 && yaw <= -DEG_90) {
             Some(Err(Error::new(ErrorKind::AngleRange { count, pitch, yaw })))
-        } else if let Some(packet) = self
-            .sim
-            .into_iter()
-            .fuse()
-            .find(|p| p.relative_position().x >= distance)
-        {
-            self.elevation_adjustment = packet.offset_vertical_moa(elevation_offset, tolerance);
-            self.windage_adjustment = packet.offset_horizontal_moa(windage_offset, tolerance);
+        } else if let Some(packet) = self.sim.into_iter().fuse().find(&self.finder) {
+            self.elevation_adjustment = (self.elevation_adjuster)(&packet);
+            self.windage_adjustment = (self.windage_adjuster)(&packet);
             let elevation = packet.relative_position().y;
             let windage = packet.relative_position().z;
-            // dbg!((self.muzzle_pitch(), self.muzzle_yaw()));
-            // eprintln!("");
             Some(Ok((pitch, yaw, elevation, windage)))
         } else {
-            // dbg!((self.count, self.sim.muzzle_pitch.to_degrees()));
             Some(Err(Error::new(ErrorKind::TerminalVelocity {
                 count,
                 pitch,
@@ -95,19 +90,24 @@ impl Iterator for IterFindAdjustments<'_> {
 }
 
 impl<'t> Simulation<'t> {
-    fn find_adjustments(
+    fn find_adjustments<F, E, W>(
         &'t mut self,
-        distance: Numeric,
-        elevation_offset: Numeric,
-        windage_offset: Numeric,
-        tolerance: Numeric,
-    ) -> IterFindAdjustments<'t> {
+        finder: F,
+        elevation_adjuster: E,
+        windage_adjuster: W,
+    ) -> IterFindAdjustments<'t, F, E, W>
+    where
+        F: Fn(&Packet) -> bool,
+        E: Fn(&Packet) -> Angle,
+        W: Fn(&Packet) -> Angle,
+    {
         IterFindAdjustments {
             sim: self,
-            distance,
-            elevation_offset,
-            windage_offset,
-            tolerance,
+            finder,
+
+            elevation_adjuster,
+            windage_adjuster,
+
             elevation_adjustment: Angle::Minutes(0.0),
             windage_adjustment: Angle::Minutes(0.0),
             count: 0u64,
@@ -141,8 +141,13 @@ impl<'t> Simulation<'t> {
         let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
         let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
         let tolerance = Length::Inches(tolerance).to_meters().to_num();
+
         let (pitch, yaw, _, _) = self
-            .find_adjustments(distance, elevation_offset, windage_offset, tolerance)
+            .find_adjustments(
+                { |p: &Packet| p.relative_position().x >= distance },
+                { |p: &Packet| p.offset_vertical_moa(elevation_offset, tolerance) },
+                { |p: &Packet| p.offset_horizontal_moa(windage_offset, tolerance) },
+            )
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {
                     if true
@@ -158,7 +163,7 @@ impl<'t> Simulation<'t> {
                 }
                 err @ Err(_) => Some(err),
             })
-            .unwrap()?; // Always unwraps Some - None above indicates continuing iteration in find_map
+            .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
         let new_pitch = (prev_pitch + pitch).to_minutes().to_num();
         let new_yaw = (prev_yaw + yaw).to_minutes().to_num();
         Ok((new_pitch, new_yaw))
