@@ -103,8 +103,8 @@ impl<'t> Simulation<'t> {
     {
         IterFindAdjustments {
             sim: self,
-            finder,
 
+            finder,
             elevation_adjuster,
             windage_adjuster,
 
@@ -127,16 +127,6 @@ impl<'t> Simulation<'t> {
         windage_offset: Numeric,
         tolerance: Numeric,
     ) -> Result<(Numeric, Numeric)> {
-        let Scope {
-            pitch: prev_pitch,
-            yaw: prev_yaw,
-            ..
-        } = self.scope;
-        self.scope = Scope {
-            pitch: Angle::Minutes(0.0),
-            yaw: Angle::Minutes(0.0),
-            ..self.scope
-        };
         let distance = Length::Yards(distance).to_meters().to_num();
         let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
         let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
@@ -164,8 +154,6 @@ impl<'t> Simulation<'t> {
                 err @ Err(_) => Some(err),
             })
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
-        let new_pitch = (prev_pitch + pitch).to_minutes().to_num();
-        let new_yaw = (prev_yaw + yaw).to_minutes().to_num();
-        Ok((new_pitch, new_yaw))
+        Ok((pitch.to_minutes().to_num(), yaw.to_minutes().to_num()))
     }
 }
