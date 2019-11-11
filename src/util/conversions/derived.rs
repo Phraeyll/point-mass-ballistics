@@ -1,38 +1,46 @@
-use self::{Acceleration::*, Density::*, Energy::*, Pressure::*, Velocity::*};
-use super::{length::*, time::*, weight_mass::*};
+use self::{
+    length::*, time::*, weight_mass::*, Acceleration::*, Density::*, Energy::*, Pressure::*,
+    Velocity::*,
+};
 use crate::util::Numeric;
 
+pub(super) mod angle;
+pub(super) mod length;
+pub(super) mod temperature;
+pub(super) mod time;
+pub(super) mod weight_mass;
+
 //Energy
-pub const JOULE_TO_FTLB: Numeric = 0.737_56;
-pub const FTLB_TO_JOULE: Numeric = 1.0 / JOULE_TO_FTLB;
+const JOULE_TO_FTLB: Numeric = 0.737_56;
+const FTLB_TO_JOULE: Numeric = 1.0 / JOULE_TO_FTLB;
 
 // Pressure
-pub const INHG_TO_PASCAL: Numeric = 3_386.38;
-pub const PASCAL_TO_INHG: Numeric = 1.0 / INHG_TO_PASCAL;
+const INHG_TO_PASCAL: Numeric = 3_386.38;
+const PASCAL_TO_INHG: Numeric = 1.0 / INHG_TO_PASCAL;
 
 // Density
-pub const LBPF3_TO_KGPM3: Numeric = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
-pub const KGPM3_TO_LBPF3: Numeric = 1.0 / LBPF3_TO_KGPM3;
+const LBPF3_TO_KGPM3: Numeric = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * FEET_TO_METERS);
+const KGPM3_TO_LBPF3: Numeric = 1.0 / LBPF3_TO_KGPM3;
 
 // Velocity
-pub const MPH_TO_MPS: Numeric = MPH_TO_FPS * FPS_TO_MPS;
-pub const MPS_TO_MPH: Numeric = 1.0 / MPH_TO_MPS;
+const MPH_TO_MPS: Numeric = MPH_TO_FPS * FPS_TO_MPS;
+const MPS_TO_MPH: Numeric = 1.0 / MPH_TO_MPS;
 
-pub const MPH_TO_FPS: Numeric = MILES_TO_FEET / HOURS_TO_SECONDS;
-pub const FPS_TO_MPH: Numeric = 1.0 / MPH_TO_FPS;
+const MPH_TO_FPS: Numeric = MILES_TO_FEET / HOURS_TO_SECONDS;
+const FPS_TO_MPH: Numeric = 1.0 / MPH_TO_FPS;
 
-pub const FPS_TO_MPS: Numeric = FEET_TO_METERS;
-pub const MPS_TO_FPS: Numeric = 1.0 / FPS_TO_MPS;
+const FPS_TO_MPS: Numeric = FEET_TO_METERS;
+const MPS_TO_FPS: Numeric = 1.0 / FPS_TO_MPS;
 
 // Acceleration ??
-pub const MPH2_TO_MPS2: Numeric = MPH2_TO_FPS2 * FPS2_TO_MPS2;
-pub const MPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_MPS2;
+const MPH2_TO_MPS2: Numeric = MPH2_TO_FPS2 * FPS2_TO_MPS2;
+const MPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_MPS2;
 
-pub const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / HOURS_TO_SECONDS;
-pub const FPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_FPS2;
+const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / HOURS_TO_SECONDS;
+const FPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_FPS2;
 
-pub const FPS2_TO_MPS2: Numeric = FPS_TO_MPS;
-pub const MPS2_TO_FPS2: Numeric = 1.0 / FPS2_TO_MPS2;
+const FPS2_TO_MPS2: Numeric = FPS_TO_MPS;
+const MPS2_TO_FPS2: Numeric = 1.0 / FPS2_TO_MPS2;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Energy {
@@ -49,7 +57,7 @@ impl From<Energy> for Numeric {
 }
 impl Energy {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_joules(self) -> Self {
         match self {
@@ -80,7 +88,7 @@ impl From<Pressure> for Numeric {
 }
 impl Pressure {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_pascals(self) -> Self {
         match self {
@@ -111,7 +119,7 @@ impl From<Density> for Numeric {
 }
 impl Density {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_kgpm3(self) -> Self {
         match self {
@@ -144,7 +152,7 @@ impl From<Velocity> for Numeric {
 }
 impl Velocity {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_mps(self) -> Self {
         match self {
@@ -186,7 +194,7 @@ impl From<Acceleration> for Numeric {
 }
 impl Acceleration {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_mps2(self) -> Self {
         match self {

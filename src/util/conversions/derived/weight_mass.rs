@@ -1,14 +1,14 @@
 use self::WeightMass::*;
 use crate::util::Numeric;
 
-pub const LBS_TO_GRAINS: Numeric = 7_000.0;
-pub const GRAINS_TO_LBS: Numeric = 1.0 / LBS_TO_GRAINS;
+pub(super) const LBS_TO_GRAINS: Numeric = 7_000.0;
+pub(super) const GRAINS_TO_LBS: Numeric = 1.0 / LBS_TO_GRAINS;
 
-pub const GRAINS_TO_KGS: Numeric = GRAINS_TO_LBS * LBS_TO_KGS;
-pub const KGS_TO_GRAINS: Numeric = 1.0 / GRAINS_TO_KGS;
+pub(super) const GRAINS_TO_KGS: Numeric = GRAINS_TO_LBS * LBS_TO_KGS;
+pub(super) const KGS_TO_GRAINS: Numeric = 1.0 / GRAINS_TO_KGS;
 
-pub const LBS_TO_KGS: Numeric = 0.453_592_37;
-pub const KGS_TO_LBS: Numeric = 1.0 / LBS_TO_KGS;
+pub(super) const LBS_TO_KGS: Numeric = 0.453_592_37;
+pub(super) const KGS_TO_LBS: Numeric = 1.0 / LBS_TO_KGS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum WeightMass {
@@ -27,7 +27,7 @@ impl From<WeightMass> for Numeric {
 }
 impl WeightMass {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_grains(self) -> Self {
         match self {

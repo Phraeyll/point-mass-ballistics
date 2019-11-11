@@ -1,14 +1,14 @@
 use self::Time::*;
 use crate::util::Numeric;
 
-pub const HOURS_TO_MINUTES: Numeric = 60.0;
-pub const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
+pub(super) const HOURS_TO_MINUTES: Numeric = 60.0;
+pub(super) const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
 
-pub const MINUTES_TO_SECONDS: Numeric = 60.0;
-pub const SECONDS_TO_MINUTES: Numeric = 1.0 / MINUTES_TO_SECONDS;
+pub(super) const MINUTES_TO_SECONDS: Numeric = 60.0;
+pub(super) const SECONDS_TO_MINUTES: Numeric = 1.0 / MINUTES_TO_SECONDS;
 
-pub const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
-pub const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
+pub(super) const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
+pub(super) const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Time {
@@ -27,7 +27,7 @@ impl From<Time> for Numeric {
 }
 impl Time {
     pub fn to_num(self) -> Numeric {
-        Numeric::from(self)
+        From::from(self)
     }
     pub fn to_hours(self) -> Self {
         match self {
