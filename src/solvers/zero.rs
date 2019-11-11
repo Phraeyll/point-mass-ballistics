@@ -156,4 +156,33 @@ impl<'t> Simulation<'t> {
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
         Ok((pitch.to_minutes().to_num(), yaw.to_minutes().to_num()))
     }
+    pub fn find_pbr_angle(
+        &'t mut self,
+        size: Numeric,
+        tolerance: Numeric,
+    ) -> Result<Numeric> {
+        let size = Length::Inches(size).to_meters().to_num() / 2.0;
+        let (pitch, _, _, _) = self
+            .find_adjustments(
+                { |p: &Packet| p.relative_position().y >= size },
+                { |p: &Packet| p.offset_vertical_moa(size, tolerance) },
+                { |_: &Packet| Angle::Minutes(0.0) },
+            )
+            .find_map(|result| match result {
+                Ok((_, _, elevation, _)) => {
+                    if true
+                        && elevation >= (size - tolerance)
+                        && elevation <= (size + tolerance)
+                    {
+                        Some(result)
+                    } else {
+                        None
+                    }
+                }
+                err @ Err(_) => Some(err),
+            })
+            .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
+        Ok(pitch.to_minutes().to_num())
+
+    }
 }
