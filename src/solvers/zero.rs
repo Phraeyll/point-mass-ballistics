@@ -165,7 +165,7 @@ impl<'t> Simulation<'t> {
         let (pitch, _, _, _) = self
             .find_adjustments(
                 { |p: &Packet| p.relative_position().y >= size },
-                { |p: &Packet| p.offset_vertical_moa(size, tolerance) },
+                { |p: &Packet| p.offset_vertical_moa(0.0, tolerance) },
                 { |_: &Packet| Angle::Minutes(0.0) },
             )
             .find_map(|result| match result {
