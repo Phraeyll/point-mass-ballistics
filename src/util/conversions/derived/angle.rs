@@ -11,8 +11,8 @@ use ordered_float::OrderedFloat;
 pub(super) const DEGREES_TO_MINUTES: Numeric = 60.0;
 pub(super) const MINUTES_TO_DEGREES: Numeric = 1.0 / DEGREES_TO_MINUTES;
 
-pub(super) const RADIANS_TO_MILIRADIANS: Numeric = 1000.0;
-pub(super) const MILIRADIANS_TO_RADIANS: Numeric = 1.0 / RADIANS_TO_MILIRADIANS;
+pub(super) const RADIANS_TO_MILLIRADIANS: Numeric = 1000.0;
+pub(super) const MILLIRADIANS_TO_RADIANS: Numeric = 1.0 / RADIANS_TO_MILLIRADIANS;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Angle {
@@ -40,7 +40,7 @@ impl Angle {
             u @ Degrees(_) => u,
             Minutes(u) => Degrees(u * MINUTES_TO_DEGREES),
             Radians(u) => Degrees(u.to_degrees()),
-            Milliradians(u) => Radians(u * MILIRADIANS_TO_RADIANS).to_degrees(),
+            Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS).to_degrees(),
         }
     }
     pub fn to_minutes(self) -> Self {
@@ -48,7 +48,7 @@ impl Angle {
             u @ Minutes(_) => u,
             Degrees(u) => Minutes(u * DEGREES_TO_MINUTES),
             Radians(u) => Degrees(u.to_degrees()).to_minutes(),
-            Milliradians(u) => Radians(u * MILIRADIANS_TO_RADIANS).to_minutes(),
+            Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS).to_minutes(),
         }
     }
     pub fn to_radians(self) -> Self {
@@ -56,15 +56,15 @@ impl Angle {
             u @ Radians(_) => u,
             Degrees(u) => Radians(u.to_radians()),
             Minutes(u) => Degrees(u * MINUTES_TO_DEGREES).to_radians(),
-            Milliradians(u) => Radians(u * MILIRADIANS_TO_RADIANS),
+            Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS),
         }
     }
-    pub fn to_miliradians(self) -> Self {
+    pub fn to_milliradians(self) -> Self {
         match self {
             u @ Milliradians(_) => u,
-            Degrees(u) => Radians(u.to_radians()).to_miliradians(),
-            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES).to_miliradians(),
-            Radians(u) => Milliradians(u * RADIANS_TO_MILIRADIANS),
+            Degrees(u) => Radians(u.to_radians()).to_milliradians(),
+            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES).to_milliradians(),
+            Radians(u) => Milliradians(u * RADIANS_TO_MILLIRADIANS),
         }
     }
 }
@@ -75,7 +75,7 @@ impl PartialEq for Angle {
             Degrees(u) => u == other.to_degrees().to_num(),
             Minutes(u) => u == other.to_minutes().to_num(),
             Radians(u) => u == other.to_radians().to_num(),
-            Milliradians(u) => u == other.to_miliradians().to_num(),
+            Milliradians(u) => u == other.to_milliradians().to_num(),
         }
     }
 }
@@ -86,7 +86,7 @@ impl Ord for Angle {
             Degrees(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_degrees().to_num())),
             Minutes(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_minutes().to_num())),
             Radians(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_radians().to_num())),
-            Milliradians(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_miliradians().to_num())),
+            Milliradians(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_milliradians().to_num())),
         }
     }
 }
@@ -114,7 +114,7 @@ impl Add for Angle {
             Degrees(u) => Degrees(u + other.to_degrees().to_num()),
             Minutes(u) => Minutes(u + other.to_minutes().to_num()),
             Radians(u) => Radians(u + other.to_radians().to_num()),
-            Milliradians(u) => Milliradians(u + other.to_miliradians().to_num()),
+            Milliradians(u) => Milliradians(u + other.to_milliradians().to_num()),
         }
     }
 }
@@ -135,7 +135,7 @@ impl Sub for Angle {
             Degrees(u) => Degrees(u - other.to_degrees().to_num()),
             Minutes(u) => Minutes(u - other.to_minutes().to_num()),
             Radians(u) => Radians(u - other.to_radians().to_num()),
-            Milliradians(u) => Milliradians(u - other.to_miliradians().to_num()),
+            Milliradians(u) => Milliradians(u - other.to_milliradians().to_num()),
         }
     }
 }
