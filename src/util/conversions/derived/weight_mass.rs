@@ -4,9 +4,6 @@ use crate::util::Numeric;
 pub(super) const LBS_TO_GRAINS: Numeric = 7_000.0;
 pub(super) const GRAINS_TO_LBS: Numeric = 1.0 / LBS_TO_GRAINS;
 
-pub(super) const GRAINS_TO_KGS: Numeric = GRAINS_TO_LBS * LBS_TO_KGS;
-pub(super) const KGS_TO_GRAINS: Numeric = 1.0 / GRAINS_TO_KGS;
-
 pub(super) const LBS_TO_KGS: Numeric = 0.453_592_37;
 pub(super) const KGS_TO_LBS: Numeric = 1.0 / LBS_TO_KGS;
 
@@ -32,8 +29,8 @@ impl WeightMass {
     pub fn to_grains(self) -> Self {
         match self {
             u @ Grains(_) => u,
+            u @ Kgs(_) => u.to_lbs().to_grains(),
             Lbs(u) => Grains(u * LBS_TO_GRAINS),
-            Kgs(u) => Grains(u * KGS_TO_GRAINS),
         }
     }
     pub fn to_lbs(self) -> Self {
@@ -46,7 +43,7 @@ impl WeightMass {
     pub fn to_kgs(self) -> Self {
         match self {
             u @ Kgs(_) => u,
-            Grains(u) => Kgs(u * GRAINS_TO_KGS),
+            u @ Grains(_) => u.to_lbs().to_kgs(),
             Lbs(u) => Kgs(u * LBS_TO_KGS),
         }
     }

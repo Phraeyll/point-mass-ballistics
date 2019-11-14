@@ -36,7 +36,7 @@ const MPS_TO_FPS: Numeric = 1.0 / FPS_TO_MPS;
 const MPH2_TO_MPS2: Numeric = MPH2_TO_FPS2 * FPS2_TO_MPS2;
 const MPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_MPS2;
 
-const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / HOURS_TO_SECONDS;
+const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / (HOURS_TO_MINUTES * MINUTES_TO_SECONDS);
 const FPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_FPS2;
 
 const FPS2_TO_MPS2: Numeric = FPS_TO_MPS;

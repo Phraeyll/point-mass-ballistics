@@ -7,9 +7,6 @@ pub(super) const MINUTES_TO_HOURS: Numeric = 1.0 / HOURS_TO_MINUTES;
 pub(super) const MINUTES_TO_SECONDS: Numeric = 60.0;
 pub(super) const SECONDS_TO_MINUTES: Numeric = 1.0 / MINUTES_TO_SECONDS;
 
-pub(super) const HOURS_TO_SECONDS: Numeric = HOURS_TO_MINUTES * MINUTES_TO_SECONDS;
-pub(super) const SECONDS_TO_HOURS: Numeric = 1.0 / HOURS_TO_SECONDS;
-
 #[derive(Debug, Copy, Clone)]
 pub enum Time {
     Hours(Numeric),
@@ -32,8 +29,8 @@ impl Time {
     pub fn to_hours(self) -> Self {
         match self {
             u @ Hours(_) => u,
+            u @ Seconds(_) => u.to_minutes().to_hours(),
             Minutes(u) => Hours(u * MINUTES_TO_HOURS),
-            Seconds(u) => Hours(u * SECONDS_TO_HOURS),
         }
     }
     pub fn to_minutes(self) -> Self {
@@ -46,7 +43,7 @@ impl Time {
     pub fn to_seconds(self) -> Self {
         match self {
             u @ Seconds(_) => u,
-            Hours(u) => Seconds(u * HOURS_TO_SECONDS),
+            u @ Hours(_) => u.to_minutes().to_seconds(),
             Minutes(u) => Seconds(u * MINUTES_TO_SECONDS),
         }
     }
