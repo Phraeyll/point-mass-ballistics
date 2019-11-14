@@ -13,24 +13,6 @@ pub(super) const INCHES_TO_FEET: Numeric = 1.0 / FEET_TO_INCHES;
 pub(super) const FEET_TO_METERS: Numeric = 0.304_8;
 pub(super) const METERS_TO_FEET: Numeric = 1.0 / FEET_TO_METERS;
 
-pub(super) const MILES_TO_FEET: Numeric = MILES_TO_YARDS * YARDS_TO_FEET;
-pub(super) const FEET_TO_MILES: Numeric = 1.0 / MILES_TO_FEET;
-
-pub(super) const YARDS_TO_INCHES: Numeric = YARDS_TO_FEET * FEET_TO_INCHES;
-pub(super) const INCHES_TO_YARDS: Numeric = 1.0 / YARDS_TO_INCHES;
-
-pub(super) const MILES_TO_INCHES: Numeric = MILES_TO_YARDS * YARDS_TO_INCHES;
-pub(super) const INCHES_TO_MILES: Numeric = 1.0 / MILES_TO_INCHES;
-
-pub(super) const MILES_TO_METERS: Numeric = MILES_TO_FEET * FEET_TO_METERS;
-pub(super) const METERS_TO_MILES: Numeric = 1.0 / MILES_TO_METERS;
-
-pub(super) const YARDS_TO_METERS: Numeric = YARDS_TO_FEET * FEET_TO_METERS;
-pub(super) const METERS_TO_YARDS: Numeric = 1.0 / YARDS_TO_METERS;
-
-pub(super) const INCHES_TO_METERS: Numeric = INCHES_TO_FEET * FEET_TO_METERS;
-pub(super) const METERS_TO_INCHES: Numeric = 1.0 / INCHES_TO_METERS;
-
 #[derive(Debug, Copy, Clone)]
 pub enum Length {
     Meters(Numeric),
@@ -57,44 +39,44 @@ impl Length {
     pub fn to_meters(self) -> Self {
         match self {
             u @ Meters(_) => u,
-            Miles(u) => Meters(u * MILES_TO_METERS),
-            Yards(u) => Meters(u * YARDS_TO_METERS),
+            u @ Miles(_) => u.to_feet().to_meters(),
+            u @ Yards(_) => u.to_feet().to_meters(),
+            u @ Inches(_) => u.to_feet().to_meters(),
             Feet(u) => Meters(u * FEET_TO_METERS),
-            Inches(u) => Meters(u * INCHES_TO_METERS),
         }
     }
     pub fn to_inches(self) -> Self {
         match self {
             u @ Inches(_) => u,
-            Meters(u) => Inches(u * METERS_TO_INCHES),
-            Miles(u) => Inches(u * MILES_TO_INCHES),
-            Yards(u) => Inches(u * YARDS_TO_INCHES),
+            u @ Meters(_) => u.to_feet().to_inches(),
+            u @ Miles(_) => u.to_feet().to_inches(),
+            u @ Yards(_) => u.to_feet().to_inches(),
             Feet(u) => Inches(u * FEET_TO_INCHES),
         }
     }
     pub fn to_yards(self) -> Self {
         match self {
             u @ Yards(_) => u,
-            Meters(u) => Yards(u * METERS_TO_YARDS),
+            u @ Meters(_) => u.to_feet().to_yards(),
+            u @ Inches(_) => u.to_feet().to_yards(),
             Miles(u) => Yards(u * MILES_TO_YARDS),
             Feet(u) => Yards(u * FEET_TO_YARDS),
-            Inches(u) => Yards(u * INCHES_TO_YARDS),
         }
     }
     pub fn to_miles(self) -> Self {
         match self {
             u @ Miles(_) => u,
-            Meters(u) => Miles(u * METERS_TO_MILES),
+            u @ Meters(_) => u.to_feet().to_miles(),
+            u @ Feet(_) => u.to_feet().to_miles(),
+            u @ Inches(_) => u.to_feet().to_miles(),
             Yards(u) => Miles(u * YARDS_TO_MILES),
-            Feet(u) => Miles(u * FEET_TO_MILES),
-            Inches(u) => Miles(u * INCHES_TO_MILES),
         }
     }
     pub fn to_feet(self) -> Self {
         match self {
             u @ Feet(_) => u,
+            u @ Miles(_) => u.to_yards().to_feet(),
             Meters(u) => Feet(u * METERS_TO_FEET),
-            Miles(u) => Feet(u * MILES_TO_FEET),
             Yards(u) => Feet(u * YARDS_TO_FEET),
             Inches(u) => Feet(u * INCHES_TO_FEET),
         }

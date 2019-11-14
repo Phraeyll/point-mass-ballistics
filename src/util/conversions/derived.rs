@@ -26,7 +26,7 @@ const KGPM3_TO_LBPF3: Numeric = 1.0 / LBPF3_TO_KGPM3;
 const MPH_TO_MPS: Numeric = MPH_TO_FPS * FPS_TO_MPS;
 const MPS_TO_MPH: Numeric = 1.0 / MPH_TO_MPS;
 
-const MPH_TO_FPS: Numeric = MILES_TO_FEET / HOURS_TO_SECONDS;
+const MPH_TO_FPS: Numeric = (MILES_TO_YARDS * YARDS_TO_FEET) / (HOURS_TO_MINUTES * MINUTES_TO_SECONDS);
 const FPS_TO_MPH: Numeric = 1.0 / MPH_TO_FPS;
 
 const FPS_TO_MPS: Numeric = FEET_TO_METERS;
