@@ -38,39 +38,39 @@ impl Angle {
     pub fn to_degrees(self) -> Self {
         match self {
             u @ Degrees(_) => u,
-            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES),
+            u @ Milliradians(_) => u.to_radians().to_degrees(),
             Radians(u) => Degrees(u.to_degrees()),
-            Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS).to_degrees(),
+            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES),
         }
     }
     pub fn to_minutes(self) -> Self {
         match self {
             u @ Minutes(_) => u,
+            u @ Radians(_) => u.to_degrees().to_minutes(),
+            u @ Milliradians(_) => u.to_degrees().to_minutes(),
             Degrees(u) => Minutes(u * DEGREES_TO_MINUTES),
-            Radians(u) => Degrees(u.to_degrees()).to_minutes(),
-            Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS).to_minutes(),
         }
     }
     pub fn to_radians(self) -> Self {
         match self {
             u @ Radians(_) => u,
+            u @ Minutes(_) => u.to_degrees().to_radians(),
             Degrees(u) => Radians(u.to_radians()),
-            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES).to_radians(),
             Milliradians(u) => Radians(u * MILLIRADIANS_TO_RADIANS),
         }
     }
     pub fn to_milliradians(self) -> Self {
         match self {
             u @ Milliradians(_) => u,
-            Degrees(u) => Radians(u.to_radians()).to_milliradians(),
-            Minutes(u) => Degrees(u * MINUTES_TO_DEGREES).to_milliradians(),
+            u @ Degrees(_) => u.to_radians().to_milliradians(),
+            u @ Minutes(_) => u.to_radians().to_milliradians(),
             Radians(u) => Milliradians(u * RADIANS_TO_MILLIRADIANS),
         }
     }
 }
 
 impl PartialEq for Angle {
-    fn eq(&self, other: &Angle) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         match *self {
             Degrees(u) => u == other.to_degrees().to_num(),
             Minutes(u) => u == other.to_minutes().to_num(),
@@ -81,7 +81,7 @@ impl PartialEq for Angle {
 }
 impl Eq for Angle {}
 impl Ord for Angle {
-    fn cmp(&self, other: &Angle) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         match *self {
             Degrees(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_degrees().to_num())),
             Minutes(u) => OrderedFloat(u).cmp(&OrderedFloat(other.to_minutes().to_num())),
@@ -91,7 +91,7 @@ impl Ord for Angle {
     }
 }
 impl PartialOrd for Angle {
-    fn partial_cmp(&self, other: &Angle) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
