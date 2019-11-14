@@ -12,10 +12,6 @@ pub(super) const K_TO_C: Numeric = -C_TO_K;
 pub(super) const F_TO_K: Numeric = 459.67;
 pub(super) const K_TO_F: Numeric = -F_TO_K;
 
-// Additive
-pub(super) const F_TO_C: Numeric = -32.0;
-pub(super) const C_TO_F: Numeric = -F_TO_C;
-
 #[derive(Debug, Copy, Clone)]
 pub enum Temperature {
     C(Numeric),
@@ -38,8 +34,8 @@ impl Temperature {
     pub fn to_celsius(self) -> Self {
         match self {
             u @ C(_) => u,
+            u @ F(_) => u.to_kelvin().to_celsius(),
             K(u) => C(u + K_TO_C),
-            F(u) => C((u + F_TO_C) * F_TO_CK),
         }
     }
     pub fn to_kelvin(self) -> Self {
@@ -52,7 +48,7 @@ impl Temperature {
     pub fn to_fahrenheit(self) -> Self {
         match self {
             u @ F(_) => u,
-            C(u) => F((u * CK_TO_F) + C_TO_F),
+            u @ C(_) => u.to_kelvin().to_fahrenheit(),
             K(u) => F((u * CK_TO_F) + K_TO_F),
         }
     }
