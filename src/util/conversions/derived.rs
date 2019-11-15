@@ -23,9 +23,6 @@ const LBPF3_TO_KGPM3: Numeric = LBS_TO_KGS / (FEET_TO_METERS * FEET_TO_METERS * 
 const KGPM3_TO_LBPF3: Numeric = 1.0 / LBPF3_TO_KGPM3;
 
 // Velocity
-const MPH_TO_MPS: Numeric = MPH_TO_FPS * FPS_TO_MPS;
-const MPS_TO_MPH: Numeric = 1.0 / MPH_TO_MPS;
-
 const MPH_TO_FPS: Numeric = (MILES_TO_YARDS * YARDS_TO_FEET) / (HOURS_TO_MINUTES * MINUTES_TO_SECONDS);
 const FPS_TO_MPH: Numeric = 1.0 / MPH_TO_FPS;
 
@@ -33,9 +30,6 @@ const FPS_TO_MPS: Numeric = FEET_TO_METERS;
 const MPS_TO_FPS: Numeric = 1.0 / FPS_TO_MPS;
 
 // Acceleration ??
-const MPH2_TO_MPS2: Numeric = MPH2_TO_FPS2 * FPS2_TO_MPS2;
-const MPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_MPS2;
-
 const MPH2_TO_FPS2: Numeric = MPH_TO_FPS / (HOURS_TO_MINUTES * MINUTES_TO_SECONDS);
 const FPS2_TO_MPH2: Numeric = 1.0 / MPH2_TO_FPS2;
 
@@ -157,14 +151,14 @@ impl Velocity {
     pub fn to_mps(self) -> Self {
         match self {
             u @ Mps(_) => u,
-            Mph(u) => Mps(u * MPH_TO_MPS),
+            u @ Mph(_) => u.to_fps().to_mps(),
             Fps(u) => Mps(u * FPS_TO_MPS),
         }
     }
     pub fn to_mph(self) -> Self {
         match self {
             u @ Mph(_) => u,
-            Mps(u) => Mph(u * MPS_TO_MPH),
+            u @ Mps(_) => u.to_fps().to_mph(),
             Fps(u) => Mph(u * FPS_TO_MPH),
         }
     }
@@ -199,14 +193,14 @@ impl Acceleration {
     pub fn to_mps2(self) -> Self {
         match self {
             u @ Mps2(_) => u,
-            Mph2(u) => Mps2(u * MPH2_TO_MPS2),
+            u @ Mph2(_) => u.to_fps2().to_mps2(),
             Fps2(u) => Mps2(u * FPS2_TO_MPS2),
         }
     }
     pub fn to_mph2(self) -> Self {
         match self {
             u @ Mph2(_) => u,
-            Mps2(u) => Mph2(u * MPS2_TO_MPH2),
+            u @ Mps2(_) => u.to_fps2().to_mph2(),
             Fps2(u) => Mph2(u * FPS2_TO_MPH2),
         }
     }
