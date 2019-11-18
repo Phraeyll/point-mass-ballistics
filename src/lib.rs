@@ -3,7 +3,7 @@ pub use self::{
     iter::Iter,
     output::Measurements,
     simulation::{Bc, BcKind, Simulation, SimulationBuilder},
-    util::{FloatMap, Natural, Numeric},
+    util::*,
 };
 
 #[macro_use]
