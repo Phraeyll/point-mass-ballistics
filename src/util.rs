@@ -11,7 +11,7 @@ use ordered_float::OrderedFloat;
 pub use uom::{
     si::{
         acceleration::meter_per_second_squared,
-        angle::{self, minute as moa, radian},
+        angle::{self, minute as moa, radian, degree[]},
         area::square_meter,
         energy::{foot_pound, joule},
         f64::*,
