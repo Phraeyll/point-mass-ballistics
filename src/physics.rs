@@ -54,7 +54,7 @@ impl Simulation<'_> {
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self, velocity: &Vector3<Numeric>) -> Numeric {
-        velocity.norm() / Velocity::get::<meter_per_second>(&self.atmosphere.speed_of_sound())
+        velocity.norm() / self.atmosphere.speed_of_sound().get::<meter_per_second>()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: &Vector3<Numeric>) -> Numeric {

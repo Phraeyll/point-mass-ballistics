@@ -26,7 +26,8 @@ impl Measurements for Packet<'_> {
     }
     fn energy(&self) -> Numeric {
         Energy::new::<joule>(
-            0.5 * self.simulation.projectile.mass().get::<kilogram>() * self.velocity.norm().powf(2.0)
+            0.5 * self.simulation.projectile.mass().get::<kilogram>()
+                * self.velocity.norm().powf(2.0),
         )
         .get::<foot_pound>()
     }
