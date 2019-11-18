@@ -47,7 +47,7 @@ where
     E: Fn(&Packet) -> Angle,
     W: Fn(&Packet) -> Angle,
 {
-    type Item = Result<(Angle, Angle, Numeric, Numeric)>;
+    type Item = Result<(Angle, Angle, Length, Length)>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
@@ -91,8 +91,8 @@ where
         } else if let Some(packet) = self.sim.into_iter().fuse().find(&self.finder) {
             self.elevation_adjustment = (self.elevation_adjuster)(&packet);
             self.windage_adjustment = (self.windage_adjuster)(&packet);
-            let elevation = packet.relative_position().y;
-            let windage = packet.relative_position().z;
+            let elevation = packet.elevation();
+            let windage = packet.windage();
             Some(Ok((pitch, yaw, elevation, windage)))
         } else {
             Some(Err(Error::new(ErrorKind::TerminalVelocity {
@@ -137,19 +137,14 @@ impl<'t> Simulation<'t> {
     // This should also work for windage adjustments as well
     pub fn find_zero_angles(
         &'t mut self,
-        distance: Numeric,
-        elevation_offset: Numeric,
-        windage_offset: Numeric,
-        tolerance: Numeric,
-    ) -> Result<(Numeric, Numeric)> {
-        let distance = Length::new::<yard>(distance).get::<meter>();
-        let elevation_offset = Length::new::<inch>(elevation_offset).get::<meter>();
-        let windage_offset = Length::new::<inch>(windage_offset).get::<meter>();
-        let tolerance = Length::new::<inch>(tolerance).get::<meter>();
-
+        distance: Length,
+        elevation_offset: Length,
+        windage_offset: Length,
+        tolerance: Length,
+    ) -> Result<(Angle, Angle)> {
         let (pitch, yaw, _, _) = self
             .find_adjustments(
-                { |p: &Packet| p.relative_position().x >= distance },
+                { |p: &Packet| p.distance() >= distance },
                 { |p: &Packet| p.offset_vertical_moa(elevation_offset, tolerance) },
                 { |p: &Packet| p.offset_horizontal_moa(windage_offset, tolerance) },
             )
@@ -169,27 +164,6 @@ impl<'t> Simulation<'t> {
                 err @ Err(_) => Some(err),
             })
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
-        Ok((pitch.get::<moa>(), yaw.get::<moa>()))
-    }
-    pub fn find_pbr_angle(&'t mut self, size: Numeric, tolerance: Numeric) -> Result<Numeric> {
-        let size = Length::new::<inch>(size).get::<meter>() / 2.0;
-        let (pitch, _, _, _) = self
-            .find_adjustments(
-                { |p: &Packet| p.relative_position().y >= size },
-                { |p: &Packet| p.offset_vertical_moa(0.0, tolerance) },
-                { |_: &Packet| Angle::new::<moa>(0.0) },
-            )
-            .find_map(|result| match result {
-                Ok((_, _, elevation, _)) => {
-                    if elevation >= (size - tolerance) && elevation <= (size + tolerance) {
-                        Some(result)
-                    } else {
-                        None
-                    }
-                }
-                err @ Err(_) => Some(err),
-            })
-            .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
-        Ok(pitch.get::<moa>())
+        Ok((pitch, yaw))
     }
 }

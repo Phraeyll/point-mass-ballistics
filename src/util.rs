@@ -15,19 +15,19 @@ pub use uom::{
         area::square_meter,
         energy::{foot_pound, joule},
         f64::*,
-        length::{inch, meter, yard},
+        length::{self, inch, meter, yard},
         mass::{grain, kilogram, pound},
         mass_density::kilogram_per_cubic_meter,
         molar_mass,
-        pressure::pascal,
+        pressure::{inch_of_mercury, pascal},
         thermodynamic_temperature::{
             degree_celsius as celsius, degree_fahrenheit as fahrenheit, kelvin,
         },
         time::second,
-        velocity::{foot_per_second, meter_per_second},
-        Quantity, ISQ, SI,
+        velocity::{foot_per_second, meter_per_second, mile_per_hour},
+        Quantity, Unit, Units, ISQ, SI,
     },
-    typenum,
+    typenum, Conversion,
 };
 
 pub mod nalgebra_helpers;

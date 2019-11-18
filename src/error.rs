@@ -1,7 +1,7 @@
 use self::ErrorKind::*;
-use crate::util::*;
+use crate::util::{Angle, Numeric};
 
-use std::{error::Error as StdError, fmt, result::Result as StdResult};
+use std::{error::Error as StdError, fmt, fmt::Debug, result::Result as StdResult};
 
 pub type Result<T, E = Error> = StdResult<T, E>;
 
@@ -51,9 +51,9 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             BcKindNull => write!(f, "Bc need to be set before inititializing simulatin"),
-            VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {}", err),
-            PositiveExpected(ref err) => write!(f, "Positive Expected Error: {}", err),
-            NegativeExpected(ref err) => write!(f, "Negative Expected Error: {}", err),
+            VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {:?}", err),
+            PositiveExpected(ref err) => write!(f, "Positive Expected Error: {:?}", err),
+            NegativeExpected(ref err) => write!(f, "Negative Expected Error: {:?}", err),
             OutOfRange { ref min, ref max } => write!(
                 f,
                 "Within Range Expected Error => min: {:#?} - {:#?}",
@@ -77,17 +77,5 @@ impl fmt::Display for Error {
         }
     }
 }
-impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self.0 {
-            BcKindNull => "BcKind is null",
-            VelocityLookup(_) => "Velocity out of range",
-            PositiveExpected(..) => "Number needs to be positive greater than 0",
-            NegativeExpected(..) => "Number needs to be positive less than 0",
-            OutOfRange { .. } => "Numer needs to be within range",
-            AngleRange { .. } => "Angle out of range",
-            TerminalVelocity { .. } => "Terminal velocity reached",
-            AngleNotChanging { .. } => "Angle not changing curing iteration",
-        }
-    }
-}
+
+impl StdError for Error {}
