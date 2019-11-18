@@ -10,8 +10,8 @@ use std::{
 use ordered_float::OrderedFloat;
 pub use uom::{
     si::{
-        acceleration::meter_per_second_squared,
-        angle::{self, minute as moa, radian, degree[]},
+        acceleration::{foot_per_second_squared, meter_per_second_squared},
+        angle::{self, degree, minute as moa, radian},
         area::square_meter,
         energy::{foot_pound, joule},
         f64::*,
