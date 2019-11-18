@@ -1,15 +1,35 @@
 use crate::{
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
-    util::*,
+    util::{
+        celsius, inch, kilogram, kilogram_per_cubic_meter, meter, meter_per_second,
+        meter_per_second_squared, molar_mass, nalgebra_helpers::*, pascal, pound, radian,
+        square_meter, typenum::*, Angle, Area, Length, Mass, MassDensity, Numeric, Pressure,
+        Quantity, Velocity, ISQ, PI, SI,
+    },
 };
 
-use std::ops::Mul;
+use std::{marker::PhantomData, ops::Mul};
 
 use nalgebra::Vector3;
 
-const UNIVERSAL_GAS: Numeric = 8.314_459_8; // Universal gas constant (J/K*mol)
-const MOLAR_DRY: Numeric = 0.028_964_4; // Molar mass of dry air (kg/mol)
-const MOLAR_VAPOR: Numeric = 0.018_016; // Molar mass of water vapor (kg/mol)
+// Universal gas constant (J/K*mol)
+const UNIVERSAL_GAS: Quantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>, SI<Numeric>, Numeric> = Quantity {
+    dimension: PhantomData,
+    units: PhantomData,
+    value: 8.314_462_618_153_24,
+};
+// Molar mass of dry air (kg/mol)
+const MOLAR_DRY: Quantity<molar_mass::Dimension, SI<Numeric>, Numeric> = Quantity {
+    dimension: PhantomData,
+    units: PhantomData,
+    value: 0.028_964_4,
+};
+// Molar mass of water vapor (kg/mol)
+const MOLAR_VAPOR: Quantity<molar_mass::Dimension, SI<Numeric>, Numeric> = Quantity {
+    dimension: PhantomData,
+    units: PhantomData,
+    value: 0.018_016,
+};
 const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
 const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
 
@@ -33,7 +53,7 @@ impl Simulation<'_> {
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     fn mach(&self, velocity: &Vector3<Numeric>) -> Numeric {
-        velocity.norm() / self.atmosphere.speed_of_sound()
+        velocity.norm() / Velocity::get::<meter_per_second>(&self.atmosphere.speed_of_sound())
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: &Vector3<Numeric>) -> Numeric {
@@ -50,16 +70,16 @@ impl Simulation<'_> {
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
     fn drag_force(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
-        -0.5 * self.atmosphere.rho()
+        -0.5 * self.atmosphere.rho().get::<kilogram_per_cubic_meter>()
             * self.vv(velocity)
             * self.vv(velocity).norm()
             * self.cd(velocity)
-            * self.projectile.area()
+            * self.projectile.area().get::<square_meter>()
     }
     pub(crate) fn drag_acceleration(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
         if self.flags.drag() {
             // Acceleration from drag force and gravity (F = ma)
-            self.drag_force(velocity) / self.projectile.mass()
+            self.drag_force(velocity) / self.projectile.mass().get::<kilogram>()
         } else {
             Vector3::zeros()
         }
@@ -97,35 +117,30 @@ impl Simulation<'_> {
 // Helpers - maybe some of these should be moved?
 impl Atmosphere {
     // Density of air, using pressure, humidity, and temperature
-    pub(crate) fn rho(&self) -> Numeric {
-        ((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.kelvin())
+    pub(crate) fn rho(&self) -> MassDensity {
+        (((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.temperature))
     }
     // Speed of sound at given air density and pressure
-    pub(crate) fn speed_of_sound(&self) -> Numeric {
-        (ADIABATIC_INDEX_AIR * (self.pa() / self.rho())).sqrt()
+    pub(crate) fn speed_of_sound(&self) -> Velocity {
+        (ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
-    fn pv(&self) -> Numeric {
-        self.humidity
-            * 611.21
-            * ((18.678 - (self.celsius() / 234.5)) * (self.celsius() / (257.14 + self.celsius())))
-                .exp()
+    fn pv(&self) -> Pressure {
+        Pressure::new::<pascal>(
+            self.humidity
+                * 611.21
+                * ((18.678 - (self.celsius() / 234.5))
+                    * (self.celsius() / (257.14 + self.celsius())))
+                .exp(),
+        )
     }
     // Pressure of dry air
-    fn pd(&self) -> Numeric {
-        self.pa() - self.pv()
-    }
-    // Total air pressure in pascals
-    fn pa(&self) -> Numeric {
-        self.pressure.to_pascals().to_num()
+    fn pd(&self) -> Pressure {
+        self.pressure - self.pv()
     }
     // Temperature in celsius
     fn celsius(&self) -> Numeric {
-        self.temperature.to_celsius().to_num()
-    }
-    // Temperature in kelvin
-    fn kelvin(&self) -> Numeric {
-        self.temperature.to_kelvin().to_num()
+        self.temperature.get::<celsius>()
     }
 }
 
@@ -142,20 +157,20 @@ impl Flags {
 }
 impl Projectile<'_> {
     // Radius of projectile cross section in meters
-    fn radius(&self) -> Numeric {
-        self.caliber.to_meters().to_num() / 2.0
+    fn radius(&self) -> Length {
+        self.caliber / 2.0
     }
     // Area of projectile in meters, used during drag force calculation
-    fn area(&self) -> Numeric {
-        PI * self.radius().powf(2.0)
+    fn area(&self) -> Area {
+        PI * self.radius().powi(P2::new())
     }
     // Mass of projectile in kgs, used during acceleration calculation in get_simulation().iteration
-    pub(crate) fn mass(&self) -> Numeric {
-        self.weight.to_kgs().into()
+    pub(crate) fn mass(&self) -> Mass {
+        self.weight
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
     fn sd(&self) -> Numeric {
-        self.weight.to_lbs().to_num() / self.caliber.to_inches().to_num().powf(2.0)
+        self.weight.get::<pound>() / self.caliber.get::<inch>().powf(2.0)
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> Numeric {
@@ -163,8 +178,7 @@ impl Projectile<'_> {
     }
     pub(crate) fn velocity(&self, scope: &Scope) -> Vector3<Numeric> {
         self.velocity
-            .to_mps()
-            .to_num()
+            .get::<meter_per_second>()
             .mul(Vector3::x())
             .pivot_y(scope.yaw())
             .pivot_z(scope.pitch())
@@ -172,11 +186,7 @@ impl Projectile<'_> {
 }
 impl Scope {
     pub(crate) fn position(&self) -> Vector3<Numeric> {
-        Vector3::new(
-            0.0,
-            self.height.to_meters().to_num(),
-            self.offset.to_meters().to_num(),
-        )
+        Vector3::new(0.0, self.height.get::<meter>(), self.offset.get::<meter>())
     }
     fn pitch(&self) -> Angle {
         self.pitch
@@ -190,7 +200,9 @@ impl Scope {
 }
 impl Shooter {
     fn gravity(&self) -> Vector3<Numeric> {
-        self.gravity.to_mps2().to_num().mul(Vector3::y())
+        self.gravity
+            .get::<meter_per_second_squared>()
+            .mul(Vector3::y())
     }
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
@@ -262,7 +274,7 @@ impl Wind {
     //         v
     //        (0)
     fn yaw(&self) -> Angle {
-        -self.yaw + Angle::Radians(PI)
+        -self.yaw + Angle::new::<radian>(PI)
     }
     fn pitch(&self) -> Angle {
         self.pitch
@@ -272,8 +284,7 @@ impl Wind {
     }
     fn velocity(&self) -> Vector3<Numeric> {
         self.velocity
-            .to_mps()
-            .to_num()
+            .get::<meter_per_second>()
             .mul(Vector3::x())
             .pivot_y(self.yaw())
             .pivot_z(self.pitch())

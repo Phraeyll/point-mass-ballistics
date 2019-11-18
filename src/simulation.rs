@@ -1,7 +1,22 @@
 use self::BcKind::*;
-use crate::{dragtables::*, util::*, Error, ErrorKind, Result};
+use crate::{
+    dragtables::*,
+    util::{Length, *},
+    Error, ErrorKind, Result,
+};
 
 use lazy_static::lazy_static;
+use uom::si::{
+    acceleration::{foot_per_second_squared, meter_per_second_squared},
+    angle::{degree, minute},
+    f64::*,
+    length::inch,
+    mass::grain,
+    pressure::inch_of_mercury,
+    thermodynamic_temperature::degree_fahrenheit,
+    time::second,
+    velocity::{foot_per_second, mile_per_hour},
+};
 
 #[derive(Debug)]
 pub struct Simulation<'t> {
@@ -11,13 +26,13 @@ pub struct Simulation<'t> {
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
     pub(crate) shooter: Shooter, // Different conditions during solving
-    pub(crate) time_step: Numeric, // Use same timestep for zeroing and solving
+    pub(crate) time_step: Time, // Use same timestep for zeroing and solving
 }
 #[derive(Debug)]
 pub struct Atmosphere {
-    pub(crate) temperature: Temperature, // Temperature (F)
-    pub(crate) pressure: Pressure,       // Pressure (InHg)
-    pub(crate) humidity: Numeric,        // Humidity (0-1)
+    pub(crate) temperature: ThermodynamicTemperature, // Temperature (F)
+    pub(crate) pressure: Pressure,                    // Pressure (InHg)
+    pub(crate) humidity: Numeric,                     // Humidity (0-1)
 }
 #[derive(Debug)]
 pub struct Flags {
@@ -51,7 +66,7 @@ pub struct Wind {
 #[derive(Debug)]
 pub struct Projectile<'t> {
     pub(crate) caliber: Length,    // Caliber (inches)
-    pub(crate) weight: WeightMass, // Weight (grains)
+    pub(crate) weight: Mass,       // Weight (grains)
     pub(crate) bc: Bc<'t>,         // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
@@ -120,41 +135,41 @@ impl Default for SimulationBuilder<'_> {
                     gravity: true,
                 },
                 projectile: Projectile {
-                    caliber: Length::Inches(0.264),
-                    weight: WeightMass::Grains(140.0),
+                    caliber: Length::new::<inch>(0.264),
+                    weight: Mass::new::<grain>(140.0),
                     bc: Bc {
                         value: 0.305,
                         kind: BcKind::G7,
                         table: None,
                     },
-                    velocity: Velocity::Fps(2710.0),
+                    velocity: Velocity::new::<foot_per_second>(2710.0),
                 },
                 scope: Scope {
-                    yaw: Angle::Minutes(0.0),
-                    pitch: Angle::Minutes(0.0),
-                    roll: Angle::Degrees(0.0),
-                    height: Length::Inches(1.5),
-                    offset: Length::Inches(0.0),
+                    yaw: Angle::new::<minute>(0.0),
+                    pitch: Angle::new::<minute>(0.0),
+                    roll: Angle::new::<degree>(0.0),
+                    height: Length::new::<inch>(1.5),
+                    offset: Length::new::<inch>(0.0),
                 },
                 atmosphere: Atmosphere {
-                    temperature: Temperature::F(68.0),
-                    pressure: Pressure::Inhg(29.92),
+                    temperature: ThermodynamicTemperature::new::<degree_fahrenheit>(68.0),
+                    pressure: Pressure::new::<inch_of_mercury>(29.92),
                     humidity: 0.0,
                 },
                 wind: Wind {
-                    yaw: Angle::Degrees(0.0),
-                    pitch: Angle::Degrees(0.0),
-                    roll: Angle::Degrees(0.0),
-                    velocity: Velocity::Mph(0.0),
+                    yaw: Angle::new::<degree>(0.0),
+                    pitch: Angle::new::<degree>(0.0),
+                    roll: Angle::new::<degree>(0.0),
+                    velocity: Velocity::new::<mile_per_hour>(0.0),
                 },
                 shooter: Shooter {
-                    yaw: Angle::Minutes(0.0),
-                    pitch: Angle::Minutes(0.0),
-                    roll: Angle::Degrees(0.0),
-                    lattitude: Angle::Degrees(0.0),
-                    gravity: Acceleration::Mps2(-9.806_65),
+                    yaw: Angle::new::<minute>(0.0),
+                    pitch: Angle::new::<minute>(0.0),
+                    roll: Angle::new::<degree>(0.0),
+                    lattitude: Angle::new::<degree>(0.0),
+                    gravity: Acceleration::new::<meter_per_second_squared>(-9.806_65),
                 },
-                time_step: 0.000_001,
+                time_step: Time::new::<second>(0.000_001),
             },
         }
     }
@@ -173,7 +188,7 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_time_step(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 0.1);
         if value > min && value <= max {
-            self.builder.time_step = value;
+            self.builder.time_step = Time::new::<second>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -184,7 +199,8 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_temperature(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-112.0, 122.0);
         if value >= min && value <= max {
-            self.builder.atmosphere.temperature = Temperature::F(value);
+            self.builder.atmosphere.temperature =
+                ThermodynamicTemperature::new::<degree_fahrenheit>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -192,7 +208,7 @@ impl<'t> SimulationBuilder<'t> {
     }
     pub fn set_pressure(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.atmosphere.pressure = Pressure::Inhg(value);
+            self.builder.atmosphere.pressure = Pressure::new::<inch_of_mercury>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -226,7 +242,7 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_shot_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
-            self.builder.shooter.pitch = Angle::Degrees(value);
+            self.builder.shooter.pitch = Angle::new::<degree>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -235,7 +251,7 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_lattitude(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-90.0, 90.0);
         if value >= min && value <= max {
-            self.builder.shooter.lattitude = Angle::Degrees(value);
+            self.builder.shooter.lattitude = Angle::new::<degree>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -244,7 +260,7 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_bearing(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
-            self.builder.shooter.yaw = Angle::Degrees(value);
+            self.builder.shooter.yaw = Angle::new::<degree>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -252,7 +268,7 @@ impl<'t> SimulationBuilder<'t> {
     }
     pub fn set_gravity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_negative() {
-            self.builder.shooter.gravity = Acceleration::Fps2(value);
+            self.builder.shooter.gravity = Acceleration::new::<foot_per_second_squared>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::NegativeExpected(value)))
@@ -262,7 +278,7 @@ impl<'t> SimulationBuilder<'t> {
     // Wind
     pub fn set_wind_speed(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.wind.velocity = Velocity::Mph(value);
+            self.builder.wind.velocity = Velocity::new::<mile_per_hour>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -271,7 +287,7 @@ impl<'t> SimulationBuilder<'t> {
     pub fn set_wind_angle(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (-360.0, 360.0);
         if value >= min && value <= max {
-            self.builder.wind.yaw = Angle::Degrees(value);
+            self.builder.wind.yaw = Angle::new::<degree>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::OutOfRange { min, max }))
@@ -280,30 +296,30 @@ impl<'t> SimulationBuilder<'t> {
 
     //Scope
     pub fn set_scope_height(mut self, value: Numeric) -> Self {
-        self.builder.scope.height = Length::Inches(value);
+        self.builder.scope.height = Length::new::<inch>(value);
         self
     }
     pub fn set_scope_offset(mut self, value: Numeric) -> Self {
-        self.builder.scope.offset = Length::Inches(value);
+        self.builder.scope.offset = Length::new::<inch>(value);
         self
     }
     pub fn set_scope_pitch(mut self, value: Numeric) -> Self {
-        self.builder.scope.pitch = Angle::Minutes(value);
+        self.builder.scope.pitch = Angle::new::<minute>(value);
         self
     }
     pub fn set_scope_yaw(mut self, value: Numeric) -> Self {
-        self.builder.scope.yaw = Angle::Minutes(value);
+        self.builder.scope.yaw = Angle::new::<minute>(value);
         self
     }
     pub fn set_scope_roll(mut self, value: Numeric) -> Self {
-        self.builder.scope.roll = Angle::Degrees(value);
+        self.builder.scope.roll = Angle::new::<degree>(value);
         self
     }
 
     //Projectile
     pub fn set_caliber(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.caliber = Length::Inches(value);
+            self.builder.projectile.caliber = Length::new::<inch>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -311,7 +327,7 @@ impl<'t> SimulationBuilder<'t> {
     }
     pub fn set_velocity(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.velocity = Velocity::Fps(value);
+            self.builder.projectile.velocity = Velocity::new::<foot_per_second>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -319,7 +335,7 @@ impl<'t> SimulationBuilder<'t> {
     }
     pub fn set_grains(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.weight = WeightMass::Grains(value);
+            self.builder.projectile.weight = Mass::new::<grain>(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
@@ -338,13 +354,13 @@ impl<'t> SimulationBuilder<'t> {
 }
 
 // Not sure how to handle/name these things yet - should be in a trait, as it's a public API
-impl Simulation<'_> {
-    pub fn public_air_desnity(&self) -> Numeric {
-        Density::Kgpm3(self.atmosphere.rho()).to_lbpf3().to_num()
-    }
-    pub fn public_speed_of_sound(&self) -> Numeric {
-        Velocity::Mps(self.atmosphere.speed_of_sound())
-            .to_fps()
-            .to_num()
-    }
-}
+// impl Simulation<'_> {
+//     pub fn public_air_desnity(&self) -> Numeric {
+//         Density::new::<kilogram_per_cubic_meter>(self.atmosphere.rho()).to_lbpf3().to_num()
+//     }
+//     pub fn public_speed_of_sound(&self) -> Numeric {
+//         Velocity::Mps(self.atmosphere.speed_of_sound())
+//             .to_fps()
+//             .to_num()
+//     }
+// }

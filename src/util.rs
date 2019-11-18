@@ -1,15 +1,42 @@
-use crate::{
-    error::{Error, ErrorKind, Result},
-    util::Numeric,
-};
+use crate::error::{Error, ErrorKind, Result};
 
 use std::{
     collections::BTreeMap,
+    f64::consts,
     iter::FromIterator,
     ops::{Bound, RangeBounds},
 };
 
 use ordered_float::OrderedFloat;
+pub use uom::{
+    si::{
+        acceleration::meter_per_second_squared,
+        angle::{self, minute as moa, radian},
+        area::square_meter,
+        energy::{foot_pound, joule},
+        f64::*,
+        length::{inch, meter, yard},
+        mass::{grain, kilogram, pound},
+        mass_density::kilogram_per_cubic_meter,
+        molar_mass,
+        pressure::pascal,
+        thermodynamic_temperature::{
+            degree_celsius as celsius, degree_fahrenheit as fahrenheit, kelvin,
+        },
+        time::second,
+        velocity::{foot_per_second, meter_per_second},
+        Quantity, ISQ, SI,
+    },
+    typenum,
+};
+
+pub mod nalgebra_helpers;
+
+pub type Numeric = f64;
+pub type Natural = u32;
+pub const PI: Numeric = consts::PI;
+pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
+pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
 #[derive(Clone)]
 pub struct FloatMap<V>(pub BTreeMap<OrderedFloat<Numeric>, V>);

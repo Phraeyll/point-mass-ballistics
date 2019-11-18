@@ -1,4 +1,8 @@
-use crate::{output::Packet, util::*, Simulation};
+use crate::{
+    output::Packet,
+    util::{nalgebra_helpers::*, second, Numeric},
+    Simulation,
+};
 
 use nalgebra::Vector3;
 
@@ -99,7 +103,7 @@ impl Simulation<'_> {
             + self.gravity_acceleration()
     }
     fn delta_time(&self) -> Numeric {
-        self.time_step
+        self.time_step.get::<second>()
     }
     // 'Second Equation of Motion'
     fn delta_position(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {

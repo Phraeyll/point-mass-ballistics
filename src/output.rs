@@ -1,4 +1,10 @@
-use crate::{util::*, Simulation};
+use crate::{
+    util::{
+        foot_per_second, foot_pound, inch, joule, kilogram, meter, meter_per_second, moa,
+        nalgebra_helpers::*, radian, second, yard, Angle, Energy, Length, Numeric, Velocity,
+    },
+    Simulation,
+};
 
 use nalgebra::Vector3;
 
@@ -13,46 +19,38 @@ pub struct Packet<'t> {
 
 impl Measurements for Packet<'_> {
     fn time(&self) -> Numeric {
-        Time::Seconds(self.time).to_seconds().to_num()
+        self.time
     }
     fn velocity(&self) -> Numeric {
-        Velocity::Mps(self.velocity.norm()).to_fps().to_num()
+        Velocity::new::<meter_per_second>(self.velocity.norm()).get::<foot_per_second>()
     }
     fn energy(&self) -> Numeric {
-        Energy::Joules(self.simulation.projectile.mass() * self.velocity.norm().powf(2.0) / 2.0)
-            .to_ftlbs()
-            .to_num()
+        Energy::new::<joule>(
+            self.simulation.projectile.mass().get::<kilogram>() * self.velocity.norm().powf(2.0)
+                / 2.0,
+        )
+        .get::<foot_pound>()
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Numeric {
-        Length::Meters(self.relative_position().x)
-            .to_yards()
-            .to_num()
+        Length::new::<meter>(self.relative_position().x).get::<yard>()
     }
     fn elevation(&self) -> Numeric {
-        Length::Meters(self.relative_position().y)
-            .to_inches()
-            .to_num()
+        Length::new::<meter>(self.relative_position().y).get::<inch>()
     }
     fn windage(&self) -> Numeric {
-        Length::Meters(self.relative_position().z)
-            .to_inches()
-            .to_num()
+        Length::new::<meter>(self.relative_position().z).get::<inch>()
     }
     fn moa(&self) -> Numeric {
-        Angle::Radians(self.relative_position().angle(&Vector3::x_axis()))
-            .to_minutes()
-            .to_num()
+        Angle::new::<radian>(self.relative_position().angle(&Vector3::x_axis())).get::<moa>()
     }
     fn vertical_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_vertical_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
-            .to_minutes()
-            .to_num()
+        self.offset_vertical_moa(0.0, Length::new::<inch>(tolerance).get::<meter>())
+            .get::<moa>()
     }
     fn horizontal_moa(&self, tolerance: Numeric) -> Numeric {
-        self.offset_horizontal_moa(0.0, Length::Inches(tolerance).to_meters().to_num())
-            .to_minutes()
-            .to_num()
+        self.offset_horizontal_moa(0.0, Length::new::<inch>(tolerance).get::<meter>())
+            .get::<moa>()
     }
     // During the simulation, the velocity of the projectile is rotated to allign with
     // the shooter's bearing (azimuth and line of sight)
@@ -76,7 +74,7 @@ impl Measurements for Packet<'_> {
         let position = Vector3::new(self.relative_position().x, self.relative_position().y, 0.0);
         let desired = Vector3::new(self.relative_position().x, offset, 0.0);
 
-        Angle::Radians(sign * position.angle(&desired))
+        Angle::new::<radian>(sign * position.angle(&desired))
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
@@ -90,7 +88,7 @@ impl Measurements for Packet<'_> {
         let position = Vector3::new(self.relative_position().x, 0.0, self.relative_position().z);
         let desired = Vector3::new(self.relative_position().x, 0.0, offset);
 
-        Angle::Radians(sign * position.angle(&desired))
+        Angle::new::<radian>(sign * position.angle(&desired))
     }
 }
 

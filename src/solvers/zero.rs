@@ -1,12 +1,28 @@
 use crate::{
-    output::Packet, simulation::Scope, util::*, Error, ErrorKind, Measurements, Result, Simulation,
+    output::Packet,
+    simulation::Scope,
+    util::{
+        angle, inch, meter, moa, radian, yard, Angle, Length, Numeric, Quantity, FRAC_PI_2,
+        FRAC_PI_4, SI,
+    },
+    Error, ErrorKind, Measurements, Result, Simulation,
 };
 
+use std::marker::PhantomData;
+
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-const DEG_45: Angle = Angle::Radians(FRAC_PI_4);
+const DEG_45: Quantity<angle::Dimension, SI<Numeric>, Numeric> = Quantity {
+    dimension: PhantomData,
+    units: PhantomData,
+    value: FRAC_PI_4,
+};
 // Should never try to yaw more than 90 degrees, probably not a necessary check
 // Also should never try to pitch this low - not sure if this ever happens in practice
-const DEG_90: Angle = Angle::Radians(FRAC_PI_2);
+const DEG_90: Quantity<angle::Dimension, SI<Numeric>, Numeric> = Quantity {
+    dimension: PhantomData,
+    units: PhantomData,
+    value: FRAC_PI_2,
+};
 
 struct IterFindAdjustments<'t, F, E, W>
 where
@@ -108,8 +124,8 @@ impl<'t> Simulation<'t> {
             elevation_adjuster,
             windage_adjuster,
 
-            elevation_adjustment: Angle::Minutes(0.0),
-            windage_adjustment: Angle::Minutes(0.0),
+            elevation_adjustment: Angle::new::<moa>(0.0),
+            windage_adjustment: Angle::new::<moa>(0.0),
             count: 0u64,
         }
     }
@@ -127,10 +143,10 @@ impl<'t> Simulation<'t> {
         windage_offset: Numeric,
         tolerance: Numeric,
     ) -> Result<(Numeric, Numeric)> {
-        let distance = Length::Yards(distance).to_meters().to_num();
-        let elevation_offset = Length::Inches(elevation_offset).to_meters().to_num();
-        let windage_offset = Length::Inches(windage_offset).to_meters().to_num();
-        let tolerance = Length::Inches(tolerance).to_meters().to_num();
+        let distance = Length::new::<yard>(distance).get::<meter>();
+        let elevation_offset = Length::new::<inch>(elevation_offset).get::<meter>();
+        let windage_offset = Length::new::<inch>(windage_offset).get::<meter>();
+        let tolerance = Length::new::<inch>(tolerance).get::<meter>();
 
         let (pitch, yaw, _, _) = self
             .find_adjustments(
@@ -154,15 +170,15 @@ impl<'t> Simulation<'t> {
                 err @ Err(_) => Some(err),
             })
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
-        Ok((pitch.to_minutes().to_num(), yaw.to_minutes().to_num()))
+        Ok((pitch.get::<moa>(), yaw.get::<moa>()))
     }
     pub fn find_pbr_angle(&'t mut self, size: Numeric, tolerance: Numeric) -> Result<Numeric> {
-        let size = Length::Inches(size).to_meters().to_num() / 2.0;
+        let size = Length::new::<inch>(size).get::<meter>() / 2.0;
         let (pitch, _, _, _) = self
             .find_adjustments(
                 { |p: &Packet| p.relative_position().y >= size },
                 { |p: &Packet| p.offset_vertical_moa(0.0, tolerance) },
-                { |_: &Packet| Angle::Minutes(0.0) },
+                { |_: &Packet| Angle::new::<moa>(0.0) },
             )
             .find_map(|result| match result {
                 Ok((_, _, elevation, _)) => {
@@ -175,6 +191,6 @@ impl<'t> Simulation<'t> {
                 err @ Err(_) => Some(err),
             })
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
-        Ok(pitch.to_minutes().to_num())
+        Ok(pitch.get::<moa>())
     }
 }

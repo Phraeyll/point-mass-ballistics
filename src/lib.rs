@@ -7,30 +7,9 @@ pub use self::{
 };
 
 #[macro_use]
-mod util {
-    pub use self::{conversions::*, float_map::*, nalgebra_helpers::*};
-    use std::f64::consts;
-    pub type Numeric = f64;
-    pub type Natural = u32;
-    pub const PI: Numeric = consts::PI;
-    pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
-    pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
-
-    #[macro_use]
-    #[allow(clippy::or_fun_call)]
-    #[allow(clippy::let_and_return)]
-    mod float_map;
-    mod conversions {
-        // Terribly inefficient and unsafe/untyped method of unit conversion, only for units needed
-        // Really need to replace with some form of dimensional analysis.  May be able to use crate 'uom'
-        // for most conversions, but still need something for termperature.  Also, may need something
-        // different for arbitrary units, such as those use in air density calculation.  uom has only
-        // a few common units specified.  May be able to work around at run time.
-        pub use self::derived::{angle::*, length::*, temperature::*, time::*, weight_mass::*, *};
-        mod derived;
-    }
-    mod nalgebra_helpers;
-}
+#[allow(clippy::or_fun_call)]
+#[allow(clippy::let_and_return)]
+mod util;
 
 mod error;
 #[allow(clippy::float_cmp)]
