@@ -1,9 +1,7 @@
 use crate::{
     output::Packet,
     simulation::Scope,
-    util::{
-        angle, inch, meter, moa, yard, Angle, Length, Numeric, Quantity, FRAC_PI_2, FRAC_PI_4, SI,
-    },
+    util::{angle, radian, Angle, Length, Numeric, Quantity, FRAC_PI_2, FRAC_PI_4, SI},
     Error, ErrorKind, Measurements, Result, Simulation,
 };
 
@@ -123,8 +121,8 @@ impl<'t> Simulation<'t> {
             elevation_adjuster,
             windage_adjuster,
 
-            elevation_adjustment: Angle::new::<moa>(0.0),
-            windage_adjustment: Angle::new::<moa>(0.0),
+            elevation_adjustment: Angle::new::<radian>(0.0),
+            windage_adjustment: Angle::new::<radian>(0.0),
             count: 0u64,
         }
     }

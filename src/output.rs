@@ -1,8 +1,7 @@
 use crate::{
     util::{
-        foot_per_second, foot_pound, inch, joule, kilogram, length, meter, meter_per_second, moa,
-        nalgebra_helpers::*, radian, second, typenum::P2, Angle, Conversion, Energy, Length,
-        Numeric, Time, Velocity,
+        meter, meter_per_second, nalgebra_helpers::*, radian, second, typenum::P2, Angle, Energy,
+        Length, Numeric, Time, Velocity,
     },
     Simulation,
 };
