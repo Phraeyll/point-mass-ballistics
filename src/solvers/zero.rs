@@ -2,7 +2,7 @@ use crate::{
     output::Packet,
     simulation::Scope,
     util::{
-        angle, inch, meter, moa, radian, yard, Angle, Length, Numeric, Quantity, FRAC_PI_2,
+        angle, inch, meter, moa, yard, Angle, Length, Numeric, Quantity, FRAC_PI_2,
         FRAC_PI_4, SI,
     },
     Error, ErrorKind, Measurements, Result, Simulation,

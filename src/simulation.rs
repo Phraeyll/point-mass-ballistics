@@ -9,7 +9,6 @@ use lazy_static::lazy_static;
 use uom::si::{
     acceleration::{foot_per_second_squared, meter_per_second_squared},
     angle::{degree, minute},
-    f64::*,
     length::inch,
     mass::grain,
     pressure::inch_of_mercury,

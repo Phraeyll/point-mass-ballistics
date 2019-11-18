@@ -13,7 +13,8 @@ use std::{marker::PhantomData, ops::Mul};
 use nalgebra::Vector3;
 
 // Universal gas constant (J/K*mol)
-const UNIVERSAL_GAS: Quantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>, SI<Numeric>, Numeric> = Quantity {
+type GasDimension = ISQ<P2, P1, N2, Z0, N1, N1, Z0>;
+const UNIVERSAL_GAS: Quantity<GasDimension, SI<Numeric>, Numeric> = Quantity {
     dimension: PhantomData,
     units: PhantomData,
     value: 8.314_462_618_153_24,
