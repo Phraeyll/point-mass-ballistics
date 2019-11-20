@@ -34,6 +34,7 @@ pub use uom::{
         velocity::{self, foot_per_second, meter_per_second, mile_per_hour},
         Dimension, Quantity, Unit, Units, ISQ, SI,
     },
+    str::ParseQuantityError,
     typenum, Conversion,
 };
 
