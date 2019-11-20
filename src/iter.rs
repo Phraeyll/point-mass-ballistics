@@ -1,10 +1,9 @@
 use crate::{
     output::Packet,
-    util::{nalgebra_helpers::*, second, Numeric},
+    util::{acceleration, length, second, typenum::P2, velocity, Time},
+    vectors::*,
     Simulation,
 };
-
-use nalgebra::Vector3;
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
@@ -12,9 +11,9 @@ use nalgebra::Vector3;
 #[derive(Debug)]
 pub struct Iter<'t> {
     simulation: &'t Simulation<'t>, // Reference to model used for calculations
-    position: Vector3<Numeric>,     // Position (m)
-    velocity: Vector3<Numeric>,     // Velocity (m/s)
-    time: Numeric,                  // Position in time (s)
+    position: MyVector3<length::Dimension>, // Position (m)
+    velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
+    time: Time,                     // Position in time (s)
 }
 impl<'t> Simulation<'t> {
     pub fn iter(&self) -> Iter<'_> {
@@ -24,12 +23,12 @@ impl<'t> Simulation<'t> {
             simulation: self,
             position,
             velocity,
-            time: 0.0,
+            time: Time::new::<second>(0.0),
         }
     }
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
-    fn absolute_projectile_velocity(&self) -> Vector3<Numeric> {
+    fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
         self.projectile
             .velocity(&self.scope)
             .pivot_x(self.shooter.roll())
@@ -37,14 +36,14 @@ impl<'t> Simulation<'t> {
             .pivot_y(self.shooter.yaw())
     }
     // Projectiles position relative to scope
-    fn absolute_projectile_position(&self) -> Vector3<Numeric> {
-        -self
-            .scope
+    fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
+        self.scope
             .position()
             .pivot_x(-self.scope.roll())
             .pivot_x(self.shooter.roll())
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
+            * -1.0
     }
 }
 // Create an new iterator over Simulation
@@ -83,7 +82,7 @@ impl<'t> Iterator for Iter<'t> {
         // For practical purposes, this still may suffice.  I want to take this check out eventually, and
         // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
         // how to check previous iteration values in standard iterator adaptors.
-        if self.position.x != position.x {
+        if self.position.get_x() != position.get_x() {
             Some(Self::Item {
                 simulation: &self.simulation,
                 time,
@@ -97,21 +96,30 @@ impl<'t> Iterator for Iter<'t> {
 }
 
 impl Simulation<'_> {
-    fn acceleration(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
+    fn acceleration(
+        &self,
+        velocity: &MyVector3<velocity::Dimension>,
+    ) -> MyVector3<acceleration::Dimension> {
         self.coriolis_acceleration(velocity)
             + self.drag_acceleration(velocity)
             + self.gravity_acceleration()
     }
-    fn delta_time(&self) -> Numeric {
-        self.time_step.get::<second>()
+    fn delta_time(&self) -> Time {
+        self.time_step
     }
     // 'Second Equation of Motion'
-    fn delta_position(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
-        velocity * self.delta_time()
-            + 0.5 * (self.acceleration(velocity) * self.delta_time().powf(2.0))
+    fn delta_position(
+        &self,
+        velocity: &MyVector3<velocity::Dimension>,
+    ) -> MyVector3<length::Dimension> {
+        velocity * &self.delta_time()
+            + (self.acceleration(velocity) * self.delta_time().powi(P2::new())) * 0.5
     }
     // 'First Equation of Motion'
-    fn delta_velocity(&self, velocity: &Vector3<Numeric>) -> Vector3<Numeric> {
+    fn delta_velocity(
+        &self,
+        velocity: &MyVector3<velocity::Dimension>,
+    ) -> MyVector3<velocity::Dimension> {
         self.acceleration(velocity) * self.delta_time()
     }
 }

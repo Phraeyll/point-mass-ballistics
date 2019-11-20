@@ -1,45 +1,41 @@
 use crate::{
-    util::{
-        meter, meter_per_second, nalgebra_helpers::*, radian, second, typenum::P2, Angle, Energy,
-        Length, Numeric, Time, Velocity,
-    },
+    util::{length, meter, radian, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
+    vectors::*,
     Simulation,
 };
-
 use nalgebra::Vector3;
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'t> {
     pub(crate) simulation: &'t Simulation<'t>, //Simulation this came from, used for various calculations
-    pub(crate) time: Numeric,                  // Position in time (s)
-    pub(crate) position: Vector3<Numeric>,     // Position (m)
-    pub(crate) velocity: Vector3<Numeric>,     // Velocity (m/s)
+    pub(crate) time: Time,                     // Position in time (s)
+    pub(crate) position: MyVector3<length::Dimension>, // Position (m)
+    pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }
 
 impl Measurements for Packet<'_> {
     fn time(&self) -> Time {
-        Time::new::<second>(self.time)
+        self.time
     }
     fn velocity(&self) -> Velocity {
-        Velocity::new::<meter_per_second>(self.velocity.norm())
+        self.velocity.norm()
     }
     fn energy(&self) -> Energy {
-        0.5 * self.simulation.projectile.mass()
-            * Velocity::new::<meter_per_second>(self.velocity.norm()).powi(P2::new())
+        self.velocity.norm().powi(P2::new()) * self.simulation.projectile.mass() * 0.5
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Length {
-        Length::new::<meter>(self.relative_position().x)
+        self.relative_position().get_x()
     }
     fn elevation(&self) -> Length {
-        Length::new::<meter>(self.relative_position().y)
+        self.relative_position().get_y()
     }
     fn windage(&self) -> Length {
-        Length::new::<meter>(self.relative_position().z)
+        self.relative_position().get_z()
     }
     fn moa(&self) -> Angle {
-        Angle::new::<radian>(self.relative_position().angle(&Vector3::x_axis()))
+        Angle::new::<radian>(self.relative_position().value.angle(&Vector3::x_axis()))
     }
     fn vertical_moa(&self, tolerance: Length) -> Angle {
         self.offset_vertical_moa(Length::new::<meter>(0.0), tolerance)
@@ -51,7 +47,7 @@ impl Measurements for Packet<'_> {
     // the shooter's bearing (azimuth and line of sight)
     // This function returns the position rotated back to the initial frame of reference
     // This is used during zero'ing and is output in the drop table
-    fn relative_position(&self) -> Vector3<Numeric> {
+    fn relative_position(&self) -> MyVector3<length::Dimension> {
         self.position
             .pivot_y(-self.simulation.shooter.yaw())
             .pivot_z(-self.simulation.shooter.pitch())
@@ -66,14 +62,10 @@ impl Measurements for Packet<'_> {
             1.0
         };
 
-        let position = Vector3::new(
-            self.distance().get::<meter>(),
-            self.elevation().get::<meter>(),
-            0.0,
-        );
-        let desired = Vector3::new(self.distance().get::<meter>(), offset.get::<meter>(), 0.0);
+        let position = MyVector3::new(self.distance(), self.elevation(), Length::new::<meter>(0.0));
+        let desired = MyVector3::new(self.distance(), offset, Length::new::<meter>(0.0));
 
-        Angle::new::<radian>(sign * position.angle(&desired))
+        position.angle(&desired) * sign
     }
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
@@ -84,14 +76,10 @@ impl Measurements for Packet<'_> {
             1.0
         };
 
-        let position = Vector3::new(
-            self.distance().get::<meter>(),
-            0.0,
-            self.windage().get::<meter>(),
-        );
-        let desired = Vector3::new(self.distance().get::<meter>(), 0.0, offset.get::<meter>());
+        let position = MyVector3::new(self.distance(), Length::new::<meter>(0.0), self.windage());
+        let desired = MyVector3::new(self.distance(), Length::new::<meter>(0.0), offset);
 
-        Angle::new::<radian>(sign * position.angle(&desired))
+        position.angle(&desired) * sign
     }
 }
 
@@ -105,7 +93,7 @@ pub trait Measurements {
     fn moa(&self) -> Angle;
     fn vertical_moa(&self, tolerance: Length) -> Angle;
     fn horizontal_moa(&self, tolerance: Length) -> Angle;
-    fn relative_position(&self) -> Vector3<Numeric>;
+    fn relative_position(&self) -> MyVector3<length::Dimension>;
     fn offset_vertical_moa(&self, offset: Length, tolerance: Length) -> Angle;
     fn offset_horizontal_moa(&self, offset: Length, tolerance: Length) -> Angle;
 }

@@ -11,6 +11,9 @@ pub use self::{
 #[allow(clippy::let_and_return)]
 mod util;
 
+#[macro_use]
+mod vectors;
+
 mod error;
 #[allow(clippy::float_cmp)]
 mod iter;
