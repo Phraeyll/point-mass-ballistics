@@ -1,13 +1,10 @@
 pub use self::{add::*, add_assign::*, div::*, mul::*, sub::*, sub_assign::*};
-
 use crate::util::{marker, radian, Angle, Dimension, Numeric, Quantity, SI};
 
 use core::ops::Add;
 use std::{fmt, marker::PhantomData};
 
 use nalgebra::{Rotation3, Vector3};
-
-pub type MyUnits = SI<Numeric>;
 
 mod add;
 mod add_assign;
@@ -16,7 +13,7 @@ mod mul;
 mod sub;
 mod sub_assign;
 
-use mul::SumDimension;
+pub type MyUnits = SI<Numeric>;
 
 pub struct MyVector3<D: ?Sized>
 where
@@ -58,6 +55,7 @@ where
         )
     }
 }
+
 impl<D: ?Sized> Copy for MyVector3<D> where D: Dimension {}
 impl<D: ?Sized> Clone for MyVector3<D>
 where
@@ -72,6 +70,7 @@ pub trait Cross<Rhs = Self> {
     type Output;
     fn cross(&self, rhs: Rhs) -> Self::Output;
 }
+
 pub trait Vectors<V = Self> {
     type Quantity;
 

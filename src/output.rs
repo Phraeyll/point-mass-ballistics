@@ -1,9 +1,8 @@
 use crate::{
-    util::{length, meter, radian, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
+    util::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
     vectors::*,
     Simulation,
 };
-use nalgebra::Vector3;
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
@@ -35,7 +34,12 @@ impl Measurements for Packet<'_> {
         self.relative_position().get_z()
     }
     fn moa(&self) -> Angle {
-        Angle::new::<radian>(self.relative_position().value.angle(&Vector3::x_axis()))
+        let compare = MyVector3::new(
+            Length::new::<meter>(1.0),
+            Length::new::<meter>(0.0),
+            Length::new::<meter>(0.0),
+        );
+        self.relative_position().angle(&compare)
     }
     fn vertical_moa(&self, tolerance: Length) -> Angle {
         self.offset_vertical_moa(Length::new::<meter>(0.0), tolerance)
