@@ -8,7 +8,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Packet<'t> {
     pub(crate) simulation: &'t Simulation, //Simulation this came from, used for various calculations
-    pub(crate) time: Time,                     // Position in time (s)
+    pub(crate) time: Time,                 // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }

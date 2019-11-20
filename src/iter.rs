@@ -13,7 +13,7 @@ pub struct Iter<'t> {
     simulation: &'t Simulation, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
-    time: Time,                     // Position in time (s)
+    time: Time,                 // Position in time (s)
 }
 impl Simulation {
     pub fn iter(&self) -> Iter<'_> {

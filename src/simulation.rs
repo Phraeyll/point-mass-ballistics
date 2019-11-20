@@ -63,7 +63,7 @@ pub struct Wind {
 pub struct Projectile {
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: Mass,       // Weight (grains)
-    pub(crate) bc: Bc,         // Ballistic Coefficient
+    pub(crate) bc: Bc,             // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
@@ -127,13 +127,13 @@ impl Bc {
 pub struct SimulationBuilder {
     pub(crate) builder: Simulation,
 }
-impl<> From<SimulationBuilder<>> for Simulation {
-    fn from(other: SimulationBuilder<>) -> Self {
+impl From<SimulationBuilder> for Simulation {
+    fn from(other: SimulationBuilder) -> Self {
         Self { ..other.builder }
     }
 }
-impl<> From<Simulation<>> for SimulationBuilder {
-    fn from(other: Simulation<>) -> Self {
+impl From<Simulation> for SimulationBuilder {
+    fn from(other: Simulation) -> Self {
         Self { builder: other }
     }
 }
@@ -187,13 +187,13 @@ impl Default for SimulationBuilder {
     }
 }
 
-impl<> SimulationBuilder<> {
+impl SimulationBuilder {
     pub fn new() -> Self {
         Default::default()
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(mut self) -> Simulation<> {
+    pub fn init(mut self) -> Simulation {
         self.builder.projectile.bc.init();
         From::from(self)
     }
