@@ -10,6 +10,8 @@ use crate::{
     Error, ErrorKind, Result,
 };
 
+use std::str::FromStr;
+
 use lazy_static::lazy_static;
 
 #[derive(Debug)]
@@ -80,6 +82,22 @@ pub enum BcKind {
     G8,
     GI,
     GS,
+}
+impl FromStr for BcKind {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "G1" => Ok(G1),
+            "G2" => Ok(G2),
+            "G5" => Ok(G5),
+            "G6" => Ok(G6),
+            "G7" => Ok(G7),
+            "G8" => Ok(G8),
+            "GI" => Ok(GI),
+            "GS" => Ok(GS),
+            _ => Err(Error::new(ErrorKind::InvalidBcKind(s.to_string()))),
+        }
+    }
 }
 impl Bc<'_> {
     fn init(&mut self) {

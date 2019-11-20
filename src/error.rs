@@ -23,6 +23,7 @@ impl Error {
 #[derive(Debug)]
 pub enum ErrorKind {
     BcKindNull,
+    InvalidBcKind(String),
     VelocityLookup(Numeric),
     PositiveExpected(Numeric),
     NegativeExpected(Numeric),
@@ -51,6 +52,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             BcKindNull => write!(f, "Bc need to be set before inititializing simulatin"),
+            InvalidBcKind(ref err) => write!(f, "Invalid BC Kind: {:?}", err),
             VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {:?}", err),
             PositiveExpected(ref err) => write!(f, "Positive Expected Error: {:?}", err),
             NegativeExpected(ref err) => write!(f, "Negative Expected Error: {:?}", err),
