@@ -1,5 +1,5 @@
 use crate::{
-    util::{marker, Dimension, Numeric, Quantity, ISQ},
+    util::{marker, Dimension, MyQuantity, Numeric, ISQ},
     vector3,
     vectors::*,
 };
@@ -18,7 +18,7 @@ pub type SumDimension<Dl, Dr> = ISQ<
     Sum<<Dl as Dimension>::J, <Dr as Dimension>::J>,
 >;
 
-impl<Dl: ?Sized, Dr: ?Sized> Mul<Quantity<Dr, MyUnits, Numeric>> for MyVector3<Dl>
+impl<Dl: ?Sized, Dr: ?Sized> Mul<MyQuantity<Dr>> for MyVector3<Dl>
 where
     Dl: Dimension,
     Dr: Dimension,
@@ -33,11 +33,11 @@ where
     Dl::J: Add<Dr::J>,
 {
     type Output = MyVector3<SumDimension<Dl, Dr>>;
-    fn mul(self, rhs: Quantity<Dr, MyUnits, Numeric>) -> Self::Output {
+    fn mul(self, rhs: MyQuantity<Dr>) -> Self::Output {
         vector3!(self.value * rhs.value)
     }
 }
-impl<'l, 'r, Dl: ?Sized, Dr: ?Sized> Mul<&'r Quantity<Dr, MyUnits, Numeric>> for &'l MyVector3<Dl>
+impl<'l, 'r, Dl: ?Sized, Dr: ?Sized> Mul<&'r MyQuantity<Dr>> for &'l MyVector3<Dl>
 where
     Dl: Dimension,
     Dr: Dimension,
@@ -52,11 +52,11 @@ where
     Dl::J: Add<Dr::J> + 'r,
 {
     type Output = MyVector3<SumDimension<Dl, Dr>>;
-    fn mul(self, rhs: &Quantity<Dr, MyUnits, Numeric>) -> Self::Output {
+    fn mul(self, rhs: &MyQuantity<Dr>) -> Self::Output {
         vector3!(self.value * rhs.value)
     }
 }
-impl<'r, Dl: ?Sized, Dr: ?Sized> Mul<&'r Quantity<Dr, MyUnits, Numeric>> for MyVector3<Dl>
+impl<'r, Dl: ?Sized, Dr: ?Sized> Mul<&'r MyQuantity<Dr>> for MyVector3<Dl>
 where
     Dl: Dimension,
     Dr: Dimension,
@@ -71,7 +71,7 @@ where
     Dl::J: Add<Dr::J> + 'r,
 {
     type Output = MyVector3<SumDimension<Dl, Dr>>;
-    fn mul(self, rhs: &Quantity<Dr, MyUnits, Numeric>) -> Self::Output {
+    fn mul(self, rhs: &MyQuantity<Dr>) -> Self::Output {
         vector3!(self.value * rhs.value)
     }
 }

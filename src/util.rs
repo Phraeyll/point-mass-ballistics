@@ -39,6 +39,8 @@ pub use uom::{
 
 pub type Numeric = f64;
 pub type Natural = u32;
+pub type MyUnits = SI<Numeric>;
+pub type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;

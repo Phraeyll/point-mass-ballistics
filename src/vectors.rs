@@ -1,5 +1,5 @@
 pub use self::{add::*, add_assign::*, div::*, mul::*, sub::*, sub_assign::*};
-use crate::util::{marker, radian, Angle, Dimension, Numeric, Quantity, SI};
+use crate::util::{marker, radian, Angle, Dimension, MyQuantity, Numeric};
 
 use core::ops::Add;
 use std::{fmt, marker::PhantomData};
@@ -13,8 +13,6 @@ mod mul;
 mod sub;
 mod sub_assign;
 
-pub type MyUnits = SI<Numeric>;
-
 pub struct MyVector3<D: ?Sized>
 where
     D: Dimension,
@@ -26,13 +24,14 @@ where
 #[macro_export]
 macro_rules! quantity {
     ($value:expr) => {
-        Quantity {
+        MyQuantity {
             dimension: ::std::marker::PhantomData,
             units: ::std::marker::PhantomData,
             value: $value,
         }
     };
 }
+
 #[macro_export]
 macro_rules! vector3 {
     ($value:expr) => {
@@ -109,7 +108,7 @@ impl<D: ?Sized> Vectors for MyVector3<D>
 where
     D: Dimension,
 {
-    type Quantity = Quantity<D, MyUnits, Numeric>;
+    type Quantity = MyQuantity<D>;
 
     fn new(x: Self::Quantity, y: Self::Quantity, z: Self::Quantity) -> Self {
         vector3!(Vector3::new(x.value, y.value, z.value))

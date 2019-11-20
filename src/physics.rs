@@ -1,37 +1,31 @@
 use crate::{
+    quantity,
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     util::{
         acceleration, angular_velocity, celsius, force, inch, length, meter, meter_per_second,
         meter_per_second_squared, molar_mass, pascal, pound, radian, radian_per_second, ratio,
         typenum::*, velocity, Acceleration, Angle, AngularVelocity, Area, Length, Mass,
-        MassDensity, Numeric, Pressure, Quantity, Velocity, ISQ, PI, SI,
+        MassDensity, MyQuantity, Numeric, Pressure, Velocity, ISQ, PI,
     },
     vectors::*,
 };
 
-use std::marker::PhantomData;
-
-// Universal gas constant (J/K*mol)
+// Universal gas constant (J/K*mol), aka,
 type GasDimension = ISQ<P2, P1, N2, Z0, N1, N1, Z0>;
-const UNIVERSAL_GAS: Quantity<GasDimension, SI<Numeric>, Numeric> = Quantity {
-    dimension: PhantomData,
-    units: PhantomData,
-    value: 8.314_462_618_153_24,
-};
+const MOLAR_GAS_UNIVERSAL: MyQuantity<GasDimension> = quantity!(8.314_462_618_153_24);
+
 // Molar mass of dry air (kg/mol)
-const MOLAR_DRY: Quantity<molar_mass::Dimension, SI<Numeric>, Numeric> = Quantity {
-    dimension: PhantomData,
-    units: PhantomData,
-    value: 0.028_964_4,
-};
+const MOLAR_MASS_DRY_AIR: MyQuantity<molar_mass::Dimension> = quantity!(0.028_964_4);
+
 // Molar mass of water vapor (kg/mol)
-const MOLAR_VAPOR: Quantity<molar_mass::Dimension, SI<Numeric>, Numeric> = Quantity {
-    dimension: PhantomData,
-    units: PhantomData,
-    value: 0.018_016,
-};
-const ADIABATIC_INDEX_AIR: Numeric = 1.4; // Adiabatic index of air, mostly diatomic gas
-const ANGULAR_VELOCITY_EARTH: Numeric = 0.000_072_921_159; // Angular velocity of earth, (radians)
+const MOLAR_MASS_WATER_VAPOR: MyQuantity<molar_mass::Dimension> = quantity!(0.018_016);
+
+// Angular velocity of earth, (radians)
+const ANGULAR_VELOCITY_EARTH: MyQuantity<angular_velocity::Dimension> =
+    quantity!(0.000_072_921_159);
+
+// Adiabatic index of air, mostly diatomic gas
+const ADIABATIC_INDEX_AIR: Numeric = 1.4;
 
 // Drag
 impl Simulation<'_> {
@@ -52,10 +46,7 @@ impl Simulation<'_> {
         velocity - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
-    fn mach(
-        &self,
-        velocity: &MyVector3<velocity::Dimension>,
-    ) -> Quantity<ratio::Dimension, MyUnits, Numeric> {
+    fn mach(&self, velocity: &MyVector3<velocity::Dimension>) -> MyQuantity<ratio::Dimension> {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
@@ -140,7 +131,8 @@ impl Simulation<'_> {
 impl Atmosphere {
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> MassDensity {
-        (((self.pd() * MOLAR_DRY) + (self.pv() * MOLAR_VAPOR)) / (UNIVERSAL_GAS * self.temperature))
+        (((self.pd() * MOLAR_MASS_DRY_AIR) + (self.pv() * MOLAR_MASS_WATER_VAPOR))
+            / (MOLAR_GAS_UNIVERSAL * self.temperature))
     }
     // Speed of sound at given air density and pressure
     pub(crate) fn speed_of_sound(&self) -> Velocity {
@@ -263,7 +255,7 @@ impl Shooter {
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
     fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
         MyVector3::new(
-            AngularVelocity::new::<radian_per_second>(ANGULAR_VELOCITY_EARTH),
+            ANGULAR_VELOCITY_EARTH,
             AngularVelocity::new::<radian_per_second>(0.0),
             AngularVelocity::new::<radian_per_second>(0.0),
         )
