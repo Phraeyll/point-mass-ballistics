@@ -1,25 +1,17 @@
 use crate::{
     output::Packet,
+    quantity,
     simulation::Scope,
-    util::{angle, radian, Angle, Length, Numeric, Quantity, FRAC_PI_2, FRAC_PI_4, SI},
+    util::{angle, radian, Angle, Length, MyQuantity, FRAC_PI_2, FRAC_PI_4},
     Error, ErrorKind, Measurements, Result, Simulation,
 };
 
-use std::marker::PhantomData;
-
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-const DEG_45: Quantity<angle::Dimension, SI<Numeric>, Numeric> = Quantity {
-    dimension: PhantomData,
-    units: PhantomData,
-    value: FRAC_PI_4,
-};
+const DEG_45: MyQuantity<angle::Dimension> = quantity!(FRAC_PI_4);
+
 // Should never try to yaw more than 90 degrees, probably not a necessary check
 // Also should never try to pitch this low - not sure if this ever happens in practice
-const DEG_90: Quantity<angle::Dimension, SI<Numeric>, Numeric> = Quantity {
-    dimension: PhantomData,
-    units: PhantomData,
-    value: FRAC_PI_2,
-};
+const DEG_90: MyQuantity<angle::Dimension> = quantity!(FRAC_PI_2);
 
 struct IterFindAdjustments<'t, F, E, W>
 where
@@ -84,7 +76,7 @@ where
                 pitch,
                 yaw,
             })))
-        } else if (pitch >= DEG_45 && pitch <= -DEG_90) || (yaw >= DEG_90 && yaw <= -DEG_90) {
+        } else if (pitch >= DEG_45 || pitch <= -DEG_90) || (yaw >= DEG_90 || yaw <= -DEG_90) {
             Some(Err(Error::new(ErrorKind::AngleRange { count, pitch, yaw })))
         } else if let Some(packet) = self.sim.into_iter().fuse().find(&self.finder) {
             self.elevation_adjustment = (self.elevation_adjuster)(&packet);
