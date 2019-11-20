@@ -74,7 +74,7 @@ impl Measurements for Packet<'_> {
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
     fn offset_horizontal_moa(&self, offset: Length, tolerance: Length) -> Angle {
-        let sign = if self.distance() >= (offset - tolerance) {
+        let sign = if self.windage() >= (offset - tolerance) {
             -1.0
         } else {
             1.0
