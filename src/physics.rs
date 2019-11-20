@@ -28,7 +28,7 @@ const ANGULAR_VELOCITY_EARTH: MyQuantity<angular_velocity::Dimension> =
 const ADIABATIC_INDEX_AIR: Numeric = 1.4;
 
 // Drag
-impl Simulation<'_> {
+impl Simulation {
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
     // along relative bearing - I don't think many would factor in a 'downhill' wind for example
@@ -89,7 +89,7 @@ impl Simulation<'_> {
 }
 
 // Coriolis
-impl Simulation<'_> {
+impl Simulation {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -113,7 +113,7 @@ impl Simulation<'_> {
 }
 
 //Gravity
-impl Simulation<'_> {
+impl Simulation {
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()
@@ -169,7 +169,7 @@ impl Flags {
         self.gravity
     }
 }
-impl Projectile<'_> {
+impl Projectile {
     // Radius of projectile cross section in meters
     fn radius(&self) -> Length {
         self.caliber / 2.0

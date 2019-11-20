@@ -7,7 +7,7 @@ use crate::{
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'t> {
-    pub(crate) simulation: &'t Simulation<'t>, //Simulation this came from, used for various calculations
+    pub(crate) simulation: &'t Simulation, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                     // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)

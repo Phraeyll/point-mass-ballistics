@@ -15,9 +15,9 @@ use std::str::FromStr;
 use lazy_static::lazy_static;
 
 #[derive(Debug)]
-pub struct Simulation<'t> {
+pub struct Simulation {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile<'t>, // Use same projectile for zeroing and solving
+    pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
@@ -56,21 +56,21 @@ pub struct Shooter {
 pub struct Wind {
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
     pub(crate) pitch: Angle,       // Wind Pitch (degrees)
-    pub(crate) roll: Angle,        // Doesn't make sense, just here for consistency
+    pub(crate) roll: Angle,        // Doesn make sense, just here for consistency
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 #[derive(Debug)]
-pub struct Projectile<'t> {
+pub struct Projectile {
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: Mass,       // Weight (grains)
-    pub(crate) bc: Bc<'t>,         // Ballistic Coefficient
+    pub(crate) bc: Bc,         // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
-pub struct Bc<'t> {
+pub struct Bc {
     pub(crate) value: Numeric,
     pub(crate) kind: BcKind,
-    pub(crate) table: Option<&'t FloatMap<Numeric>>,
+    pub(crate) table: Option<&'static FloatMap<Numeric>>,
 }
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -99,7 +99,7 @@ impl FromStr for BcKind {
         }
     }
 }
-impl Bc<'_> {
+impl Bc {
     fn init(&mut self) {
         lazy_static! {
             static ref G1_TABLE: FloatMap<Numeric> = g1::init();
@@ -124,20 +124,20 @@ impl Bc<'_> {
     }
 }
 #[derive(Debug)]
-pub struct SimulationBuilder<'t> {
-    pub(crate) builder: Simulation<'t>,
+pub struct SimulationBuilder {
+    pub(crate) builder: Simulation,
 }
-impl<'t> From<SimulationBuilder<'t>> for Simulation<'t> {
-    fn from(other: SimulationBuilder<'t>) -> Self {
+impl<> From<SimulationBuilder<>> for Simulation {
+    fn from(other: SimulationBuilder<>) -> Self {
         Self { ..other.builder }
     }
 }
-impl<'t> From<Simulation<'t>> for SimulationBuilder<'t> {
-    fn from(other: Simulation<'t>) -> Self {
+impl<> From<Simulation<>> for SimulationBuilder {
+    fn from(other: Simulation<>) -> Self {
         Self { builder: other }
     }
 }
-impl Default for SimulationBuilder<'_> {
+impl Default for SimulationBuilder {
     fn default() -> Self {
         Self {
             builder: Simulation {
@@ -187,13 +187,13 @@ impl Default for SimulationBuilder<'_> {
     }
 }
 
-impl<'t> SimulationBuilder<'t> {
+impl<> SimulationBuilder<> {
     pub fn new() -> Self {
         Default::default()
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(mut self) -> Simulation<'t> {
+    pub fn init(mut self) -> Simulation<> {
         self.builder.projectile.bc.init();
         From::from(self)
     }

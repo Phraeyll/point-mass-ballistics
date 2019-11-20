@@ -10,12 +10,12 @@ use crate::{
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
 pub struct Iter<'t> {
-    simulation: &'t Simulation<'t>, // Reference to model used for calculations
+    simulation: &'t Simulation, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                     // Position in time (s)
 }
-impl<'t> Simulation<'t> {
+impl Simulation {
     pub fn iter(&self) -> Iter<'_> {
         let position = self.absolute_projectile_position();
         let velocity = self.absolute_projectile_velocity();
@@ -47,7 +47,7 @@ impl<'t> Simulation<'t> {
     }
 }
 // Create an new iterator over Simulation
-impl<'t> IntoIterator for &'t Simulation<'t> {
+impl<'t> IntoIterator for &'t Simulation {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = Iter<'t>;
 
@@ -95,7 +95,7 @@ impl<'t> Iterator for Iter<'t> {
     }
 }
 
-impl Simulation<'_> {
+impl Simulation {
     fn acceleration(
         &self,
         velocity: &MyVector3<velocity::Dimension>,

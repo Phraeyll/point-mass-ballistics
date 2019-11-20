@@ -27,7 +27,7 @@ where
     E: Fn(&Packet) -> Angle,
     W: Fn(&Packet) -> Angle,
 {
-    sim: &'t mut Simulation<'t>,
+    sim: &'t mut Simulation,
 
     finder: F,
     elevation_adjuster: E,
@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<'t> Simulation<'t> {
+impl<'t> Simulation {
     fn find_adjustments<F, E, W>(
         &'t mut self,
         finder: F,
@@ -127,14 +127,14 @@ impl<'t> Simulation<'t> {
         }
     }
 }
-impl<'t> Simulation<'t> {
+impl Simulation {
     // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
     // ran once for most practical inputs.  Can also handle larger ranges, and will just continue to re-adjust
     // until tolerance is met.  Since MOA adjustment is always a positive number, this is probably broken for some inputs
     // This should also work for windage adjustments as well
     pub fn find_zero_angles(
-        &'t mut self,
+        &mut self,
         distance: Length,
         elevation_offset: Length,
         windage_offset: Length,
