@@ -55,8 +55,7 @@ impl Simulation {
             * self
                 .projectile
                 .bc
-                .table
-                .expect("BC")
+                .table()
                 .lerp(self.mach(velocity).get::<ratio::ratio>())
                 .expect("CD")
     }

@@ -70,7 +70,6 @@ pub struct Projectile {
 pub struct Bc {
     pub(crate) value: Numeric,
     pub(crate) kind: BcKind,
-    pub(crate) table: Option<&'static FloatMap<Numeric>>,
 }
 #[derive(Debug, Copy, Clone)]
 pub enum BcKind {
@@ -100,7 +99,7 @@ impl FromStr for BcKind {
     }
 }
 impl Bc {
-    fn init(&mut self) {
+    pub(crate) fn table(&self) -> &'static FloatMap<Numeric> {
         lazy_static! {
             static ref G1_TABLE: FloatMap<Numeric> = g1::init();
             static ref G2_TABLE: FloatMap<Numeric> = g2::init();
@@ -111,7 +110,7 @@ impl Bc {
             static ref GI_TABLE: FloatMap<Numeric> = gi::init();
             static ref GS_TABLE: FloatMap<Numeric> = gs::init();
         };
-        self.table = Some(match self.kind {
+        match self.kind {
             G1 => &G1_TABLE,
             G2 => &G2_TABLE,
             G5 => &G5_TABLE,
@@ -120,7 +119,7 @@ impl Bc {
             G8 => &G8_TABLE,
             GI => &GI_TABLE,
             GS => &GS_TABLE,
-        });
+        }
     }
 }
 #[derive(Debug)]
@@ -152,7 +151,6 @@ impl Default for SimulationBuilder {
                     bc: Bc {
                         value: 0.305,
                         kind: BcKind::G7,
-                        table: None,
                     },
                     velocity: Velocity::new::<foot_per_second>(2710.0),
                 },
@@ -193,8 +191,7 @@ impl SimulationBuilder {
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(mut self) -> Simulation {
-        self.builder.projectile.bc.init();
+    pub fn init(self) -> Simulation {
         From::from(self)
     }
     pub fn set_time_step(mut self, value: Time) -> Result<Self> {
@@ -388,14 +385,16 @@ impl SimulationBuilder {
             )))
         }
     }
-    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+    pub fn set_bc_value(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.bc.value = value;
-            self.builder.projectile.bc.kind = kind;
-            self.builder.projectile.bc.init();
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
+    }
+    pub fn set_bc_type(mut self, value: &str) -> Result<Self> {
+        self.builder.projectile.bc.kind = <BcKind as FromStr>::from_str(value)?;
+        Ok(self)
     }
 }
