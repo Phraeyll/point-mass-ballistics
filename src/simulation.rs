@@ -393,7 +393,7 @@ impl SimulationBuilder {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
     }
-    pub fn set_bc_type(mut self, value: &str) -> Result<Self> {
+    pub fn set_bc_kind(mut self, value: &str) -> Result<Self> {
         self.builder.projectile.bc.kind = <BcKind as FromStr>::from_str(value)?;
         Ok(self)
     }
