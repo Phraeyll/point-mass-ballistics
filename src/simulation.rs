@@ -85,7 +85,7 @@ pub enum BcKind {
 impl FromStr for BcKind {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_uppercase() {
+        match s.to_ascii_uppercase().as_ref() {
             "G1" => Ok(G1),
             "G2" => Ok(G2),
             "G5" => Ok(G5),
