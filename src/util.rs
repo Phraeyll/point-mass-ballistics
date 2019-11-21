@@ -9,28 +9,30 @@ use std::{
 
 use ordered_float::OrderedFloat;
 pub use uom::{
+    fmt::DisplayStyle,
     marker,
     si::{
         acceleration::{self, foot_per_second_squared, meter_per_second_squared},
-        amount_of_substance::mole,
+        amount_of_substance::{self, mole},
         angle::{self, degree, minute as moa, radian},
         angular_velocity::{self, radian_per_second},
-        area::square_meter,
-        electric_current::ampere,
-        energy::{foot_pound, joule},
+        area::{self, square_meter},
+        electric_current::{self, ampere},
+        energy::{self, foot_pound, joule},
         f64::*,
+        fmt::{Arguments, QuantityArguments},
         force::{self},
         length::{self, inch, meter, yard},
-        luminous_intensity::candela,
-        mass::{grain, kilogram, pound},
-        mass_density::kilogram_per_cubic_meter,
-        molar_mass,
-        pressure::{inch_of_mercury, pascal},
+        luminous_intensity::{self, candela},
+        mass::{self, grain, kilogram, pound},
+        mass_density::{self, kilogram_per_cubic_meter},
+        molar_mass::{self},
+        pressure::{self, inch_of_mercury, pascal},
         ratio::{self},
         thermodynamic_temperature::{
-            degree_celsius as celsius, degree_fahrenheit as fahrenheit, kelvin,
+            self as temperature, degree_celsius as celsius, degree_fahrenheit as fahrenheit, kelvin,
         },
-        time::second,
+        time::{self, second},
         velocity::{self, foot_per_second, meter_per_second, mile_per_hour},
         Dimension, Quantity, Unit, Units, ISQ, SI,
     },
@@ -42,6 +44,7 @@ pub type Numeric = f64;
 pub type Natural = u32;
 pub type MyUnits = SI<Numeric>;
 pub type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
+pub type MyQuantityArguments<D, N> = QuantityArguments<D, MyUnits, Numeric, N>;
 pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;

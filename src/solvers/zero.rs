@@ -135,8 +135,8 @@ impl Simulation {
         let (pitch, yaw, _, _) = self
             .find_adjustments(
                 { |p: &Packet| p.distance() >= distance },
-                { |p: &Packet| p.offset_vertical_moa(elevation_offset, tolerance) },
-                { |p: &Packet| p.offset_horizontal_moa(windage_offset, tolerance) },
+                { |p: &Packet| p.offset_vertical_angle(elevation_offset, tolerance) },
+                { |p: &Packet| p.offset_horizontal_angle(windage_offset, tolerance) },
             )
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {
