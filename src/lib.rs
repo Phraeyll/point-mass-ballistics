@@ -1,7 +1,7 @@
 pub use self::{
     error::{Error, ErrorKind, Result},
     iter::Iter,
-    output::{FmtMeasurements, Measurements},
+    output::*,
     simulation::{Bc, BcKind, Simulation, SimulationBuilder},
     util::*,
 };

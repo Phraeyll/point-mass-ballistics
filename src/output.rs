@@ -1,8 +1,5 @@
 use crate::{
-    util::{
-        angle, energy, length, meter, time, typenum::P2, velocity, Angle, DisplayStyle, Energy,
-        Length, MyQuantityArguments, Time, Velocity,
-    },
+    util::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
     vectors::*,
     Simulation,
 };
@@ -14,75 +11,6 @@ pub struct Packet<'t> {
     pub(crate) time: Time,                 // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
-}
-
-impl FmtMeasurements for Packet<'_> {
-    fn fmt_time<N: time::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<time::Dimension, N> {
-        self.time().into_format_args(unit, style)
-    }
-    fn fmt_velocity<N: velocity::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<velocity::Dimension, N> {
-        self.velocity().into_format_args(unit, style)
-    }
-    fn fmt_energy<N: energy::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<energy::Dimension, N> {
-        self.energy().into_format_args(unit, style)
-    }
-    fn fmt_distance<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N> {
-        self.distance().into_format_args(unit, style)
-    }
-    fn fmt_elevation<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N> {
-        self.elevation().into_format_args(unit, style)
-    }
-    fn fmt_windage<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N> {
-        self.windage().into_format_args(unit, style)
-    }
-    fn fmt_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<angle::Dimension, N> {
-        self.angle().into_format_args(unit, style)
-    }
-    fn fmt_vertical_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-        tolerance: Length,
-    ) -> MyQuantityArguments<angle::Dimension, N> {
-        self.vertical_angle(tolerance).into_format_args(unit, style)
-    }
-    fn fmt_horizontal_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-        tolerance: Length,
-    ) -> MyQuantityArguments<angle::Dimension, N> {
-        self.horizontal_angle(tolerance)
-            .into_format_args(unit, style)
-    }
 }
 
 impl Measurements for Packet<'_> {
@@ -172,54 +100,4 @@ pub trait Measurements {
     fn relative_position(&self) -> MyVector3<length::Dimension>;
     fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle;
     fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle;
-}
-
-pub trait FmtMeasurements {
-    fn fmt_time<N: time::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<time::Dimension, N>;
-    fn fmt_velocity<N: velocity::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<velocity::Dimension, N>;
-    fn fmt_energy<N: energy::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<energy::Dimension, N>;
-    fn fmt_distance<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N>;
-    fn fmt_elevation<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N>;
-    fn fmt_windage<N: length::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<length::Dimension, N>;
-    fn fmt_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-    ) -> MyQuantityArguments<angle::Dimension, N>;
-    fn fmt_vertical_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-        tolerance: Length,
-    ) -> MyQuantityArguments<angle::Dimension, N>;
-    fn fmt_horizontal_angle<N: angle::Unit>(
-        &self,
-        unit: N,
-        style: DisplayStyle,
-        tolerance: Length,
-    ) -> MyQuantityArguments<angle::Dimension, N>;
 }
