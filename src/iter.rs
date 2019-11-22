@@ -1,6 +1,9 @@
 use crate::{
     output::Packet,
-    util::{acceleration, length, second, typenum::P2, velocity, Time},
+    util::{
+        acceleration, length, meter, meter_per_second, second, typenum::P2, velocity, Length, Time,
+        Velocity,
+    },
     vectors::*,
     Simulation,
 };
@@ -29,19 +32,28 @@ impl Simulation {
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
-        self.projectile
-            .velocity(&self.scope)
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
+        MyVector3::new(
+            self.projectile.velocity,
+            Velocity::new::<meter_per_second>(0.0),
+            Velocity::new::<meter_per_second>(0.0),
+        )
+        .pivot_y(self.scope.yaw())
+        .pivot_z(self.scope.pitch())
+        .pivot_x(self.shooter.roll())
+        .pivot_z(self.shooter.pitch())
+        .pivot_y(self.shooter.yaw())
     }
     // Projectiles position relative to scope
     fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
-        self.projectile
-            .position(&self.scope)
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
+        MyVector3::new(
+            Length::new::<meter>(0.0),
+            -self.scope.height,
+            -self.scope.offset,
+        )
+        .pivot_x(self.scope.roll())
+        .pivot_x(self.shooter.roll())
+        .pivot_z(self.shooter.pitch())
+        .pivot_y(self.shooter.yaw())
     }
 }
 // Create an new iterator over Simulation

@@ -4,10 +4,10 @@ use crate::{
         Atmosphere, Flags, Projectile, Scope, SectionalDensity, Shooter, Simulation, Wind,
     },
     util::{
-        acceleration, angular_velocity, celsius, force, length, meter, meter_per_second,
-        meter_per_second_squared, pascal, radian, radian_per_second, ratio, typenum::*, velocity,
-        Acceleration, Angle, AngularVelocity, Area, Length, Mass, MassDensity, MolarMass,
-        MyQuantity, Numeric, Pressure, Ratio, Velocity, ISQ, PI,
+        acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
+        pascal, radian, radian_per_second, ratio, typenum::*, velocity, Acceleration, Angle,
+        AngularVelocity, Area, Length, Mass, MassDensity, MolarMass, MyQuantity, Numeric, Pressure,
+        Ratio, Velocity, ISQ, PI,
     },
     vectors::*,
 };
@@ -190,28 +190,15 @@ impl Projectile {
     fn i(&self) -> Ratio {
         self.sd() / self.bc.value
     }
-    pub(crate) fn velocity(&self, scope: &Scope) -> MyVector3<velocity::Dimension> {
-        MyVector3::new(
-            self.velocity,
-            Velocity::new::<meter_per_second>(0.0),
-            Velocity::new::<meter_per_second>(0.0),
-        )
-        .pivot_y(scope.yaw())
-        .pivot_z(scope.pitch())
-    }
-    pub(crate) fn position(&self, scope: &Scope) -> MyVector3<length::Dimension> {
-        MyVector3::new(Length::new::<meter>(0.0), -scope.height, -scope.offset)
-            .pivot_x(scope.roll())
-    }
 }
 impl Scope {
-    fn pitch(&self) -> Angle {
+    pub(crate) fn pitch(&self) -> Angle {
         self.pitch
     }
-    fn yaw(&self) -> Angle {
+    pub(crate) fn yaw(&self) -> Angle {
         -self.yaw
     }
-    fn roll(&self) -> Angle {
+    pub(crate) fn roll(&self) -> Angle {
         self.roll
     }
 }
