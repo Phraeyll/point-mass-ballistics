@@ -1,6 +1,7 @@
 use self::BcKind::*;
 use crate::{
     dragtables::*,
+    my_quantity,
     util::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, pound, radian,
@@ -183,7 +184,7 @@ impl Default for SimulationBuilder {
                     pitch: Angle::new::<radian>(0.0),
                     roll: Angle::new::<radian>(0.0),
                     lattitude: Angle::new::<radian>(0.0),
-                    gravity: Acceleration::new::<meter_per_second_squared>(-9.806_65),
+                    gravity: my_quantity!(-9.806_65),
                 },
                 time_step: Time::new::<second>(0.000_001),
             },

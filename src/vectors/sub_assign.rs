@@ -1,43 +1,55 @@
 use crate::{
-    util::{marker, Dimension},
-    vectors::MyVector3,
+    util::{marker, Conversion, Dimension, Units},
+    vectors::DimVector3,
 };
 
 use core::ops::SubAssign;
 
-impl<D: ?Sized> SubAssign for MyVector3<D>
+use alga::general::ClosedSub;
+use nalgebra::base::Scalar;
+use num_traits::Num;
+
+impl<D: ?Sized, U: ?Sized, V> SubAssign for DimVector3<D, U, V>
 where
     D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: Self) {
         self.value -= rhs.value
     }
 }
-impl<'l, 'r, D: ?Sized> SubAssign<&'r Self> for &'l mut MyVector3<D>
+impl<'l, 'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r Self> for &'l mut DimVector3<D, U, V>
 where
     D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &Self) {
         self.value -= rhs.value
     }
 }
-impl<'r, D: ?Sized> SubAssign<&'r Self> for MyVector3<D>
+impl<'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r Self> for DimVector3<D, U, V>
 where
     D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &Self) {
         self.value -= rhs.value
     }
 }
-impl<'l, D: ?Sized> SubAssign<MyVector3<D>> for &'l mut MyVector3<D>
+impl<'l, D: ?Sized, U: ?Sized, V> SubAssign<DimVector3<D, U, V>> for &'l mut DimVector3<D, U, V>
 where
     D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedSub,
     D::Kind: marker::SubAssign,
 {
-    fn sub_assign(&mut self, rhs: MyVector3<D>) {
+    fn sub_assign(&mut self, rhs: DimVector3<D, U, V>) {
         self.value -= rhs.value
     }
 }

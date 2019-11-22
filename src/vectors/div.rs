@@ -1,29 +1,25 @@
 use crate::{
-    util::{marker, Dimension, MyQuantity, Numeric, ISQ},
+    util::{marker, Conversion, Dimension, Quantity, Units},
     vector3,
     vectors::*,
 };
 
 use core::ops::{Div, Sub};
 
-use typenum::operator_aliases::Diff;
+use alga::general::ClosedDiv;
+use nalgebra::base::Scalar;
+use num_traits::Num;
 
-pub type DiffDimension<Dl, Dr> = ISQ<
-    Diff<<Dl as Dimension>::L, <Dr as Dimension>::L>,
-    Diff<<Dl as Dimension>::M, <Dr as Dimension>::M>,
-    Diff<<Dl as Dimension>::T, <Dr as Dimension>::T>,
-    Diff<<Dl as Dimension>::I, <Dr as Dimension>::I>,
-    Diff<<Dl as Dimension>::Th, <Dr as Dimension>::Th>,
-    Diff<<Dl as Dimension>::N, <Dr as Dimension>::N>,
-    Diff<<Dl as Dimension>::J, <Dr as Dimension>::J>,
->;
-
-impl<Dl: ?Sized, Dr: ?Sized> Div<MyQuantity<Dr>> for MyVector3<Dl>
+impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
+    for DimVector3<Dl, Ul, V>
 where
     Dl: Dimension,
     Dr: Dimension,
     Dl::Kind: marker::Div,
     Dr::Kind: marker::Div,
+    Ul: Units<V>,
+    Ur: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -32,15 +28,19 @@ where
     Dl::N: Sub<Dr::N>,
     Dl::J: Sub<Dr::J>,
 {
-    type Output = MyVector3<DiffDimension<Dl, Dr>>;
-    fn div(self, rhs: MyQuantity<Dr>) -> Self::Output {
+    type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
+    fn div(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {
         vector3!(self.value / rhs.value)
     }
 }
-impl<'l, 'r, Dl: ?Sized, Dr: ?Sized> Div<&'r MyQuantity<Dr>> for &'l MyVector3<Dl>
+impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r Quantity<Dr, Ur, V>>
+    for &'l DimVector3<Dl, Ul, V>
 where
     Dl: Dimension,
     Dr: Dimension,
+    Ul: Units<V>,
+    Ur: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
     Dl::Kind: marker::Div,
     Dr::Kind: marker::Div,
     Dl::L: Sub<Dr::L> + 'r,
@@ -51,15 +51,19 @@ where
     Dl::N: Sub<Dr::N> + 'r,
     Dl::J: Sub<Dr::J> + 'r,
 {
-    type Output = MyVector3<DiffDimension<Dl, Dr>>;
-    fn div(self, rhs: &MyQuantity<Dr>) -> Self::Output {
+    type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
+    fn div(self, rhs: &Quantity<Dr, Ur, V>) -> Self::Output {
         vector3!(self.value / rhs.value)
     }
 }
-impl<'r, Dl: ?Sized, Dr: ?Sized> Div<&'r MyQuantity<Dr>> for MyVector3<Dl>
+impl<'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r Quantity<Dr, Ur, V>>
+    for DimVector3<Dl, Ul, V>
 where
     Dl: Dimension,
     Dr: Dimension,
+    Ul: Units<V>,
+    Ur: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
     Dl::Kind: marker::Div,
     Dr::Kind: marker::Div,
     Dl::L: Sub<Dr::L> + 'r,
@@ -70,18 +74,20 @@ where
     Dl::N: Sub<Dr::N> + 'r,
     Dl::J: Sub<Dr::J> + 'r,
 {
-    type Output = MyVector3<DiffDimension<Dl, Dr>>;
-    fn div(self, rhs: &MyQuantity<Dr>) -> Self::Output {
+    type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
+    fn div(self, rhs: &Quantity<Dr, Ur, V>) -> Self::Output {
         vector3!(self.value / rhs.value)
     }
 }
-impl<D: ?Sized> Div<Numeric> for MyVector3<D>
+impl<D: ?Sized, U: ?Sized, V> Div<V> for DimVector3<D, U, V>
 where
     D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
     D::Kind: marker::Div,
 {
     type Output = Self;
-    fn div(self, rhs: Numeric) -> Self::Output {
+    fn div(self, rhs: V) -> Self::Output {
         vector3!(self.value / rhs)
     }
 }

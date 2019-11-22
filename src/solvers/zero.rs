@@ -1,17 +1,17 @@
 use crate::{
+    my_quantity,
     output::Packet,
-    quantity,
     simulation::Scope,
     util::{angle, radian, Angle, Length, MyQuantity, FRAC_PI_2, FRAC_PI_4},
     Error, ErrorKind, Measurements, Result, Simulation,
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
-const DEG_45: MyQuantity<angle::Dimension> = quantity!(FRAC_PI_4);
+const DEG_45: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_4);
 
 // Should never try to yaw more than 90 degrees, probably not a necessary check
 // Also should never try to pitch this low - not sure if this ever happens in practice
-const DEG_90: MyQuantity<angle::Dimension> = quantity!(FRAC_PI_2);
+const DEG_90: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_2);
 
 struct IterFindAdjustments<'t, F, E, W>
 where

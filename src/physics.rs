@@ -1,5 +1,5 @@
 use crate::{
-    quantity,
+    my_quantity,
     simulation::{
         Atmosphere, Flags, Projectile, Scope, SectionalDensity, Shooter, Simulation, Wind,
     },
@@ -14,16 +14,16 @@ use crate::{
 
 // Universal gas constant (J/K*mol)
 type EnergyPerTempPerAmount = MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>>;
-const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = quantity!(8.314_462_618_153_24);
+const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = my_quantity!(8.314_462_618_153_24);
 
 // Molar mass of dry air (kg/mol)
-const MOLAR_MASS_DRY_AIR: MolarMass = quantity!(0.028_964_4);
+const MOLAR_MASS_DRY_AIR: MolarMass = my_quantity!(0.028_964_4);
 
 // Molar mass of water vapor (kg/mol)
-const MOLAR_MASS_WATER_VAPOR: MolarMass = quantity!(0.018_016);
+const MOLAR_MASS_WATER_VAPOR: MolarMass = my_quantity!(0.018_016);
 
 // Angular velocity of earth, (radians)
-const ANGULAR_VELOCITY_EARTH: AngularVelocity = quantity!(0.000_072_921_159);
+const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
 
 // Adiabatic index of air, mostly diatomic gas
 const ADIABATIC_INDEX_AIR: Numeric = 1.4;
