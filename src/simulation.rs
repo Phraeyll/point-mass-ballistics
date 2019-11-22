@@ -5,7 +5,7 @@ use crate::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
         Acceleration, Angle, FloatMap, Length, Mass, Numeric, Pressure, ThermodynamicTemperature,
-        Time, Velocity, FRAC_PI_2, PI,
+        Time, Velocity, FRAC_PI_2, PI, ISQ, typenum::*, MyQuantity, Area, square_inch, pound,
     },
     Error, ErrorKind, Result,
 };
@@ -68,7 +68,7 @@ pub struct Projectile {
 }
 #[derive(Debug)]
 pub struct Bc {
-    pub(crate) value: Numeric,
+    pub(crate) value: MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>,
     pub(crate) kind: BcKind,
 }
 #[derive(Debug, Copy, Clone)]
@@ -100,7 +100,10 @@ impl FromStr for BcKind {
 }
 impl Bc {
     pub fn new(value: Numeric, kind: BcKind) -> Self {
-        Self { value, kind }
+        Self { 
+            value: Mass::new::<pound>(value) / Area::new::<square_inch>(1.0),
+            kind,
+        }
     }
     pub(crate) fn table(&self) -> &'static FloatMap<Numeric> {
         lazy_static! {
@@ -151,10 +154,7 @@ impl Default for SimulationBuilder {
                 projectile: Projectile {
                     caliber: Length::new::<inch>(0.264),
                     weight: Mass::new::<grain>(140.0),
-                    bc: Bc {
-                        value: 0.305,
-                        kind: BcKind::G7,
-                    },
+                    bc: Bc::new(0.305, G7),
                     velocity: Velocity::new::<foot_per_second>(2710.0),
                 },
                 scope: Scope {
@@ -390,8 +390,7 @@ impl SimulationBuilder {
     }
     pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.bc.value = value;
-            self.builder.projectile.bc.kind = kind;
+            self.builder.projectile.bc = Bc::new(value, kind);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))

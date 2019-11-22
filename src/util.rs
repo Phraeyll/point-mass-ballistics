@@ -16,7 +16,7 @@ pub use uom::{
         amount_of_substance::{self, mole},
         angle::{self, degree, minute as moa, radian},
         angular_velocity::{self, radian_per_second},
-        area::{self, square_meter},
+        area::{self, square_inch, square_meter},
         electric_current::{self, ampere},
         energy::{self, foot_pound, joule},
         f64::*,

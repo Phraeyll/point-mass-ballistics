@@ -2,17 +2,16 @@ use crate::{
     quantity,
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     util::{
-        acceleration, angular_velocity, celsius, force, inch, length, meter, meter_per_second,
-        meter_per_second_squared, molar_mass, pascal, pound, radian, radian_per_second, ratio,
+        acceleration, angular_velocity, celsius, force, length, meter, meter_per_second,
+        meter_per_second_squared, molar_mass, pascal, radian, radian_per_second, ratio,
         typenum::*, velocity, Acceleration, Angle, AngularVelocity, Area, Length, Mass,
-        MassDensity, MyQuantity, Numeric, Pressure, Velocity, ISQ, PI,
+        Ratio, MassDensity, MyQuantity, Numeric, Pressure, Velocity, ISQ, PI,
     },
     vectors::*,
 };
 
 // Universal gas constant (J/K*mol), aka,
-type GasDimension = ISQ<P2, P1, N2, Z0, N1, N1, Z0>;
-const MOLAR_GAS_UNIVERSAL: MyQuantity<GasDimension> = quantity!(8.314_462_618_153_24);
+const MOLAR_GAS_UNIVERSAL: MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>> = quantity!(8.314_462_618_153_24);
 
 // Molar mass of dry air (kg/mol)
 const MOLAR_MASS_DRY_AIR: MyQuantity<molar_mass::Dimension> = quantity!(0.028_964_4);
@@ -46,12 +45,12 @@ impl Simulation {
         velocity - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
-    fn mach(&self, velocity: &MyVector3<velocity::Dimension>) -> MyQuantity<ratio::Dimension> {
+    fn mach(&self, velocity: &MyVector3<velocity::Dimension>) -> Ratio {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: &MyVector3<velocity::Dimension>) -> Numeric {
-        self.projectile.i()
+        self.projectile.i().get::<ratio::ratio>()
             * self
                 .projectile
                 .bc
@@ -182,11 +181,11 @@ impl Projectile {
         self.weight
     }
     // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    fn sd(&self) -> Numeric {
-        self.weight.get::<pound>() / self.caliber.get::<inch>().powf(2.0)
+    fn sd(&self) -> MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>> {
+        self.weight / self.caliber.powi(P2::new())
     }
     // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
-    fn i(&self) -> Numeric {
+    fn i(&self) -> Ratio {
         self.sd() / self.bc.value
     }
     pub(crate) fn velocity(&self, scope: &Scope) -> MyVector3<velocity::Dimension> {
