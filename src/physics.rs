@@ -199,19 +199,20 @@ impl Projectile {
         .pivot_y(scope.yaw())
         .pivot_z(scope.pitch())
     }
+    pub(crate) fn position(&self, scope: &Scope) -> MyVector3<length::Dimension> {
+        MyVector3::new(Length::new::<meter>(0.0), -scope.height, -scope.offset)
+            .pivot_x(scope.roll())
+    }
 }
 impl Scope {
-    pub(crate) fn position(&self) -> MyVector3<length::Dimension> {
-        MyVector3::new(Length::new::<meter>(0.0), self.height, self.offset)
-    }
     fn pitch(&self) -> Angle {
         self.pitch
     }
     fn yaw(&self) -> Angle {
         -self.yaw
     }
-    pub(crate) fn roll(&self) -> Angle {
-        -self.roll
+    fn roll(&self) -> Angle {
+        self.roll
     }
 }
 impl Shooter {

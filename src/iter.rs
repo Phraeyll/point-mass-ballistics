@@ -37,13 +37,11 @@ impl Simulation {
     }
     // Projectiles position relative to scope
     fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
-        self.scope
-            .position()
-            .pivot_x(-self.scope.roll())
+        self.projectile
+            .position(&self.scope)
             .pivot_x(self.shooter.roll())
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
-            * -1.0
     }
 }
 // Create an new iterator over Simulation
