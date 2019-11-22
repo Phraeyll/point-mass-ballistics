@@ -91,11 +91,7 @@ where
     V: Num + Conversion<V> + Scalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Vector3: {{ x: {}, y: {}, z: {} }}",
-            self.value.x, self.value.y, self.value.z
-        )
+        self.value.fmt(f)
     }
 }
 

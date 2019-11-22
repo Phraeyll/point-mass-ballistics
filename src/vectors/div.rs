@@ -4,7 +4,7 @@ use crate::{
     vectors::*,
 };
 
-use core::ops::{Div, Sub};
+use core::ops::{Sub, Div};
 
 use alga::general::ClosedDiv;
 use nalgebra::base::Scalar;
@@ -20,6 +20,30 @@ where
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: V) -> Self::Output {
         vector3!(self.value / rhs)
+    }
+}
+impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r V> for DimVector3<D, U, V>
+where
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    D::Kind: marker::Div,
+{
+    type Output = DimVector3<D, U, V>;
+    fn div(self, rhs: &V) -> Self::Output {
+        vector3!(self.value / *rhs)
+    }
+}
+impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r mut V> for DimVector3<D, U, V>
+where
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    D::Kind: marker::Div,
+{
+    type Output = DimVector3<D, U, V>;
+    fn div(self, rhs: &mut V) -> Self::Output {
+        vector3!(self.value / *rhs)
     }
 }
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
@@ -216,13 +240,13 @@ where
     V: Num + Conversion<V> + Scalar + ClosedDiv,
     Dl::Kind: marker::Div,
     Dr::Kind: marker::Div,
-    Dl::L: Sub<Dr::L> + 'r,
-    Dl::M: Sub<Dr::M> + 'r,
-    Dl::T: Sub<Dr::T> + 'r,
-    Dl::I: Sub<Dr::I> + 'r,
-    Dl::Th: Sub<Dr::Th> + 'r,
-    Dl::N: Sub<Dr::N> + 'r,
-    Dl::J: Sub<Dr::J> + 'r,
+    Dl::L: Sub<Dr::L>,
+    Dl::M: Sub<Dr::M>,
+    Dl::T: Sub<Dr::T>,
+    Dl::I: Sub<Dr::I>,
+    Dl::Th: Sub<Dr::Th>,
+    Dl::N: Sub<Dr::N>,
+    Dl::J: Sub<Dr::J>,
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &mut Quantity<Dr, Ur, V>) -> Self::Output {
