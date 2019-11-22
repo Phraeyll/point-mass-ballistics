@@ -51,8 +51,8 @@ impl Simulation {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
-    fn cd(&self, velocity: &MyVector3<velocity::Dimension>) -> Numeric {
-        self.projectile.i().get::<ratio::ratio>()
+    fn cd(&self, velocity: &MyVector3<velocity::Dimension>) -> Ratio {
+        self.projectile.i()
             * self
                 .projectile
                 .bc
