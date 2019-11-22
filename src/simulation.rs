@@ -3,9 +3,10 @@ use crate::{
     dragtables::*,
     util::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
-        Acceleration, Angle, FloatMap, Length, Mass, Numeric, Pressure, ThermodynamicTemperature,
-        Time, Velocity, FRAC_PI_2, PI, ISQ, typenum::*, MyQuantity, Area, square_inch, pound,
+        meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, pound, radian,
+        second, square_inch, typenum::*, Acceleration, Angle, Area, FloatMap, Length, Mass,
+        MyQuantity, Numeric, Pressure, ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ,
+        PI,
     },
     Error, ErrorKind, Result,
 };
@@ -100,7 +101,7 @@ impl FromStr for BcKind {
 }
 impl Bc {
     pub fn new(value: Numeric, kind: BcKind) -> Self {
-        Self { 
+        Self {
             value: Mass::new::<pound>(value) / Area::new::<square_inch>(1.0),
             kind,
         }

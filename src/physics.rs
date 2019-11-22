@@ -3,15 +3,16 @@ use crate::{
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     util::{
         acceleration, angular_velocity, celsius, force, length, meter, meter_per_second,
-        meter_per_second_squared, molar_mass, pascal, radian, radian_per_second, ratio,
-        typenum::*, velocity, Acceleration, Angle, AngularVelocity, Area, Length, Mass,
-        Ratio, MassDensity, MyQuantity, Numeric, Pressure, Velocity, ISQ, PI,
+        meter_per_second_squared, molar_mass, pascal, radian, radian_per_second, ratio, typenum::*,
+        velocity, Acceleration, Angle, AngularVelocity, Area, Length, Mass, MassDensity,
+        MyQuantity, Numeric, Pressure, Ratio, Velocity, ISQ, PI,
     },
     vectors::*,
 };
 
 // Universal gas constant (J/K*mol), aka,
-const MOLAR_GAS_UNIVERSAL: MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>> = quantity!(8.314_462_618_153_24);
+const MOLAR_GAS_UNIVERSAL: MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>> =
+    quantity!(8.314_462_618_153_24);
 
 // Molar mass of dry air (kg/mol)
 const MOLAR_MASS_DRY_AIR: MyQuantity<molar_mass::Dimension> = quantity!(0.028_964_4);
