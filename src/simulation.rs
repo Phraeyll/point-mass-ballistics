@@ -99,6 +99,9 @@ impl FromStr for BcKind {
     }
 }
 impl Bc {
+    pub fn new(value: Numeric, kind: BcKind) -> Self {
+        Self { value, kind }
+    }
     pub(crate) fn table(&self) -> &'static FloatMap<Numeric> {
         lazy_static! {
             static ref G1_TABLE: FloatMap<Numeric> = g1::init();
@@ -385,16 +388,13 @@ impl SimulationBuilder {
             )))
         }
     }
-    pub fn set_bc_value(mut self, value: Numeric) -> Result<Self> {
+    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.bc.value = value;
+            self.builder.projectile.bc.kind = kind;
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))
         }
-    }
-    pub fn set_bc_kind(mut self, value: BcKind) -> Result<Self> {
-        self.builder.projectile.bc.kind = value;
-        Ok(self)
     }
 }
