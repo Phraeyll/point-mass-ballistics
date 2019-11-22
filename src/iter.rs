@@ -112,7 +112,7 @@ impl Simulation {
         &self,
         velocity: &MyVector3<velocity::Dimension>,
     ) -> MyVector3<length::Dimension> {
-        velocity * &self.delta_time()
+        velocity * self.delta_time()
             + (self.acceleration(velocity) * self.delta_time().powi(P2::new())) * 0.5
     }
     // 'First Equation of Motion'
