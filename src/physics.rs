@@ -1,28 +1,29 @@
 use crate::{
     quantity,
-    simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
+    simulation::{
+        Atmosphere, Flags, Projectile, Scope, SectionalDensity, Shooter, Simulation, Wind,
+    },
     util::{
         acceleration, angular_velocity, celsius, force, length, meter, meter_per_second,
-        meter_per_second_squared, molar_mass, pascal, radian, radian_per_second, ratio, typenum::*,
-        velocity, Acceleration, Angle, AngularVelocity, Area, Length, Mass, MassDensity,
+        meter_per_second_squared, pascal, radian, radian_per_second, ratio, typenum::*, velocity,
+        Acceleration, Angle, AngularVelocity, Area, Length, Mass, MassDensity, MolarMass,
         MyQuantity, Numeric, Pressure, Ratio, Velocity, ISQ, PI,
     },
     vectors::*,
 };
 
-// Universal gas constant (J/K*mol), aka,
-const MOLAR_GAS_UNIVERSAL: MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>> =
-    quantity!(8.314_462_618_153_24);
+// Universal gas constant (J/K*mol)
+type EnergyPerTempPerAmount = MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>>;
+const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = quantity!(8.314_462_618_153_24);
 
 // Molar mass of dry air (kg/mol)
-const MOLAR_MASS_DRY_AIR: MyQuantity<molar_mass::Dimension> = quantity!(0.028_964_4);
+const MOLAR_MASS_DRY_AIR: MolarMass = quantity!(0.028_964_4);
 
 // Molar mass of water vapor (kg/mol)
-const MOLAR_MASS_WATER_VAPOR: MyQuantity<molar_mass::Dimension> = quantity!(0.018_016);
+const MOLAR_MASS_WATER_VAPOR: MolarMass = quantity!(0.018_016);
 
 // Angular velocity of earth, (radians)
-const ANGULAR_VELOCITY_EARTH: MyQuantity<angular_velocity::Dimension> =
-    quantity!(0.000_072_921_159);
+const ANGULAR_VELOCITY_EARTH: AngularVelocity = quantity!(0.000_072_921_159);
 
 // Adiabatic index of air, mostly diatomic gas
 const ADIABATIC_INDEX_AIR: Numeric = 1.4;
@@ -181,11 +182,11 @@ impl Projectile {
     pub(crate) fn mass(&self) -> Mass {
         self.weight
     }
-    // Sectional density of projectile, defined terms of lbs and inches, yet dimensionless
-    fn sd(&self) -> MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>> {
+    // Sectional density of projectile
+    fn sd(&self) -> SectionalDensity {
         self.weight / self.caliber.powi(P2::new())
     }
-    // Form factor of projectile, calculated fro Ballistic Coefficient and Sectional Density (sd)
+    // Form factor of projectile, calculated from Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> Ratio {
         self.sd() / self.bc.value
     }

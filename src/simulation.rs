@@ -15,6 +15,8 @@ use std::str::FromStr;
 
 use lazy_static::lazy_static;
 
+pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
+
 #[derive(Debug)]
 pub struct Simulation {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
@@ -69,7 +71,7 @@ pub struct Projectile {
 }
 #[derive(Debug)]
 pub struct Bc {
-    pub(crate) value: MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>,
+    pub(crate) value: SectionalDensity,
     pub(crate) kind: BcKind,
 }
 #[derive(Debug, Copy, Clone)]
