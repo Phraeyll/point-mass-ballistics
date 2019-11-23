@@ -121,16 +121,19 @@ pub trait Cross<Rhs = Self> {
     type Output;
     fn cross(&self, rhs: Rhs) -> Self::Output;
 }
+pub trait Norm {
+    type Output;
+    fn norm(&self) -> Self::Output;
+}
 
-pub trait Vectors<D: ?Sized, U: ?Sized, V> {
-    type Quantity;
-    type Norm;
+pub trait Vectors {
+    type Output;
+    // type Norm = Quantity<D, U, <V as ComplexField>::RealField>;
 
-    fn new(x: Self::Quantity, y: Self::Quantity, z: Self::Quantity) -> Self;
-    fn norm(&self) -> Self::Norm;
-    fn get_x(&self) -> Self::Quantity;
-    fn get_y(&self) -> Self::Quantity;
-    fn get_z(&self) -> Self::Quantity;
+    fn new(x: Self::Output, y: Self::Output, z: Self::Output) -> Self;
+    fn get_x(&self) -> Self::Output;
+    fn get_y(&self) -> Self::Output;
+    fn get_z(&self) -> Self::Output;
 }
 
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Cross<&DimVector3<Dr, Ur, V>>
@@ -156,7 +159,7 @@ where
     }
 }
 
-impl<D: ?Sized, U: ?Sized, V> Vectors<D, U, V> for DimVector3<D, U, V>
+impl<D: ?Sized, U: ?Sized, V> Norm for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
@@ -164,26 +167,34 @@ where
     V: Num + Conversion<V> + Scalar + ComplexField,
     V::RealField: Num + Conversion<<V as ComplexField>::RealField> + Scalar,
 {
-    type Quantity = Quantity<D, U, V>;
-    type Norm = Quantity<D, U, <V as ComplexField>::RealField>;
+    type Output = Quantity<D, U, <V as ComplexField>::RealField>;
+    fn norm(&self) -> Self::Output {
+        quantity!(self.value.norm())
+    }
+}
 
-    fn new(x: Self::Quantity, y: Self::Quantity, z: Self::Quantity) -> Self {
+impl<D: ?Sized, U: ?Sized, V> Vectors for DimVector3<D, U, V>
+where
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar,
+{
+    type Output = Quantity<D, U, V>;
+
+    fn new(x: Self::Output, y: Self::Output, z: Self::Output) -> Self {
         Self {
             dimension: PhantomData,
             units: PhantomData,
             value: Vector3::new(x.value, y.value, z.value),
         }
     }
-    fn norm(&self) -> Self::Norm {
-        quantity!(self.value.norm())
-    }
-    fn get_x(&self) -> Self::Quantity {
+    fn get_x(&self) -> Self::Output {
         quantity!(self.value.x)
     }
-    fn get_y(&self) -> Self::Quantity {
+    fn get_y(&self) -> Self::Output {
         quantity!(self.value.y)
     }
-    fn get_z(&self) -> Self::Quantity {
+    fn get_z(&self) -> Self::Output {
         quantity!(self.value.z)
     }
 }
