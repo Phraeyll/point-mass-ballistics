@@ -17,7 +17,7 @@ where
     D::Kind: marker::MulAssign,
 {
     fn mul_assign(&mut self, rhs: V) {
-        self.value *= rhs
+        MulAssign::mul_assign(&mut self.value, rhs)
     }
 }
 impl<D: ?Sized, U: ?Sized, V> MulAssign<&V> for DimVector3<D, U, V>
@@ -28,7 +28,7 @@ where
     D::Kind: marker::MulAssign,
 {
     fn mul_assign(&mut self, rhs: &V) {
-        self.value *= *rhs
+        MulAssign::mul_assign(&mut self.value, *rhs)
     }
 }
 impl<D: ?Sized, U: ?Sized, V> MulAssign<&mut V> for DimVector3<D, U, V>
@@ -39,7 +39,7 @@ where
     D::Kind: marker::MulAssign,
 {
     fn mul_assign(&mut self, rhs: &mut V) {
-        self.value *= *rhs
+        MulAssign::mul_assign(&mut self.value, *rhs)
     }
 }
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<Quantity<Dr, Ur, V>>
@@ -61,7 +61,7 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }
 impl<'l, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<Quantity<Dr, Ur, V>>
@@ -83,7 +83,7 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }
 impl<'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<&'r Quantity<Dr, Ur, V>>
@@ -105,7 +105,7 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: &Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<&'r Quantity<Dr, Ur, V>>
@@ -127,7 +127,7 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: &Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }
 impl<'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<&'r mut Quantity<Dr, Ur, V>>
@@ -149,7 +149,7 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: &mut Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V>
@@ -171,6 +171,6 @@ where
     Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: &mut Quantity<Dr, Ur, V>) {
-        self.value *= rhs.value
+        MulAssign::mul_assign(&mut self.value, rhs.value)
     }
 }

@@ -33,8 +33,21 @@ where
     units: PhantomData<U>,
     pub value: Vector3<V>,
 }
+impl<D: ?Sized, U: ?Sized, V> From<Vector3<V>> for DimVector3<D, U, V>
+where
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar,
+{
+    fn from(value: Vector3<V>) -> Self {
+        Self {
+            dimension: PhantomData,
+            units: PhantomData,
+            value,
+        }
+    }
+}
 
-#[macro_export]
 macro_rules! quantity {
     ($value:expr) => {
         Quantity {
@@ -44,6 +57,7 @@ macro_rules! quantity {
         }
     };
 }
+
 #[macro_export]
 macro_rules! my_quantity {
     ($value:expr) => {
@@ -55,16 +69,6 @@ macro_rules! my_quantity {
     };
 }
 
-#[macro_export]
-macro_rules! vector3 {
-    ($value:expr) => {
-        DimVector3 {
-            dimension: ::std::marker::PhantomData,
-            units: ::std::marker::PhantomData,
-            value: $value,
-        }
-    };
-}
 pub type SumDimension<Dl, Dr> = ISQ<
     Sum<<Dl as Dimension>::L, <Dr as Dimension>::L>,
     Sum<<Dl as Dimension>::M, <Dr as Dimension>::M>,
@@ -148,7 +152,7 @@ where
 {
     type Output = DimVector3<SumDimension<Dl, Dr>, Ul, V>;
     fn cross(&self, rhs: &DimVector3<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value.cross(&rhs.value))
+        self.value.cross(&rhs.value).into()
     }
 }
 
@@ -164,7 +168,11 @@ where
     type Norm = Quantity<D, U, <V as ComplexField>::RealField>;
 
     fn new(x: Self::Quantity, y: Self::Quantity, z: Self::Quantity) -> Self {
-        vector3!(Vector3::new(x.value, y.value, z.value))
+        Self {
+            dimension: PhantomData,
+            units: PhantomData,
+            value: Vector3::new(x.value, y.value, z.value),
+        }
     }
     fn norm(&self) -> Self::Norm {
         quantity!(self.value.norm())
@@ -188,12 +196,12 @@ where
         Angle::new::<radian>(self.value.angle(&other.value))
     }
     pub fn pivot_z(&self, angle: Angle) -> Self {
-        vector3!(Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>()) * self.value)
+        (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>()) * self.value).into()
     }
     pub fn pivot_y(&self, angle: Angle) -> Self {
-        vector3!(Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>()) * self.value)
+        (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>()) * self.value).into()
     }
     pub fn pivot_x(&self, angle: Angle) -> Self {
-        vector3!(Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>()) * self.value)
+        (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>()) * self.value).into()
     }
 }

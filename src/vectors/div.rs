@@ -1,10 +1,9 @@
 use crate::{
     util::{marker, Conversion, Dimension, Quantity, Units},
-    vector3,
     vectors::*,
 };
 
-use core::ops::{Sub, Div};
+use core::ops::{Div, Sub};
 
 use alga::general::ClosedDiv;
 use nalgebra::base::Scalar;
@@ -19,7 +18,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: V) -> Self::Output {
-        vector3!(self.value / rhs)
+        Div::div(self.value, rhs).into()
     }
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r V> for DimVector3<D, U, V>
@@ -31,7 +30,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: &V) -> Self::Output {
-        vector3!(self.value / *rhs)
+        Div::div(self.value, *rhs).into()
     }
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r mut V> for DimVector3<D, U, V>
@@ -43,7 +42,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: &mut V) -> Self::Output {
-        vector3!(self.value / *rhs)
+        Div::div(self.value, *rhs).into()
     }
 }
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
@@ -66,7 +65,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
@@ -89,7 +88,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
@@ -112,7 +111,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r Quantity<Dr, Ur, V>>
@@ -135,7 +134,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r Quantity<Dr, Ur, V>>
@@ -158,7 +157,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r Quantity<Dr, Ur, V>>
@@ -181,7 +180,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r mut Quantity<Dr, Ur, V>>
@@ -204,7 +203,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &mut Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r mut Quantity<Dr, Ur, V>>
@@ -227,7 +226,7 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &mut Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<&'r mut Quantity<Dr, Ur, V>>
@@ -250,6 +249,6 @@ where
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: &mut Quantity<Dr, Ur, V>) -> Self::Output {
-        vector3!(self.value / rhs.value)
+        Div::div(self.value, rhs.value).into()
     }
 }

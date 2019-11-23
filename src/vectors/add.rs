@@ -1,6 +1,5 @@
 use crate::{
     util::{marker, Conversion, Dimension, Units},
-    vector3,
     vectors::DimVector3,
 };
 
@@ -19,7 +18,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, D: ?Sized, U: ?Sized, V> Add<DimVector3<D, U, V>> for &'l DimVector3<D, U, V>
@@ -31,7 +30,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, D: ?Sized, U: ?Sized, V> Add<DimVector3<D, U, V>> for &'l mut DimVector3<D, U, V>
@@ -43,7 +42,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Add<&'r DimVector3<D, U, V>> for DimVector3<D, U, V>
@@ -55,7 +54,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, D: ?Sized, U: ?Sized, V> Add<&'r DimVector3<D, U, V>> for &'l DimVector3<D, U, V>
@@ -67,7 +66,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, D: ?Sized, U: ?Sized, V> Add<&'r DimVector3<D, U, V>> for &'l mut DimVector3<D, U, V>
@@ -79,7 +78,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Add<&'r mut DimVector3<D, U, V>> for DimVector3<D, U, V>
@@ -91,7 +90,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, D: ?Sized, U: ?Sized, V> Add<&'r mut DimVector3<D, U, V>> for &'l DimVector3<D, U, V>
@@ -103,7 +102,7 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
 impl<'l, 'r, D: ?Sized, U: ?Sized, V> Add<&'r mut DimVector3<D, U, V>>
@@ -116,6 +115,6 @@ where
 {
     type Output = DimVector3<D, U, V>;
     fn add(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {
-        vector3!(self.value + rhs.value)
+        Add::add(self.value, rhs.value).into()
     }
 }
