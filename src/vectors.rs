@@ -31,7 +31,7 @@ where
 {
     dimension: PhantomData<D>,
     units: PhantomData<U>,
-    pub value: Vector3<V>,
+    value: Vector3<V>,
 }
 impl<D: ?Sized, U: ?Sized, V> From<Vector3<V>> for DimVector3<D, U, V>
 where
@@ -45,6 +45,16 @@ where
             units: PhantomData,
             value,
         }
+    }
+}
+impl<D: ?Sized, U: ?Sized, V> Into<Vector3<V>> for DimVector3<D, U, V>
+where
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar,
+{
+    fn into(self) -> Vector3<V> {
+        self.value
     }
 }
 
@@ -203,16 +213,22 @@ impl<D: ?Sized> MyVector3<D>
 where
     D: Dimension,
 {
-    pub fn angle(&self, other: &Self) -> Angle {
-        Angle::new::<radian>(self.value.angle(&other.value))
+    pub fn angle(self, other: &Self) -> Angle {
+        Angle::new::<radian>(<Self as Into<Vector3<Numeric>>>::into(self).angle(&other.value))
     }
-    pub fn pivot_z(&self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>()) * self.value).into()
+    pub fn pivot_z(self, angle: Angle) -> Self {
+        (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>())
+            * <Self as Into<Vector3<Numeric>>>::into(self))
+        .into()
     }
-    pub fn pivot_y(&self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>()) * self.value).into()
+    pub fn pivot_y(self, angle: Angle) -> Self {
+        (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>())
+            * <Self as Into<Vector3<Numeric>>>::into(self))
+        .into()
     }
-    pub fn pivot_x(&self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>()) * self.value).into()
+    pub fn pivot_x(self, angle: Angle) -> Self {
+        (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>())
+            * <Self as Into<Vector3<Numeric>>>::into(self))
+        .into()
     }
 }
