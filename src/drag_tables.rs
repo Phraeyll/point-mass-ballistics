@@ -1,7 +1,4 @@
-use crate::{
-    simulation::SectionalDensity,
-    util::{Numeric, NumericMap},
-};
+use crate::{error::Result, simulation::SectionalDensity, util::Numeric};
 
 pub mod g1;
 pub mod g2;
@@ -15,5 +12,5 @@ pub mod gs;
 pub trait DragTable {
     fn new(value: Numeric) -> Self;
     fn value(&self) -> SectionalDensity;
-    fn table(&self) -> &NumericMap;
+    fn cd(&self, x: Numeric) -> Result<Numeric>;
 }
