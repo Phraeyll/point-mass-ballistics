@@ -1,7 +1,31 @@
-use crate::NumericMap;
+use crate::{
+    simulation::SectionalDensity,
+    util::{pound, square_inch, Area, Mass, Numeric, NumericMap},
+    DragTable,
+};
 
-pub fn init() -> NumericMap {
-    float_map![
+use lazy_static::lazy_static;
+
+pub struct Bc {
+    value: SectionalDensity,
+}
+
+impl DragTable for Bc {
+    fn new(value: Numeric) -> Self {
+        Self {
+            value: Mass::new::<pound>(value) / Area::new::<square_inch>(1.0),
+        }
+    }
+    fn value(&self) -> SectionalDensity {
+        self.value
+    }
+    fn table(&self) -> &'static NumericMap {
+        &TABLE
+    }
+}
+
+lazy_static! {
+    static ref TABLE: NumericMap = float_map![
         0.00  => 0.2303,
         0.05  => 0.2298,
         0.10  => 0.2287,
@@ -87,5 +111,5 @@ pub fn init() -> NumericMap {
         4.60  => 0.1741,
         4.80  => 0.1693,
         5.00  => 0.1648,
-    ]
+    ];
 }

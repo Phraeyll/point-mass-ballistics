@@ -1,27 +1,25 @@
-use self::BcKind::*;
+// use self::BcKind::*;
 use crate::{
-    dragtables::*,
+    drag_tables::*,
     my_quantity,
     util::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, pound, radian,
-        second, square_inch, typenum::*, Acceleration, Angle, Area, NumericMap, Length, Mass,
-        MyQuantity, Numeric, Pressure, ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ,
-        PI,
+        meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
+        typenum::*, Acceleration, Angle, Length, Mass, MyQuantity, Numeric, Pressure,
+        ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ, PI,
     },
     Error, ErrorKind, Result,
 };
 
-use std::str::FromStr;
-
-use lazy_static::lazy_static;
-
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
 
 #[derive(Debug)]
-pub struct Simulation {
+pub struct Simulation<T>
+where
+    T: DragTable,
+{
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
+    pub(crate) projectile: Projectile<T>, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
@@ -64,89 +62,42 @@ pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 #[derive(Debug)]
-pub struct Projectile {
+pub struct Projectile<T>
+where
+    T: DragTable,
+{
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: Mass,       // Weight (grains)
-    pub(crate) bc: Bc,             // Ballistic Coefficient
+    pub(crate) bc: T,              // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
-pub struct Bc {
-    pub(crate) value: SectionalDensity,
-    pub(crate) kind: BcKind,
+pub struct SimulationBuilder<T>
+where
+    T: DragTable,
+{
+    pub(crate) builder: Simulation<T>,
 }
-#[derive(Debug, Copy, Clone)]
-pub enum BcKind {
-    G1,
-    G2,
-    G5,
-    G6,
-    G7,
-    G8,
-    GI,
-    GS,
-}
-impl FromStr for BcKind {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_uppercase().as_ref() {
-            "G1" => Ok(G1),
-            "G2" => Ok(G2),
-            "G5" => Ok(G5),
-            "G6" => Ok(G6),
-            "G7" => Ok(G7),
-            "G8" => Ok(G8),
-            "GI" => Ok(GI),
-            "GS" => Ok(GS),
-            _ => Err(Error::new(ErrorKind::InvalidBcKind(s.to_string()))),
-        }
-    }
-}
-impl Bc {
-    pub fn new(value: Numeric, kind: BcKind) -> Self {
-        Self {
-            value: Mass::new::<pound>(value) / Area::new::<square_inch>(1.0),
-            kind,
-        }
-    }
-    pub(crate) fn table(&self) -> &'static NumericMap {
-        lazy_static! {
-            static ref G1_TABLE: NumericMap = g1::init();
-            static ref G2_TABLE: NumericMap = g2::init();
-            static ref G5_TABLE: NumericMap = g5::init();
-            static ref G6_TABLE: NumericMap = g6::init();
-            static ref G7_TABLE: NumericMap = g7::init();
-            static ref G8_TABLE: NumericMap = g8::init();
-            static ref GI_TABLE: NumericMap = gi::init();
-            static ref GS_TABLE: NumericMap = gs::init();
-        };
-        match self.kind {
-            G1 => &G1_TABLE,
-            G2 => &G2_TABLE,
-            G5 => &G5_TABLE,
-            G6 => &G6_TABLE,
-            G7 => &G7_TABLE,
-            G8 => &G8_TABLE,
-            GI => &GI_TABLE,
-            GS => &GS_TABLE,
-        }
-    }
-}
-#[derive(Debug)]
-pub struct SimulationBuilder {
-    pub(crate) builder: Simulation,
-}
-impl From<SimulationBuilder> for Simulation {
-    fn from(other: SimulationBuilder) -> Self {
+impl<T> From<SimulationBuilder<T>> for Simulation<T>
+where
+    T: DragTable,
+{
+    fn from(other: SimulationBuilder<T>) -> Self {
         Self { ..other.builder }
     }
 }
-impl From<Simulation> for SimulationBuilder {
-    fn from(other: Simulation) -> Self {
+impl<T> From<Simulation<T>> for SimulationBuilder<T>
+where
+    T: DragTable,
+{
+    fn from(other: Simulation<T>) -> Self {
         Self { builder: other }
     }
 }
-impl Default for SimulationBuilder {
+impl<T> Default for SimulationBuilder<T>
+where
+    T: DragTable,
+{
     fn default() -> Self {
         Self {
             builder: Simulation {
@@ -158,7 +109,7 @@ impl Default for SimulationBuilder {
                 projectile: Projectile {
                     caliber: Length::new::<inch>(0.264),
                     weight: Mass::new::<grain>(140.0),
-                    bc: Bc::new(0.305, G7),
+                    bc: <T as DragTable>::new(0.305),
                     velocity: Velocity::new::<foot_per_second>(2710.0),
                 },
                 scope: Scope {
@@ -192,13 +143,16 @@ impl Default for SimulationBuilder {
     }
 }
 
-impl SimulationBuilder {
+impl<T> SimulationBuilder<T>
+where
+    T: DragTable,
+{
     pub fn new() -> Self {
         Default::default()
     }
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(self) -> Simulation {
+    pub fn init(self) -> Simulation<T> {
         From::from(self)
     }
     pub fn set_time_step(mut self, value: Time) -> Result<Self> {
@@ -392,9 +346,9 @@ impl SimulationBuilder {
             )))
         }
     }
-    pub fn set_bc(mut self, value: Numeric, kind: BcKind) -> Result<Self> {
+    pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.bc = Bc::new(value, kind);
+            self.builder.projectile.bc = <T as DragTable>::new(value);
             Ok(self)
         } else {
             Err(Error::new(ErrorKind::PositiveExpected(value)))

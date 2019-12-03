@@ -5,21 +5,27 @@ use crate::{
         Velocity,
     },
     vectors::*,
-    Simulation,
+    DragTable, Simulation,
 };
 
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct Iter<'t> {
-    simulation: &'t Simulation, // Reference to model used for calculations
+pub struct Iter<'t, T>
+where
+    T: DragTable,
+{
+    simulation: &'t Simulation<T>, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
-    time: Time,                 // Position in time (s)
+    time: Time,                    // Position in time (s)
 }
-impl Simulation {
-    pub fn iter(&self) -> Iter<'_> {
+impl<T> Simulation<T>
+where
+    T: DragTable,
+{
+    pub fn iter(&self) -> Iter<'_, T> {
         let position = self.absolute_projectile_position();
         let velocity = self.absolute_projectile_velocity();
         Iter {
@@ -57,9 +63,12 @@ impl Simulation {
     }
 }
 // Create an new iterator over Simulation
-impl<'t> IntoIterator for &'t Simulation {
+impl<'t, T> IntoIterator for &'t Simulation<T>
+where
+    T: DragTable,
+{
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = Iter<'t>;
+    type IntoIter = Iter<'t, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -67,8 +76,11 @@ impl<'t> IntoIterator for &'t Simulation {
 }
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
-impl<'t> Iterator for Iter<'t> {
-    type Item = Packet<'t>;
+impl<'t, T> Iterator for Iter<'t, T>
+where
+    T: DragTable,
+{
+    type Item = Packet<'t, T>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -105,7 +117,10 @@ impl<'t> Iterator for Iter<'t> {
     }
 }
 
-impl Simulation {
+impl<T> Simulation<T>
+where
+    T: DragTable,
+{
     fn acceleration(
         &self,
         velocity: &MyVector3<velocity::Dimension>,

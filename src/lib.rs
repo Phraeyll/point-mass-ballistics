@@ -1,8 +1,9 @@
 pub use self::{
+    drag_tables::DragTable,
     error::{Error, ErrorKind, Result},
     iter::Iter,
     output::*,
-    simulation::{Bc, BcKind, Simulation, SimulationBuilder},
+    simulation::{Simulation, SimulationBuilder},
     util::*,
 };
 
@@ -27,13 +28,4 @@ pub mod solvers {
     pub mod zero;
 }
 #[allow(clippy::approx_constant)]
-mod dragtables {
-    pub mod g1;
-    pub mod g2;
-    pub mod g5;
-    pub mod g6;
-    pub mod g7;
-    pub mod g8;
-    pub mod gi;
-    pub mod gs;
-}
+mod drag_tables;

@@ -10,6 +10,7 @@ use crate::{
         Ratio, Velocity, ISQ, PI,
     },
     vectors::*,
+    DragTable,
 };
 
 // Universal gas constant (J/K*mol)
@@ -29,7 +30,10 @@ const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
 const ADIABATIC_INDEX_AIR: Numeric = 1.4;
 
 // Drag
-impl Simulation {
+impl<T> Simulation<T>
+where
+    T: DragTable,
+{
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
     // along relative bearing - I don't think many would factor in a 'downhill' wind for example
@@ -89,7 +93,10 @@ impl Simulation {
 }
 
 // Coriolis
-impl Simulation {
+impl<T> Simulation<T>
+where
+    T: DragTable,
+{
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -113,7 +120,10 @@ impl Simulation {
 }
 
 //Gravity
-impl Simulation {
+impl<T> Simulation<T>
+where
+    T: DragTable,
+{
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()
@@ -169,7 +179,10 @@ impl Flags {
         self.gravity
     }
 }
-impl Projectile {
+impl<T> Projectile<T>
+where
+    T: DragTable,
+{
     // Radius of projectile cross section in meters
     fn radius(&self) -> Length {
         self.caliber / 2.0
@@ -188,7 +201,7 @@ impl Projectile {
     }
     // Form factor of projectile, calculated from Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> Ratio {
-        self.sd() / self.bc.value
+        self.sd() / self.bc.value()
     }
 }
 impl Scope {
