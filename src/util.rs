@@ -42,6 +42,7 @@ pub use uom::{
 
 pub type Numeric = f64;
 pub type Natural = u32;
+pub type NumericMap = FloatMap<Numeric>;
 pub type MyUnits = SI<Numeric>;
 pub type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
 pub type MyQuantityArguments<D, N> = QuantityArguments<D, MyUnits, Numeric, N>;
@@ -148,7 +149,7 @@ macro_rules! float_map {
         ]
     };
     ( $($key:expr => $val:expr),* ) => {{
-        let mut _float_map = FloatMap::new();
+        let mut _float_map = $crate::FloatMap::new();
         $(
             let _ = _float_map.insert($key, $val);
         )*

@@ -5,7 +5,7 @@ use crate::{
     util::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, pound, radian,
-        second, square_inch, typenum::*, Acceleration, Angle, Area, FloatMap, Length, Mass,
+        second, square_inch, typenum::*, Acceleration, Angle, Area, NumericMap, Length, Mass,
         MyQuantity, Numeric, Pressure, ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ,
         PI,
     },
@@ -109,16 +109,16 @@ impl Bc {
             kind,
         }
     }
-    pub(crate) fn table(&self) -> &'static FloatMap<Numeric> {
+    pub(crate) fn table(&self) -> &'static NumericMap {
         lazy_static! {
-            static ref G1_TABLE: FloatMap<Numeric> = g1::init();
-            static ref G2_TABLE: FloatMap<Numeric> = g2::init();
-            static ref G5_TABLE: FloatMap<Numeric> = g5::init();
-            static ref G6_TABLE: FloatMap<Numeric> = g6::init();
-            static ref G7_TABLE: FloatMap<Numeric> = g7::init();
-            static ref G8_TABLE: FloatMap<Numeric> = g8::init();
-            static ref GI_TABLE: FloatMap<Numeric> = gi::init();
-            static ref GS_TABLE: FloatMap<Numeric> = gs::init();
+            static ref G1_TABLE: NumericMap = g1::init();
+            static ref G2_TABLE: NumericMap = g2::init();
+            static ref G5_TABLE: NumericMap = g5::init();
+            static ref G6_TABLE: NumericMap = g6::init();
+            static ref G7_TABLE: NumericMap = g7::init();
+            static ref G8_TABLE: NumericMap = g8::init();
+            static ref GI_TABLE: NumericMap = gi::init();
+            static ref GS_TABLE: NumericMap = gs::init();
         };
         match self.kind {
             G1 => &G1_TABLE,

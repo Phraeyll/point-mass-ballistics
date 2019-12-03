@@ -1,6 +1,6 @@
-use crate::{FloatMap, Numeric};
+use crate::NumericMap;
 
-pub fn init() -> FloatMap<Numeric> {
+pub fn init() -> NumericMap {
     float_map![
         0.00  => 0.2105,
         0.05  => 0.2105,
