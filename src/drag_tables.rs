@@ -15,5 +15,5 @@ pub mod gs;
 pub trait DragTable {
     fn new(value: Numeric) -> Self;
     fn value(&self) -> SectionalDensity;
-    fn table(&self) -> &'static NumericMap;
+    fn table(&self) -> &NumericMap;
 }
