@@ -1,4 +1,5 @@
 use crate::{
+    error::Result,
     simulation::SectionalDensity,
     util::{pound, square_inch, Area, Mass, Numeric, NumericMap},
     DragTable,
@@ -19,8 +20,8 @@ impl DragTable for Bc {
     fn value(&self) -> SectionalDensity {
         self.value
     }
-    fn table(&self) -> &'static NumericMap {
-        &TABLE
+    fn cd(&self, x: Numeric) -> Result<Numeric> {
+        TABLE.lerp(x)
     }
 }
 

@@ -60,8 +60,7 @@ where
             * self
                 .projectile
                 .bc
-                .table()
-                .lerp(self.mach(velocity).get::<ratio::ratio>())
+                .cd(self.mach(velocity).get::<ratio::ratio>())
                 .expect("CD")
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
