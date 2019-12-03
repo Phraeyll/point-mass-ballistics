@@ -1,32 +1,7 @@
-use crate::{
-    error::Result,
-    simulation::SectionalDensity,
-    util::{pound, square_inch, Area, Mass, Numeric, NumericMap},
-    DragTable,
-};
+use crate::util::NumericMap;
 
-use lazy_static::lazy_static;
-
-pub struct Bc {
-    value: SectionalDensity,
-}
-
-impl DragTable for Bc {
-    fn new(value: Numeric) -> Self {
-        Self {
-            value: Mass::new::<pound>(value) / Area::new::<square_inch>(1.0),
-        }
-    }
-    fn value(&self) -> SectionalDensity {
-        self.value
-    }
-    fn cd(&self, x: Numeric) -> Result<Numeric> {
-        TABLE.lerp(x)
-    }
-}
-
-lazy_static! {
-    static ref TABLE: NumericMap = float_map![
+pub fn table() -> NumericMap {
+    float_map![
         0.00 => 0.4662,
         0.05 => 0.4689,
         0.10 => 0.4717,
@@ -108,5 +83,5 @@ lazy_static! {
         3.90 => 0.9310,
         3.95 => 0.9295,
         4.00 => 0.9280,
-    ];
+    ]
 }
