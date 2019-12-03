@@ -28,4 +28,4 @@ pub mod solvers {
     pub mod zero;
 }
 #[allow(clippy::approx_constant)]
-mod drag_tables;
+pub mod drag_tables;
