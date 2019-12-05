@@ -1,25 +1,19 @@
 use crate::{
     util::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
     vectors::*,
-    DragTable, Simulation,
+    Simulation,
 };
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
-pub struct Packet<'t, T>
-where
-    T: DragTable,
-{
+pub struct Packet<'t, T> {
     pub(crate) simulation: &'t Simulation<T>, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                    // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }
 
-impl<T> Measurements for Packet<'_, T>
-where
-    T: DragTable,
-{
+impl<T> Measurements for Packet<'_, T> {
     fn time(&self) -> Time {
         self.time
     }

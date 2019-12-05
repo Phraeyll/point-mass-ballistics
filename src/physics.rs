@@ -92,10 +92,7 @@ where
 }
 
 // Coriolis
-impl<T> Simulation<T>
-where
-    T: DragTable,
-{
+impl<T> Simulation<T> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -119,10 +116,7 @@ where
 }
 
 //Gravity
-impl<T> Simulation<T>
-where
-    T: DragTable,
-{
+impl<T> Simulation<T> {
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()
@@ -178,10 +172,7 @@ impl Flags {
         self.gravity
     }
 }
-impl<T> Projectile<T>
-where
-    T: DragTable,
-{
+impl<T> Projectile<T> {
     // Radius of projectile cross section in meters
     fn radius(&self) -> Length {
         self.caliber / 2.0
@@ -198,6 +189,11 @@ where
     fn sd(&self) -> SectionalDensity {
         self.weight / self.caliber.powi(P2::new())
     }
+}
+impl<T> Projectile<T>
+where
+    T: DragTable,
+{
     // Form factor of projectile, calculated from Ballistic Coefficient and Sectional Density (sd)
     fn i(&self) -> Ratio {
         self.sd() / self.bc.value()

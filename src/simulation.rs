@@ -14,10 +14,7 @@ use crate::{
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
 
 #[derive(Debug)]
-pub struct Simulation<T>
-where
-    T: DragTable,
-{
+pub struct Simulation<T> {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
     pub(crate) projectile: Projectile<T>, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
@@ -62,34 +59,22 @@ pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 #[derive(Debug)]
-pub struct Projectile<T>
-where
-    T: DragTable,
-{
+pub struct Projectile<T> {
     pub(crate) caliber: Length,    // Caliber (inches)
     pub(crate) weight: Mass,       // Weight (grains)
     pub(crate) bc: T,              // Ballistic Coefficient
     pub(crate) velocity: Velocity, // Initial velocity (ft/s)
 }
 #[derive(Debug)]
-pub struct SimulationBuilder<T>
-where
-    T: DragTable,
-{
+pub struct SimulationBuilder<T> {
     pub(crate) builder: Simulation<T>,
 }
-impl<T> From<SimulationBuilder<T>> for Simulation<T>
-where
-    T: DragTable,
-{
+impl<T> From<SimulationBuilder<T>> for Simulation<T> {
     fn from(other: SimulationBuilder<T>) -> Self {
         Self { ..other.builder }
     }
 }
-impl<T> From<Simulation<T>> for SimulationBuilder<T>
-where
-    T: DragTable,
-{
+impl<T> From<Simulation<T>> for SimulationBuilder<T> {
     fn from(other: Simulation<T>) -> Self {
         Self { builder: other }
     }

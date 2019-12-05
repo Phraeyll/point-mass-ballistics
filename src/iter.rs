@@ -1,8 +1,8 @@
 use crate::{
     output::Packet,
     util::{
-        acceleration, length, meter, meter_per_second, second, typenum::P2, velocity, Length, Time,
-        Velocity,
+        acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
+        typenum::P2, velocity, Acceleration, Length, Time, Velocity,
     },
     vectors::*,
     DragTable, Simulation,
@@ -12,19 +12,13 @@ use crate::{
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct Iter<'t, T>
-where
-    T: DragTable,
-{
+pub struct Iter<'t, T> {
     simulation: &'t Simulation<T>, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
 }
-impl<T> Simulation<T>
-where
-    T: DragTable,
-{
+impl<T> Simulation<T> {
     pub fn iter(&self) -> Iter<'_, T> {
         let position = self.absolute_projectile_position();
         let velocity = self.absolute_projectile_velocity();
@@ -78,7 +72,7 @@ where
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'t, T> Iterator for Iter<'t, T>
 where
-    T: DragTable,
+    Self: Newtonian,
 {
     type Item = Packet<'t, T>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -87,12 +81,12 @@ where
             time,
             position,
             velocity,
-            simulation,
+            ..
         } = self;
 
-        self.time += simulation.delta_time();
-        self.position += simulation.delta_position(&velocity);
-        self.velocity += simulation.delta_velocity(&velocity);
+        self.time += self.delta_time();
+        self.position += self.delta_position(&velocity);
+        self.velocity += self.delta_velocity(&velocity);
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -117,20 +111,19 @@ where
     }
 }
 
-impl<T> Simulation<T>
-where
-    T: DragTable,
-{
+pub trait Newtonian {
     fn acceleration(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        _velocity: &MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
-        self.coriolis_acceleration(velocity)
-            + self.drag_acceleration(velocity)
-            + self.gravity_acceleration()
+        MyVector3::new(
+            Acceleration::new::<meter_per_second_squared>(0.0),
+            Acceleration::new::<meter_per_second_squared>(0.0),
+            Acceleration::new::<meter_per_second_squared>(0.0),
+        )
     }
     fn delta_time(&self) -> Time {
-        self.time_step
+        Time::new::<second>(0.000_005)
     }
     // 'Second Equation of Motion'
     fn delta_position(
@@ -146,5 +139,22 @@ where
         velocity: &MyVector3<velocity::Dimension>,
     ) -> MyVector3<velocity::Dimension> {
         self.acceleration(velocity) * self.delta_time()
+    }
+}
+
+impl<T> Newtonian for Iter<'_, T>
+where
+    T: DragTable,
+{
+    fn acceleration(
+        &self,
+        velocity: &MyVector3<velocity::Dimension>,
+    ) -> MyVector3<acceleration::Dimension> {
+        self.simulation.coriolis_acceleration(velocity)
+            + self.simulation.drag_acceleration(velocity)
+            + self.simulation.gravity_acceleration()
+    }
+    fn delta_time(&self) -> Time {
+        self.simulation.time_step
     }
 }

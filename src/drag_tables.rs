@@ -50,7 +50,7 @@ macro_rules! drag_tables {
     };
 }
 
-drag_tables!{
+drag_tables! {
     G1 => g1::table(),
     G2 => g2::table(),
     G5 => g5::table(),
