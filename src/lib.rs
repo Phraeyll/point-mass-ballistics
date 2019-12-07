@@ -8,15 +8,12 @@ pub use self::{
 };
 
 #[macro_use]
-#[allow(clippy::or_fun_call)]
-#[allow(clippy::let_and_return)]
 mod util;
 
 #[macro_use]
 mod vectors;
 
 mod error;
-#[allow(clippy::float_cmp)]
 mod iter;
 mod output;
 mod physics;
