@@ -8,7 +8,7 @@ use crate::{
         typenum::*, Acceleration, Angle, Length, Mass, MyQuantity, Numeric, Pressure,
         ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ, PI,
     },
-    Error, ErrorKind, Result,
+    Error, Result,
 };
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
@@ -147,10 +147,10 @@ where
             self.builder.time_step = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<second>(),
                 max: max.get::<second>(),
-            }))
+            })
         }
     }
 
@@ -162,10 +162,10 @@ where
             self.builder.atmosphere.temperature = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<kelvin>(),
                 max: max.get::<kelvin>(),
-            }))
+            })
         }
     }
     pub fn set_pressure(mut self, value: Pressure) -> Result<Self> {
@@ -173,9 +173,7 @@ where
             self.builder.atmosphere.pressure = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(
-                value.get::<pascal>(),
-            )))
+            Err(Error::PositiveExpected(value.get::<pascal>()))
         }
     }
     pub fn set_humidity(mut self, value: Numeric) -> Result<Self> {
@@ -184,7 +182,7 @@ where
             self.builder.atmosphere.humidity = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange { min, max }))
+            Err(Error::OutOfRange { min, max })
         }
     }
 
@@ -210,10 +208,10 @@ where
             self.builder.shooter.pitch = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<radian>(),
                 max: max.get::<radian>(),
-            }))
+            })
         }
     }
     pub fn set_lattitude(mut self, value: Angle) -> Result<Self> {
@@ -223,10 +221,10 @@ where
             self.builder.shooter.lattitude = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<radian>(),
                 max: max.get::<radian>(),
-            }))
+            })
         }
     }
     pub fn set_bearing(mut self, value: Angle) -> Result<Self> {
@@ -236,10 +234,10 @@ where
             self.builder.shooter.yaw = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<radian>(),
                 max: max.get::<radian>(),
-            }))
+            })
         }
     }
     pub fn set_gravity(mut self, value: Acceleration) -> Result<Self> {
@@ -247,9 +245,9 @@ where
             self.builder.shooter.gravity = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::NegativeExpected(
+            Err(Error::NegativeExpected(
                 value.get::<meter_per_second_squared>(),
-            )))
+            ))
         }
     }
 
@@ -259,9 +257,7 @@ where
             self.builder.wind.velocity = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(
-                value.get::<meter_per_second>(),
-            )))
+            Err(Error::PositiveExpected(value.get::<meter_per_second>()))
         }
     }
     pub fn set_wind_angle(mut self, value: Angle) -> Result<Self> {
@@ -271,10 +267,10 @@ where
             self.builder.wind.yaw = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::OutOfRange {
+            Err(Error::OutOfRange {
                 min: min.get::<radian>(),
                 max: max.get::<radian>(),
-            }))
+            })
         }
     }
 
@@ -306,9 +302,7 @@ where
             self.builder.projectile.caliber = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(
-                value.get::<meter>(),
-            )))
+            Err(Error::PositiveExpected(value.get::<meter>()))
         }
     }
     pub fn set_velocity(mut self, value: Velocity) -> Result<Self> {
@@ -316,9 +310,7 @@ where
             self.builder.projectile.velocity = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(
-                value.get::<meter_per_second>(),
-            )))
+            Err(Error::PositiveExpected(value.get::<meter_per_second>()))
         }
     }
     pub fn set_mass(mut self, value: Mass) -> Result<Self> {
@@ -326,9 +318,7 @@ where
             self.builder.projectile.weight = value;
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(
-                value.get::<kilogram>(),
-            )))
+            Err(Error::PositiveExpected(value.get::<kilogram>()))
         }
     }
     pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
@@ -336,7 +326,7 @@ where
             self.builder.projectile.bc = <T as DragTable>::new(value);
             Ok(self)
         } else {
-            Err(Error::new(ErrorKind::PositiveExpected(value)))
+            Err(Error::PositiveExpected(value))
         }
     }
 }

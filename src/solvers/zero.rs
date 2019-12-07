@@ -3,7 +3,7 @@ use crate::{
     output::Packet,
     simulation::Scope,
     util::{angle, radian, Angle, Length, MyQuantity, FRAC_PI_2, FRAC_PI_4},
-    DragTable, Error, ErrorKind, Measurements, Result, Simulation,
+    DragTable, Error, Measurements, Result, Simulation,
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -73,13 +73,9 @@ where
             // Ignore first time, since both should be still be 0.0 at this point
             && count != 1
         {
-            Some(Err(Error::new(ErrorKind::AngleNotChanging {
-                count,
-                pitch,
-                yaw,
-            })))
+            Some(Err(Error::AngleNotChanging { count, pitch, yaw }))
         } else if (pitch >= DEG_45 || pitch <= -DEG_90) || (yaw >= DEG_90 || yaw <= -DEG_90) {
-            Some(Err(Error::new(ErrorKind::AngleRange { count, pitch, yaw })))
+            Some(Err(Error::AngleRange { count, pitch, yaw }))
         } else if let Some(packet) = self.sim.into_iter().fuse().find(&self.finder) {
             self.elevation_adjustment = (self.elevation_adjuster)(&packet);
             self.windage_adjustment = (self.windage_adjuster)(&packet);
@@ -87,11 +83,7 @@ where
             let windage = packet.windage();
             Some(Ok((pitch, yaw, elevation, windage)))
         } else {
-            Some(Err(Error::new(ErrorKind::TerminalVelocity {
-                count,
-                pitch,
-                yaw,
-            })))
+            Some(Err(Error::TerminalVelocity { count, pitch, yaw }))
         }
     }
 }

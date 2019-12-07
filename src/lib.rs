@@ -1,6 +1,6 @@
 pub use self::{
     drag_tables::DragTable,
-    error::{Error, ErrorKind, Result},
+    error::{Error, Result},
     iter::Iter,
     output::*,
     simulation::{Simulation, SimulationBuilder},

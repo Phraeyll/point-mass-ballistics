@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, Result};
 
 use std::{
     collections::BTreeMap,
@@ -136,7 +136,7 @@ impl FloatMap<Numeric> {
             .zip(self.range(x..))
             .next()
             .map(|((x0, y0), (x1, y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
-            .ok_or(Error::new(ErrorKind::VelocityLookup(x)))
+            .ok_or(Error::VelocityLookup(x))
     }
 }
 
