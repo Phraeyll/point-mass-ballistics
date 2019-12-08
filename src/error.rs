@@ -1,6 +1,10 @@
 use crate::util::{Angle, Numeric};
 
-use std::{error::Error as StdError, fmt, fmt::Debug, result::Result as StdResult};
+use std::{
+    error::Error as StdError,
+    fmt::{self, Debug},
+    result::Result as StdResult,
+};
 
 pub type Result<T, E = Error> = StdResult<T, E>;
 

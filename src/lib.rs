@@ -9,10 +9,8 @@ pub use self::{
 
 #[macro_use]
 mod util;
-
 #[macro_use]
 mod vectors;
-
 mod error;
 mod iter;
 mod output;
