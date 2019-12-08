@@ -36,11 +36,11 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::VelocityLookup(ref err) => write!(f, "Velocity Lookup Error: {:?}", err),
-            Self::PositiveExpected(ref err) => write!(f, "Positive Expected Error: {:?}", err),
-            Self::NegativeExpected(ref err) => write!(f, "Negative Expected Error: {:?}", err),
-            Self::OutOfRange { ref min, ref max } => write!(
+        match *self {
+            Self::VelocityLookup(err) => write!(f, "Velocity Lookup Error: {:?}", err),
+            Self::PositiveExpected(err) => write!(f, "Positive Expected Error: {:?}", err),
+            Self::NegativeExpected(err) => write!(f, "Negative Expected Error: {:?}", err),
+            Self::OutOfRange { min, max } => write!(
                 f,
                 "Within Range Expected Error => min: {:#?} - {:#?}",
                 min, max
