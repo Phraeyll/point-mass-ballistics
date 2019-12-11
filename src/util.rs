@@ -79,7 +79,9 @@ impl<V> IntoIterator for FloatMap<V> {
     type IntoIter = IntoIter<V>;
     type Item = <Self::IntoIter as Iterator>::Item;
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter(self.0.into_iter())
+        Self::IntoIter {
+            0: self.0.into_iter(),
+        }
     }
 }
 
@@ -88,9 +90,9 @@ impl<V> FromIterator<<Self as IntoIterator>::Item> for FloatMap<V> {
     where
         I: IntoIterator<Item = <Self as IntoIterator>::Item>,
     {
-        FloatMap(BTreeMap::from_iter(
-            iter.into_iter().map(|(key, val)| (OrderedFloat(key), val)),
-        ))
+        Self {
+            0: iter.into_iter().map(|(key, val)| (OrderedFloat(key), val)).collect::<_>()
+        }
     }
 }
 
