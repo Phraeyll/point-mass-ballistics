@@ -8,6 +8,8 @@ use crate::{
     DragTable, Simulation,
 };
 
+use std::iter::FusedIterator;
+
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
@@ -110,6 +112,7 @@ where
         }
     }
 }
+impl<'t, T> FusedIterator for Iter<'t, T> where T: DragTable {}
 
 pub trait Newtonian {
     fn acceleration(
