@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::{Error, Result},
     simulation::SectionalDensity,
     util::{pound, square_inch, Area, Mass, Numeric, NumericMap},
 };
@@ -39,11 +39,20 @@ macro_rules! drag_tables {
                 fn value(&self) -> SectionalDensity {
                     self.value
                 }
+                // Linear interpolation for 'y' of value 'x'
+                // Search for closest surrounding 'x' ks in map
+                // and use them along with their values for interpolation
+                // Works for exact values of 'x' as well
                 fn cd(&self, x: Numeric) -> Result<Numeric> {
                     lazy_static! {
-                        static ref TABLE: NumericMap = $expr;
+                        static ref TABL: NumericMap = $expr;
                     }
-                    TABLE.lerp(x)
+                    TABL.range(..x)
+                        .rev()
+                        .zip(TABL.range(x..))
+                        .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+                        .next()
+                        .ok_or(Error::VelocityLookup(x))
                 }
             }
         )*

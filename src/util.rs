@@ -1,10 +1,5 @@
-use crate::error::{Error, Result};
-
 use std::{
-    collections::{
-        btree_map::{Entry, IntoIter, Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut},
-        BTreeMap,
-    },
+    collections::{btree_map, BTreeMap},
     f64::consts,
     iter::{FromIterator, FusedIterator},
     ops::{Bound, RangeBounds},
@@ -53,106 +48,107 @@ pub const PI: Numeric = consts::PI;
 pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
 pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
+// Entry
 #[derive(Debug)]
-pub struct FloatEntry<'a, V>(Entry<'a, OrdF<Numeric>, V>);
+pub struct Entry<'a, V>(btree_map::Entry<'a, OrdF<Numeric>, V>);
 
-// Float Range
+// Range
 #[derive(Debug, Clone)]
-pub struct FloatRange<'a, V>(Range<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatRange<'a, V> {
+pub struct Range<'a, V>(btree_map::Range<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for Range<'a, V> {
     type Item = (Numeric, &'a V);
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(unwrap_ref)
     }
 }
-impl<'a, V> DoubleEndedIterator for FloatRange<'a, V> {
+impl<'a, V> DoubleEndedIterator for Range<'a, V> {
     fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
         self.0.next_back().map(unwrap_ref)
     }
 }
-impl<'a, V> FusedIterator for FloatRange<'a, V> {}
+impl<'a, V> FusedIterator for Range<'a, V> {}
 
-// Float Range Mut
+// RangeMut
 #[derive(Debug)]
-pub struct FloatRangeMut<'a, V>(RangeMut<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatRangeMut<'a, V> {
+pub struct RangeMut<'a, V>(btree_map::RangeMut<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for RangeMut<'a, V> {
     type Item = (Numeric, &'a mut V);
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(unwrap_mut)
     }
 }
-impl<'a, V> DoubleEndedIterator for FloatRangeMut<'a, V> {
+impl<'a, V> DoubleEndedIterator for RangeMut<'a, V> {
     fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
         self.0.next_back().map(unwrap_mut)
     }
 }
-impl<'a, V> FusedIterator for FloatRangeMut<'a, V> {}
+impl<'a, V> FusedIterator for RangeMut<'a, V> {}
 
-// Float Map Values
+// Values
 #[derive(Debug, Clone)]
-pub struct FloatValues<'a, V>(Values<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatValues<'a, V> {
+pub struct Values<'a, V>(btree_map::Values<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for Values<'a, V> {
     type Item = &'a V;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
-impl<'a, V> DoubleEndedIterator for FloatValues<'a, V> {
+impl<'a, V> DoubleEndedIterator for Values<'a, V> {
     fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
         self.0.next_back()
     }
 }
-impl<'a, V> ExactSizeIterator for FloatValues<'a, V> {
+impl<'a, V> ExactSizeIterator for Values<'a, V> {
     fn len(&self) -> usize {
         self.0.len()
     }
 }
-impl<'a, V> FusedIterator for FloatValues<'a, V> {}
+impl<'a, V> FusedIterator for Values<'a, V> {}
 
-// Float Map Values Mut
+// ValuesMut
 #[derive(Debug)]
-pub struct FloatValuesMut<'a, V>(ValuesMut<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatValuesMut<'a, V> {
+pub struct ValuesMut<'a, V>(btree_map::ValuesMut<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for ValuesMut<'a, V> {
     type Item = &'a mut V;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
-impl<'a, V> DoubleEndedIterator for FloatValuesMut<'a, V> {
+impl<'a, V> DoubleEndedIterator for ValuesMut<'a, V> {
     fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
         self.0.next_back()
     }
 }
-impl<'a, V> ExactSizeIterator for FloatValuesMut<'a, V> {
+impl<'a, V> ExactSizeIterator for ValuesMut<'a, V> {
     fn len(&self) -> usize {
         self.0.len()
     }
 }
-impl<'a, V> FusedIterator for FloatValuesMut<'a, V> {}
+impl<'a, V> FusedIterator for ValuesMut<'a, V> {}
 
-// Float Map Keys
+// Keys
 #[derive(Debug)]
-pub struct FloatKeys<'a, V>(Keys<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatKeys<'a, V> {
+pub struct Keys<'a, V>(btree_map::Keys<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for Keys<'a, V> {
     type Item = Numeric;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(|&OrdF(k)| k)
     }
 }
-impl<'a, V> DoubleEndedIterator for FloatKeys<'a, V> {
+impl<'a, V> DoubleEndedIterator for Keys<'a, V> {
     fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
         self.0.next_back().map(|&OrdF(k)| k)
     }
 }
-impl<'a, V> ExactSizeIterator for FloatKeys<'a, V> {
+impl<'a, V> ExactSizeIterator for Keys<'a, V> {
     fn len(&self) -> usize {
         self.0.len()
     }
 }
-impl<'a, V> FusedIterator for FloatKeys<'a, V> {}
+impl<'a, V> FusedIterator for Keys<'a, V> {}
 
-// Float Into Iter
-pub struct FloatIntoIter<V>(IntoIter<OrdF<Numeric>, V>);
+// IntoIter
+pub struct FloatIntoIter<V>(btree_map::IntoIter<OrdF<Numeric>, V>);
 impl<V> Iterator for FloatIntoIter<V> {
     type Item = (Numeric, V);
     fn next(&mut self) -> Option<Self::Item> {
@@ -170,48 +166,6 @@ impl<V> ExactSizeIterator for FloatIntoIter<V> {
     }
 }
 impl<V> FusedIterator for FloatIntoIter<V> {}
-
-// Float Iter
-pub struct FloatIter<'a, V>(Iter<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatIter<'a, V> {
-    type Item = (Numeric, &'a V);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(unwrap_ref)
-    }
-}
-impl<'a, V> DoubleEndedIterator for FloatIter<'a, V> {
-    fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
-        self.0.next_back().map(unwrap_ref)
-    }
-}
-impl<'a, V> ExactSizeIterator for FloatIter<'a, V> {
-    fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-impl<'a, V> FusedIterator for FloatIter<'a, V> {}
-
-// Float Iter Mut
-pub struct FloatIterMut<'a, V>(IterMut<'a, OrdF<Numeric>, V>);
-impl<'a, V> Iterator for FloatIterMut<'a, V> {
-    type Item = (Numeric, &'a mut V);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(unwrap_mut)
-    }
-}
-impl<'a, V> DoubleEndedIterator for FloatIterMut<'a, V> {
-    fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
-        self.0.next_back().map(unwrap_mut)
-    }
-}
-impl<'a, V> ExactSizeIterator for FloatIterMut<'a, V> {
-    fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-impl<'a, V> FusedIterator for FloatIterMut<'a, V> {}
-
-// Float Map
 impl<V> IntoIterator for FloatMap<V> {
     type IntoIter = FloatIntoIter<V>;
     type Item = <Self::IntoIter as Iterator>::Item;
@@ -221,20 +175,62 @@ impl<V> IntoIterator for FloatMap<V> {
         }
     }
 }
+
+// Iter
+pub struct Iter<'a, V>(btree_map::Iter<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for Iter<'a, V> {
+    type Item = (Numeric, &'a V);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(unwrap_ref)
+    }
+}
+impl<'a, V> DoubleEndedIterator for Iter<'a, V> {
+    fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
+        self.0.next_back().map(unwrap_ref)
+    }
+}
+impl<'a, V> ExactSizeIterator for Iter<'a, V> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+impl<'a, V> FusedIterator for Iter<'a, V> {}
 impl<'v, V> IntoIterator for &'v FloatMap<V> {
-    type IntoIter = FloatIter<'v, V>;
+    type IntoIter = Iter<'v, V>;
     type Item = <Self::IntoIter as Iterator>::Item;
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
+
+// Iter Mut
+pub struct IterMut<'a, V>(btree_map::IterMut<'a, OrdF<Numeric>, V>);
+impl<'a, V> Iterator for IterMut<'a, V> {
+    type Item = (Numeric, &'a mut V);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(unwrap_mut)
+    }
+}
+impl<'a, V> DoubleEndedIterator for IterMut<'a, V> {
+    fn next_back(&mut self) -> Option<<Self as Iterator>::Item> {
+        self.0.next_back().map(unwrap_mut)
+    }
+}
+impl<'a, V> ExactSizeIterator for IterMut<'a, V> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+impl<'a, V> FusedIterator for IterMut<'a, V> {}
 impl<'v, V> IntoIterator for &'v mut FloatMap<V> {
-    type IntoIter = FloatIterMut<'v, V>;
+    type IntoIter = IterMut<'v, V>;
     type Item = <Self::IntoIter as Iterator>::Item;
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
     }
 }
+
+// Float Map
 
 #[derive(Debug, Clone)]
 pub struct FloatMap<V>(BTreeMap<OrdF<Numeric>, V>);
@@ -284,38 +280,38 @@ impl<V> FloatMap<V> {
     pub fn append(&mut self, other: &mut Self) {
         self.0.append(&mut other.0);
     }
-    pub fn iter(&self) -> FloatIter<'_, V> {
-        FloatIter { 0: self.0.iter() }
+    pub fn iter(&self) -> Iter<'_, V> {
+        Iter { 0: self.0.iter() }
     }
-    pub fn iter_mut(&mut self) -> FloatIterMut<'_, V> {
-        FloatIterMut {
+    pub fn iter_mut(&mut self) -> IterMut<'_, V> {
+        IterMut {
             0: self.0.iter_mut(),
         }
     }
-    pub fn range<R>(&self, range: R) -> FloatRange<'_, V>
+    pub fn range<R>(&self, range: R) -> Range<'_, V>
     where
         R: RangeBounds<Numeric>,
     {
         let start = wrap_bound(range.start_bound());
         let end = wrap_bound(range.end_bound());
 
-        FloatRange {
+        Range {
             0: self.0.range((start, end)),
         }
     }
-    pub fn range_mut<R>(&mut self, range: R) -> FloatRangeMut<'_, V>
+    pub fn range_mut<R>(&mut self, range: R) -> RangeMut<'_, V>
     where
         R: RangeBounds<Numeric>,
     {
         let start = wrap_bound(range.start_bound());
         let end = wrap_bound(range.end_bound());
 
-        FloatRangeMut {
+        RangeMut {
             0: self.0.range_mut((start, end)),
         }
     }
-    pub fn entry(&mut self, k: Numeric) -> FloatEntry<V> {
-        FloatEntry {
+    pub fn entry(&mut self, k: Numeric) -> Entry<V> {
+        Entry {
             0: self.0.entry(OrdF(k)),
         }
     }
@@ -330,14 +326,14 @@ impl<V> FloatMap<V> {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-    pub fn keys(&self) -> FloatKeys<'_, V> {
-        FloatKeys { 0: self.0.keys() }
+    pub fn keys(&self) -> Keys<'_, V> {
+        Keys { 0: self.0.keys() }
     }
-    pub fn values(&self) -> FloatValues<'_, V> {
-        FloatValues { 0: self.0.values() }
+    pub fn values(&self) -> Values<'_, V> {
+        Values { 0: self.0.values() }
     }
-    pub fn values_mut(&mut self) -> FloatValuesMut<'_, V> {
-        FloatValuesMut {
+    pub fn values_mut(&mut self) -> ValuesMut<'_, V> {
+        ValuesMut {
             0: self.0.values_mut(),
         }
     }
@@ -349,7 +345,6 @@ fn wrap_bound(bound: Bound<&Numeric>) -> Bound<OrdF<Numeric>> {
         Bound::Included(f) => Bound::Included(OrdF(*f)),
     }
 }
-
 fn unwrap_mut<'k, 'v, V>(kv: (&'k OrdF<Numeric>, &'v mut V)) -> (Numeric, &'v mut V) {
     match kv {
         (&OrdF(k), v) => (k, v),
@@ -365,29 +360,9 @@ fn unwrap_own<V>(kv: (OrdF<Numeric>, V)) -> (Numeric, V) {
         (OrdF(k), v) => (k, v),
     }
 }
-// fn wrap_ref<'k, 'v, V>(kv: (&'k Numeric, &'v V)) -> (&'k OrdF<Numeric>, &'v V) {
-//         match kv {
-//             (k, v) => (&OrdF(*k), v)
-//         }
-// }
 fn wrap_own<V>(kv: (Numeric, V)) -> (OrdF<Numeric>, V) {
     match kv {
         (k, v) => (OrdF(k), v),
-    }
-}
-
-impl FloatMap<Numeric> {
-    // Linear interpolation for 'y' of value 'x'
-    // Search for closest surrounding 'x' ks in map
-    // and use them along with their values for interpolation
-    // Works for exact values of 'x' as well
-    pub fn lerp(&self, x: Numeric) -> Result<Numeric> {
-        self.range(..x)
-            .rev()
-            .zip(self.range(x..))
-            .next()
-            .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
-            .ok_or(Error::VelocityLookup(x))
     }
 }
 
