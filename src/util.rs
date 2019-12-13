@@ -258,7 +258,7 @@ impl<V> FromIterator<<Self as IntoIterator>::Item> for FloatMap<V> {
 
 impl<V> FloatMap<V> {
     pub fn new() -> Self {
-        FloatMap(BTreeMap::new())
+        Self { 0: BTreeMap::new() }
     }
     pub fn clear(&mut self) {
         self.0.clear()
