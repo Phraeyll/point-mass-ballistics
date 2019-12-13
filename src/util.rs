@@ -221,6 +221,20 @@ impl<V> IntoIterator for FloatMap<V> {
         }
     }
 }
+impl<'v, V> IntoIterator for &'v FloatMap<V> {
+    type IntoIter = FloatIter<'v, V>;
+    type Item = <Self::IntoIter as Iterator>::Item;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+impl<'v, V> IntoIterator for &'v mut FloatMap<V> {
+    type IntoIter = FloatIterMut<'v, V>;
+    type Item = <Self::IntoIter as Iterator>::Item;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct FloatMap<V>(BTreeMap<OrdF<Numeric>, V>);
@@ -270,10 +284,10 @@ impl<V> FloatMap<V> {
     pub fn append(&mut self, other: &mut Self) {
         self.0.append(&mut other.0);
     }
-    pub fn iter(&self) -> impl Iterator<Item = (Numeric, &V)> {
+    pub fn iter(&self) -> FloatIter<'_, V> {
         FloatIter { 0: self.0.iter() }
     }
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = (Numeric, &mut V)> {
+    pub fn iter_mut(&mut self) -> FloatIterMut<'_, V> {
         FloatIterMut {
             0: self.0.iter_mut(),
         }
