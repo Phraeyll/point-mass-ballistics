@@ -13,22 +13,6 @@ use crate::{
     DragTable,
 };
 
-// Universal gas constant (J/K*mol)
-type EnergyPerTempPerAmount = MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>>;
-const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = my_quantity!(8.314_462_618_153_24);
-
-// Molar mass of dry air (kg/mol)
-const MOLAR_MASS_DRY_AIR: MolarMass = my_quantity!(0.028_964_4);
-
-// Molar mass of water vapor (kg/mol)
-const MOLAR_MASS_WATER_VAPOR: MolarMass = my_quantity!(0.018_016);
-
-// Angular velocity of earth, (radians)
-const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
-
-// Adiabatic index of air, mostly diatomic gas
-const ADIABATIC_INDEX_AIR: Numeric = 1.4;
-
 // Drag
 impl<T> Simulation<T>
 where
@@ -130,16 +114,29 @@ impl<T> Simulation<T> {
     }
 }
 
+type EnergyPerTempPerAmount = MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>>;
 // Helpers - maybe some of these should be moved?
 impl Atmosphere {
+    // Universal gas constant (J/K*mol)
+    const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = my_quantity!(8.314_462_618_153_24);
+
+    // Molar mass of dry air (kg/mol)
+    const MOLAR_MASS_DRY_AIR: MolarMass = my_quantity!(0.028_964_4);
+
+    // Molar mass of water vapor (kg/mol)
+    const MOLAR_MASS_WATER_VAPOR: MolarMass = my_quantity!(0.018_016);
+
+    // Adiabatic index of air, mostly diatomic gas
+    const ADIABATIC_INDEX_AIR: Numeric = 1.4;
+
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> MassDensity {
-        (((self.pd() * MOLAR_MASS_DRY_AIR) + (self.pv() * MOLAR_MASS_WATER_VAPOR))
-            / (MOLAR_GAS_UNIVERSAL * self.temperature))
+        (((self.pd() * Self::MOLAR_MASS_DRY_AIR) + (self.pv() * Self::MOLAR_MASS_WATER_VAPOR))
+            / (Self::MOLAR_GAS_UNIVERSAL * self.temperature))
     }
     // Speed of sound at given air density and pressure
     pub(crate) fn speed_of_sound(&self) -> Velocity {
-        (ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
+        (Self::ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
     }
     // Pressure of water vapor, Arden Buck equation
     fn pv(&self) -> Pressure {
@@ -211,6 +208,9 @@ impl Scope {
     }
 }
 impl Shooter {
+    // Angular velocity of earth, (radians)
+    const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
+
     fn gravity(&self) -> MyVector3<acceleration::Dimension> {
         MyVector3::new(
             Acceleration::new::<meter_per_second_squared>(0.0),
@@ -251,7 +251,7 @@ impl Shooter {
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
     fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
         MyVector3::new(
-            ANGULAR_VELOCITY_EARTH,
+            Self::ANGULAR_VELOCITY_EARTH,
             AngularVelocity::new::<radian_per_second>(0.0),
             AngularVelocity::new::<radian_per_second>(0.0),
         )
