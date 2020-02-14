@@ -39,22 +39,22 @@ where
     U: Units<V>,
     V: Num + Conversion<V> + Scalar,
 {
-    fn from(value: Vector3<V>) -> Self {
+    fn from(other: Vector3<V>) -> Self {
         Self {
             dimension: PhantomData,
             units: PhantomData,
-            value,
+            value: other,
         }
     }
 }
-impl<D: ?Sized, U: ?Sized, V> Into<Vector3<V>> for DimVector3<D, U, V>
+impl<D: ?Sized, U: ?Sized, V> From<DimVector3<D, U, V>> for Vector3<V>
 where
     D: Dimension,
     U: Units<V>,
     V: Num + Conversion<V> + Scalar,
 {
-    fn into(self) -> Vector3<V> {
-        self.value
+    fn from(other: DimVector3<D, U, V>) -> Self {
+        other.value
     }
 }
 
@@ -209,37 +209,26 @@ where
     }
 }
 
-impl<D: ?Sized, U: ?Sized, V> DimVector3<D, U, V>
-where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
-{
-    pub fn into_vector(self) -> Vector3<V>
-    where
-        Self: Into<Vector3<V>>,
-    {
-        self.into()
-    }
-}
-
 impl<D: ?Sized> MyVector3<D>
 where
     D: Dimension,
 {
     pub fn angle(self, other: &Self) -> Angle {
-        Angle::new::<radian>(self.into_vector().angle(&other.value))
+        Angle::new::<radian>(Vector3::from(self).angle(&other.value))
     }
     pub fn pivot_z(self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>()) * self.into_vector())
-            .into()
+        (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>())
+            * Vector3::from(self))
+        .into()
     }
     pub fn pivot_y(self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>()) * self.into_vector())
-            .into()
+        (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>())
+            * Vector3::from(self))
+        .into()
     }
     pub fn pivot_x(self, angle: Angle) -> Self {
-        (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>()) * self.into_vector())
-            .into()
+        (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>())
+            * Vector3::from(self))
+        .into()
     }
 }

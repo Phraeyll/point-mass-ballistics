@@ -345,21 +345,25 @@ fn wrap_bound(bound: Bound<&Numeric>) -> Bound<OrdF<Numeric>> {
         Bound::Included(f) => Bound::Included(OrdF(*f)),
     }
 }
+#[allow(clippy::match_single_binding)]
 fn unwrap_mut<'k, 'v, V>(kv: (&'k OrdF<Numeric>, &'v mut V)) -> (Numeric, &'v mut V) {
     match kv {
         (&OrdF(k), v) => (k, v),
     }
 }
+#[allow(clippy::match_single_binding)]
 fn unwrap_ref<'k, 'v, V>(kv: (&'k OrdF<Numeric>, &'v V)) -> (Numeric, &'v V) {
     match kv {
         (&OrdF(k), v) => (k, v),
     }
 }
+#[allow(clippy::match_single_binding)]
 fn unwrap_own<V>(kv: (OrdF<Numeric>, V)) -> (Numeric, V) {
     match kv {
         (OrdF(k), v) => (k, v),
     }
 }
+#[allow(clippy::match_single_binding)]
 fn wrap_own<V>(kv: (Numeric, V)) -> (OrdF<Numeric>, V) {
     match kv {
         (k, v) => (OrdF(k), v),

@@ -131,8 +131,8 @@ impl Atmosphere {
 
     // Density of air, using pressure, humidity, and temperature
     pub(crate) fn rho(&self) -> MassDensity {
-        (((self.pd() * Self::MOLAR_MASS_DRY_AIR) + (self.pv() * Self::MOLAR_MASS_WATER_VAPOR))
-            / (Self::MOLAR_GAS_UNIVERSAL * self.temperature))
+        ((self.pd() * Self::MOLAR_MASS_DRY_AIR) + (self.pv() * Self::MOLAR_MASS_WATER_VAPOR))
+            / (Self::MOLAR_GAS_UNIVERSAL * self.temperature)
     }
     // Speed of sound at given air density and pressure
     pub(crate) fn speed_of_sound(&self) -> Velocity {
