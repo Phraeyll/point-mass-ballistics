@@ -5,8 +5,7 @@ use crate::{
 
 use core::ops::Sub;
 
-use alga::general::ClosedSub;
-use nalgebra::base::Scalar;
+use nalgebra::{base::Scalar, ClosedSub};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> Sub<DimVector3<D, U, V>> for DimVector3<D, U, V>
@@ -14,7 +13,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: DimVector3<D, U, V>) -> Self::Output {
@@ -26,7 +25,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: DimVector3<D, U, V>) -> Self::Output {
@@ -38,7 +37,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: DimVector3<D, U, V>) -> Self::Output {
@@ -50,7 +49,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
@@ -62,7 +61,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
@@ -74,7 +73,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &DimVector3<D, U, V>) -> Self::Output {
@@ -86,7 +85,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {
@@ -98,7 +97,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {
@@ -111,7 +110,7 @@ where
     D: Dimension,
     D::Kind: marker::Sub,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
 {
     type Output = DimVector3<D, U, V>;
     fn sub(self, rhs: &mut DimVector3<D, U, V>) -> Self::Output {

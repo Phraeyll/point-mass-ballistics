@@ -134,9 +134,9 @@ where
     ) -> Result<(Angle, Angle)> {
         let (pitch, yaw, _, _) = self
             .find_adjustments(
-                { |p: &Packet<T>| p.distance() >= distance },
-                { |p: &Packet<T>| p.offset_vertical_angle(elevation_offset, tolerance) },
-                { |p: &Packet<T>| p.offset_horizontal_angle(windage_offset, tolerance) },
+                |p: &Packet<T>| p.distance() >= distance,
+                |p: &Packet<T>| p.offset_vertical_angle(elevation_offset, tolerance),
+                |p: &Packet<T>| p.offset_horizontal_angle(windage_offset, tolerance),
             )
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {

@@ -5,15 +5,14 @@ use crate::{
 
 use core::ops::{DivAssign, Sub};
 
-use alga::general::ClosedDiv;
-use nalgebra::base::Scalar;
+use nalgebra::{base::Scalar, ClosedDiv};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> DivAssign<V> for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     D::Kind: marker::DivAssign,
 {
     fn div_assign(&mut self, rhs: V) {
@@ -24,7 +23,7 @@ impl<D: ?Sized, U: ?Sized, V> DivAssign<&V> for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     D::Kind: marker::DivAssign,
 {
     fn div_assign(&mut self, rhs: &V) {
@@ -35,7 +34,7 @@ impl<D: ?Sized, U: ?Sized, V> DivAssign<&mut V> for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     D::Kind: marker::DivAssign,
 {
     fn div_assign(&mut self, rhs: &mut V) {
@@ -51,7 +50,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -73,7 +72,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -95,7 +94,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -117,7 +116,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -139,7 +138,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,
@@ -161,7 +160,7 @@ where
     Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
     Dl::L: Sub<Dr::L>,
     Dl::M: Sub<Dr::M>,
     Dl::T: Sub<Dr::T>,

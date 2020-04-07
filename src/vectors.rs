@@ -8,8 +8,9 @@ use crate::util::{
 use core::ops::Add;
 use std::{fmt, marker::PhantomData};
 
-use alga::general::{ComplexField, Ring};
-use nalgebra::{base::Scalar, Rotation3, Vector3};
+use nalgebra::{
+    base::Scalar, ClosedAdd, ClosedMul, ClosedSub, Rotation3, SimdComplexField, Vector3,
+};
 use num_traits::Num;
 use typenum::operator_aliases::{Diff, Sum};
 
@@ -25,9 +26,7 @@ mod sub_assign;
 pub type MyVector3<D> = DimVector3<D, MyUnits, Numeric>;
 pub struct DimVector3<D: ?Sized, U: ?Sized, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
+    V: Scalar,
 {
     dimension: PhantomData<D>,
     units: PhantomData<U>,
@@ -35,9 +34,7 @@ where
 }
 impl<D: ?Sized, U: ?Sized, V> From<Vector3<V>> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
+    V: Scalar + Copy,
 {
     fn from(other: Vector3<V>) -> Self {
         Self {
@@ -49,9 +46,7 @@ where
 }
 impl<D: ?Sized, U: ?Sized, V> From<DimVector3<D, U, V>> for Vector3<V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
+    V: Scalar + Copy,
 {
     fn from(other: DimVector3<D, U, V>) -> Self {
         other.value
@@ -100,27 +95,17 @@ pub type DiffDimension<Dl, Dr> = ISQ<
 
 impl<D: ?Sized, U: ?Sized, V> fmt::Debug for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + fmt::Display,
+    V: Conversion<V> + Scalar + Copy + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.value.fmt(f)
     }
 }
 
-impl<D: ?Sized, U: ?Sized, V> Copy for DimVector3<D, U, V>
-where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
-{
-}
+impl<D: ?Sized, U: ?Sized, V> Copy for DimVector3<D, U, V> where V: Scalar + Copy {}
 impl<D: ?Sized, U: ?Sized, V> Clone for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
+    V: Scalar + Copy,
 {
     fn clone(&self) -> Self {
         *self
@@ -138,7 +123,6 @@ pub trait Norm {
 
 pub trait Vectors {
     type Output;
-    // type Norm = Quantity<D, U, <V as ComplexField>::RealField>;
 
     fn new(x: Self::Output, y: Self::Output, z: Self::Output) -> Self;
     fn get_x(&self) -> Self::Output;
@@ -153,7 +137,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + Ring,
+    V: Conversion<V> + Scalar + Copy + ClosedAdd + ClosedMul + ClosedSub,
     Dl::Kind: marker::Mul,
     Dl::L: Add<Dr::L>,
     Dl::M: Add<Dr::M>,
@@ -173,11 +157,11 @@ impl<D: ?Sized, U: ?Sized, V> Norm for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    U: Units<<V as ComplexField>::RealField>,
-    V: Num + Conversion<V> + Scalar + ComplexField,
-    V::RealField: Num + Conversion<<V as ComplexField>::RealField> + Scalar,
+    U: Units<<V as SimdComplexField>::SimdRealField>,
+    V: Conversion<V> + Scalar + Copy + SimdComplexField,
+    V::SimdRealField: Num + Conversion<<V as SimdComplexField>::SimdRealField> + Scalar + Copy,
 {
-    type Output = Quantity<D, U, <V as ComplexField>::RealField>;
+    type Output = Quantity<D, U, <V as SimdComplexField>::SimdRealField>;
     fn norm(&self) -> Self::Output {
         quantity!(self.value.norm())
     }
@@ -187,7 +171,7 @@ impl<D: ?Sized, U: ?Sized, V> Vectors for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar,
+    V: Num + Conversion<V> + Scalar + Copy,
 {
     type Output = Quantity<D, U, V>;
 

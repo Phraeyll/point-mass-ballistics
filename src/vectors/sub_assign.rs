@@ -5,15 +5,14 @@ use crate::{
 
 use core::ops::SubAssign;
 
-use alga::general::ClosedSub;
-use nalgebra::base::Scalar;
+use nalgebra::{base::Scalar, ClosedSub};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> SubAssign<DimVector3<D, U, V>> for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: DimVector3<D, U, V>) {
@@ -24,7 +23,7 @@ impl<'l, D: ?Sized, U: ?Sized, V> SubAssign<DimVector3<D, U, V>> for &'l mut Dim
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: DimVector3<D, U, V>) {
@@ -35,7 +34,7 @@ impl<'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r DimVector3<D, U, V>> for DimVect
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &DimVector3<D, U, V>) {
@@ -47,7 +46,7 @@ impl<'l, 'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r DimVector3<D, U, V>>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &DimVector3<D, U, V>) {
@@ -58,7 +57,7 @@ impl<'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r mut DimVector3<D, U, V>> for Dim
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &mut DimVector3<D, U, V>) {
@@ -70,7 +69,7 @@ impl<'l, 'r, D: ?Sized, U: ?Sized, V> SubAssign<&'r mut DimVector3<D, U, V>>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedSub,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedSub,
     D::Kind: marker::SubAssign,
 {
     fn sub_assign(&mut self, rhs: &mut DimVector3<D, U, V>) {

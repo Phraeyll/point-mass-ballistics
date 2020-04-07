@@ -5,15 +5,14 @@ use crate::{
 
 use core::ops::AddAssign;
 
-use alga::general::ClosedAdd;
-use nalgebra::base::Scalar;
+use nalgebra::{base::Scalar, ClosedAdd};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> AddAssign<DimVector3<D, U, V>> for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: DimVector3<D, U, V>) {
@@ -24,7 +23,7 @@ impl<'l, D: ?Sized, U: ?Sized, V> AddAssign<DimVector3<D, U, V>> for &'l mut Dim
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: DimVector3<D, U, V>) {
@@ -35,7 +34,7 @@ impl<'r, D: ?Sized, U: ?Sized, V> AddAssign<&'r DimVector3<D, U, V>> for DimVect
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: &DimVector3<D, U, V>) {
@@ -47,7 +46,7 @@ impl<'l, 'r, D: ?Sized, U: ?Sized, V> AddAssign<&'r DimVector3<D, U, V>>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: &DimVector3<D, U, V>) {
@@ -58,7 +57,7 @@ impl<'r, D: ?Sized, U: ?Sized, V> AddAssign<&'r mut DimVector3<D, U, V>> for Dim
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: &mut DimVector3<D, U, V>) {
@@ -70,7 +69,7 @@ impl<'l, 'r, D: ?Sized, U: ?Sized, V> AddAssign<&'r mut DimVector3<D, U, V>>
 where
     D: Dimension,
     U: Units<V>,
-    V: Num + Conversion<V> + Scalar + ClosedAdd,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedAdd,
     D::Kind: marker::AddAssign,
 {
     fn add_assign(&mut self, rhs: &mut DimVector3<D, U, V>) {
