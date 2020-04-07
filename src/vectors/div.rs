@@ -10,10 +10,7 @@ use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> Div<V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::Div,
+    V: Scalar + Copy + ClosedDiv,
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: V) -> Self::Output {
@@ -22,10 +19,7 @@ where
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::Div,
+    V: Scalar + Copy + ClosedDiv,
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: &V) -> Self::Output {
@@ -34,10 +28,7 @@ where
 }
 impl<'r, D: ?Sized, U: ?Sized, V> Div<&'r mut V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::Div,
+    V: Scalar + Copy + ClosedDiv,
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: &mut V) -> Self::Output {

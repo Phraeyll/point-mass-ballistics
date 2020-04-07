@@ -10,10 +10,7 @@ use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> DivAssign<V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::DivAssign,
+    V: Scalar + Copy + ClosedDiv,
 {
     fn div_assign(&mut self, rhs: V) {
         DivAssign::div_assign(&mut self.value, rhs)
@@ -21,10 +18,7 @@ where
 }
 impl<D: ?Sized, U: ?Sized, V> DivAssign<&V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::DivAssign,
+    V: Scalar + Copy + ClosedDiv,
 {
     fn div_assign(&mut self, rhs: &V) {
         DivAssign::div_assign(&mut self.value, *rhs)
@@ -32,10 +26,7 @@ where
 }
 impl<D: ?Sized, U: ?Sized, V> DivAssign<&mut V> for DimVector3<D, U, V>
 where
-    D: Dimension,
-    U: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    D::Kind: marker::DivAssign,
+    V: Scalar + Copy + ClosedDiv,
 {
     fn div_assign(&mut self, rhs: &mut V) {
         DivAssign::div_assign(&mut self.value, *rhs)
