@@ -31,15 +31,15 @@ where
     }
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
-    fn vv(&self, velocity: &MyVector3<velocity::Dimension>) -> MyVector3<velocity::Dimension> {
+    fn vv(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<velocity::Dimension> {
         velocity - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
-    fn mach(&self, velocity: &MyVector3<velocity::Dimension>) -> Ratio {
+    fn mach(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
-    fn cd(&self, velocity: &MyVector3<velocity::Dimension>) -> Ratio {
+    fn cd(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
         self.projectile.i()
             * self
                 .projectile
@@ -50,7 +50,7 @@ where
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
-    fn drag_force(&self, velocity: &MyVector3<velocity::Dimension>) -> MyVector3<force::Dimension> {
+    fn drag_force(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<force::Dimension> {
         self.vv(velocity)
             * self.vv(velocity).norm()
             * self.atmosphere.rho()
@@ -60,7 +60,7 @@ where
     }
     pub(crate) fn drag_acceleration(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.drag() {
             // Acceleration from drag force and gravity (F = ma)
@@ -85,10 +85,10 @@ impl<T> Simulation<T> {
     // Bearing West results in lower elevation (-y relative/absolute)
     pub(crate) fn coriolis_acceleration(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.coriolis() {
-            self.shooter.omega().cross(velocity) * -2.0
+            self.shooter.omega().cross(&velocity) * -2.0
         } else {
             MyVector3::new(
                 Acceleration::new::<meter_per_second_squared>(0.0),

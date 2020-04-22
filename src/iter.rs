@@ -87,8 +87,8 @@ where
         } = self;
 
         self.time += self.delta_time();
-        self.position += self.delta_position(&velocity);
-        self.velocity += self.delta_velocity(&velocity);
+        self.position += self.delta_position(velocity);
+        self.velocity += self.delta_velocity(velocity);
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -117,7 +117,7 @@ impl<'t, T> FusedIterator for Iter<'t, T> where T: DragTable {}
 pub trait Newtonian {
     fn acceleration(
         &self,
-        _velocity: &MyVector3<velocity::Dimension>,
+        _velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         MyVector3::new(
             Acceleration::new::<meter_per_second_squared>(0.0),
@@ -131,7 +131,7 @@ pub trait Newtonian {
     // 'Second Equation of Motion'
     fn delta_position(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<length::Dimension> {
         velocity * self.delta_time()
             + (self.acceleration(velocity) * self.delta_time().powi(P2::new())) * 0.5
@@ -139,7 +139,7 @@ pub trait Newtonian {
     // 'First Equation of Motion'
     fn delta_velocity(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<velocity::Dimension> {
         self.acceleration(velocity) * self.delta_time()
     }
@@ -151,7 +151,7 @@ where
 {
     fn acceleration(
         &self,
-        velocity: &MyVector3<velocity::Dimension>,
+        velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         self.simulation.coriolis_acceleration(velocity)
             + self.simulation.drag_acceleration(velocity)

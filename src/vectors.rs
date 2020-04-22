@@ -1,6 +1,4 @@
-pub use self::{
-    add::*, add_assign::*, div::*, div_assign::*, mul::*, mul_assign::*, sub::*, sub_assign::*,
-};
+pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::util::{
     marker, radian, Angle, Conversion, Dimension, MyUnits, Numeric, Quantity, Units, ISQ,
 };
@@ -16,14 +14,11 @@ use typenum::operator_aliases::{Diff, Sum};
 
 mod add;
 mod add_assign;
-mod div;
-mod div_assign;
 mod mul;
 mod mul_assign;
-mod sub;
-mod sub_assign;
 
 pub type MyVector3<D> = DimVector3<D, MyUnits, Numeric>;
+
 pub struct DimVector3<D: ?Sized, U: ?Sized, V>
 where
     V: Scalar,
@@ -32,9 +27,10 @@ where
     units: PhantomData<U>,
     value: Vector3<V>,
 }
+
 impl<D: ?Sized, U: ?Sized, V> From<Vector3<V>> for DimVector3<D, U, V>
 where
-    V: Scalar + Copy,
+    V: Scalar,
 {
     fn from(other: Vector3<V>) -> Self {
         Self {
@@ -44,9 +40,10 @@ where
         }
     }
 }
+
 impl<D: ?Sized, U: ?Sized, V> From<DimVector3<D, U, V>> for Vector3<V>
 where
-    V: Scalar + Copy,
+    V: Scalar,
 {
     fn from(other: DimVector3<D, U, V>) -> Self {
         other.value
@@ -83,6 +80,7 @@ pub type SumDimension<Dl, Dr> = ISQ<
     Sum<<Dl as Dimension>::N, <Dr as Dimension>::N>,
     Sum<<Dl as Dimension>::J, <Dr as Dimension>::J>,
 >;
+
 pub type DiffDimension<Dl, Dr> = ISQ<
     Diff<<Dl as Dimension>::L, <Dr as Dimension>::L>,
     Diff<<Dl as Dimension>::M, <Dr as Dimension>::M>,
@@ -95,7 +93,7 @@ pub type DiffDimension<Dl, Dr> = ISQ<
 
 impl<D: ?Sized, U: ?Sized, V> fmt::Debug for DimVector3<D, U, V>
 where
-    V: Conversion<V> + Scalar + Copy + fmt::Display,
+    V: Scalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.value.fmt(f)
@@ -103,12 +101,13 @@ where
 }
 
 impl<D: ?Sized, U: ?Sized, V> Copy for DimVector3<D, U, V> where V: Scalar + Copy {}
+
 impl<D: ?Sized, U: ?Sized, V> Clone for DimVector3<D, U, V>
 where
-    V: Scalar + Copy,
+    V: Scalar,
 {
     fn clone(&self) -> Self {
-        *self
+        self.value.clone().into()
     }
 }
 
@@ -116,6 +115,7 @@ pub trait Cross<Rhs = Self> {
     type Output;
     fn cross(&self, rhs: Rhs) -> Self::Output;
 }
+
 pub trait Norm {
     type Output;
     fn norm(&self) -> Self::Output;
