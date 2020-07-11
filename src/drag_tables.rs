@@ -39,20 +39,19 @@ macro_rules! drag_tables {
                 fn value(&self) -> SectionalDensity {
                     self.value
                 }
-                // Linear interpolation for 'y' of value 'x'
-                // Search for closest surrounding 'x' ks in map
-                // and use them along with their values for interpolation
-                // Works for exact values of 'x' as well
+                // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
+                // This funtions returns linear approximation of coefficient, for a given mach speed
+                // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
                 fn cd(&self, x: Numeric) -> Result<Numeric> {
                     lazy_static! {
-                        static ref TABL: NumericMap = $expr;
+                        static ref TABLE: NumericMap = $expr;
                     }
-                    TABL.range(..x)
-                        .rev()
-                        .zip(TABL.range(x..))
-                        .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+                    // TODO: Does not work if x exists in map as smallest key, ..x excludes it, so first step is None
+                    TABLE.range(..x).rev()     // First = None if smallest key >= x, else Some((x0, &y0)) where x0 greatest key <  x
+                        .zip(TABLE.range(x..)) // First = None if greatest key <  x, else Some((x1, &y1)) where x1 smallest key >= x
+                        .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0))) // Linear interpolation when x0 and x1 both exist
                         .next()
-                        .ok_or(Error::VelocityLookup(x))
+                        .ok_or(Error::VelocityLookup(x)) // None => Err: x is outside of key range: this function does not extrapolate
                 }
             }
         )*
