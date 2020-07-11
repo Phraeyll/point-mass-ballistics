@@ -3,9 +3,9 @@ use crate::{
     vectors::*,
 };
 
-use core::ops::{Add, Mul, Div, Sub};
+use core::ops::{Add, Div, Mul, Sub};
 
-use nalgebra::{base::Scalar, ClosedMul, ClosedDiv};
+use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> Mul<V> for DimVector3<D, U, V>

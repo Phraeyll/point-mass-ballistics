@@ -3,9 +3,9 @@ use crate::{
     vectors::*,
 };
 
-use core::ops::{Add, MulAssign, Sub, DivAssign};
+use core::ops::{Add, DivAssign, MulAssign, Sub};
 
-use nalgebra::{base::Scalar, ClosedMul, ClosedDiv};
+use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
 use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> MulAssign<V> for DimVector3<D, U, V>
