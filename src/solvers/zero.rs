@@ -30,6 +30,7 @@ where
     windage_adjustment: Angle,
     count: u64,
 }
+
 // This never returns None - it returns Some(Result) which can indicate failure instead
 // This is just to capture reason why iteration stopped
 impl<T, F, E, W> Iterator for IterFindAdjustments<'_, T, F, E, W>
@@ -116,6 +117,7 @@ where
         }
     }
 }
+
 impl<T> Simulation<T>
 where
     T: DragTable,
