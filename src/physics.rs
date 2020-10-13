@@ -11,7 +11,7 @@ use crate::{
         AngularVelocity, Area, Length, Mass, MassDensity, MolarMass, MyQuantity, Pressure, Ratio,
         Velocity, ISQ,
     },
-    vectors::*,
+    vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
 };
 

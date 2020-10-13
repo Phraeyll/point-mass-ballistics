@@ -1,7 +1,7 @@
 // use self::BcKind::*;
 use crate::{
     consts::{FRAC_PI_2, PI},
-    drag_tables::*,
+    drag_tables::DragTable,
     error::{Error, Result},
     my_quantity,
     units::{

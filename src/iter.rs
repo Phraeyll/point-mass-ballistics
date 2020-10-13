@@ -6,7 +6,7 @@ use crate::{
         acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
         typenum::P2, velocity, Acceleration, Length, Time, Velocity,
     },
-    vectors::*,
+    vectors::{MyVector3, Vectors},
 };
 
 use std::iter::FusedIterator;
