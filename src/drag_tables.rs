@@ -1,7 +1,8 @@
 use crate::{
     error::{Error, Result},
     simulation::SectionalDensity,
-    util::{pound, square_inch, Area, Mass, Numeric, NumericMap},
+    units::{pound, square_inch, Area, Mass},
+    Numeric, NumericMap,
 };
 
 use lazy_static::lazy_static;

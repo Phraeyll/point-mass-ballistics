@@ -1,16 +1,18 @@
 use crate::{
+    consts::PI,
+    drag_tables::DragTable,
     my_quantity,
     simulation::{
         Atmosphere, Flags, Projectile, Scope, SectionalDensity, Shooter, Simulation, Wind,
     },
-    util::{
+    units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
         pascal, radian, radian_per_second, ratio, typenum::*, velocity, Acceleration, Angle,
-        AngularVelocity, Area, Length, Mass, MassDensity, MolarMass, MyQuantity, Numeric, Pressure,
-        Ratio, Velocity, ISQ, PI,
+        AngularVelocity, Area, Length, Mass, MassDensity, MolarMass, MyQuantity, Pressure, Ratio,
+        Velocity, ISQ,
     },
     vectors::*,
-    DragTable,
+    Numeric,
 };
 
 // Drag

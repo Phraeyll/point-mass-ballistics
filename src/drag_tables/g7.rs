@@ -1,7 +1,7 @@
-use crate::util::NumericMap;
+use crate::NumericMap;
 
 pub fn table() -> NumericMap {
-    float_map![
+    float_btree_map![
         0.00   => 0.1198,
         0.05   => 0.1197,
         0.10   => 0.1196,

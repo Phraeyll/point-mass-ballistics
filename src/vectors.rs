@@ -1,6 +1,7 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
-use crate::util::{
-    marker, radian, Angle, Conversion, Dimension, MyUnits, Numeric, Quantity, Units, ISQ,
+use crate::{
+    units::{marker, radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
+    Numeric,
 };
 
 use core::ops::Add;

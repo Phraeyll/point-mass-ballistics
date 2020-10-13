@@ -1,52 +1,12 @@
+use crate::Numeric;
+
 use std::{
     collections::{btree_map, BTreeMap},
-    f64::consts,
     iter::{FromIterator, FusedIterator},
     ops::{Bound, RangeBounds},
 };
 
 use ordered_float::OrderedFloat as OrdF;
-pub use uom::{
-    fmt::DisplayStyle,
-    marker,
-    si::{
-        acceleration::{self, foot_per_second_squared, meter_per_second_squared},
-        amount_of_substance::{self, mole},
-        angle::{self, degree, minute as moa, radian},
-        angular_velocity::{self, radian_per_second},
-        area::{self, square_inch, square_meter},
-        electric_current::{self, ampere},
-        energy::{self, foot_pound, joule},
-        f64::*,
-        fmt::{Arguments, QuantityArguments},
-        force::{self},
-        length::{self, inch, meter, yard},
-        luminous_intensity::{self, candela},
-        mass::{self, grain, kilogram, pound},
-        mass_density::{self, kilogram_per_cubic_meter},
-        molar_mass::{self},
-        pressure::{self, inch_of_mercury, pascal},
-        ratio::{self},
-        thermodynamic_temperature::{
-            self as temperature, degree_celsius as celsius, degree_fahrenheit as fahrenheit, kelvin,
-        },
-        time::{self, second},
-        velocity::{self, foot_per_second, meter_per_second, mile_per_hour},
-        Dimension, Quantity, Unit, Units, ISQ, SI,
-    },
-    str::ParseQuantityError,
-    typenum, Conversion,
-};
-
-pub type Numeric = f64;
-pub type Natural = u32;
-pub type NumericMap = FloatMap<Numeric>;
-pub type MyUnits = SI<Numeric>;
-pub type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
-pub type MyQuantityArguments<D, N> = QuantityArguments<D, MyUnits, Numeric, N>;
-pub const PI: Numeric = consts::PI;
-pub const FRAC_PI_4: Numeric = consts::FRAC_PI_4;
-pub const FRAC_PI_2: Numeric = consts::FRAC_PI_2;
 
 // Entry
 #[derive(Debug)]
@@ -372,14 +332,14 @@ fn wrap_own<V>(kv: (Numeric, V)) -> (OrdF<Numeric>, V) {
 
 // Initialize BTreeMap with OrdereredFloat wrapper around k, and FloatMap wrapper
 // around entire map.  Used for drag tables and output/drop tables
-macro_rules! float_map {
+macro_rules! float_btree_map {
     ( $($k:expr => $v:expr,)+ ) => {
-        float_map![
+        float_btree_map![
             $($k => $v),+
         ]
     };
     ( $($k:expr => $v:expr),* ) => {{
-        let mut _float_map = $crate::FloatMap::new();
+        let mut _float_map = $crate::float_map::FloatMap::new();
         $(
             let _ = _float_map.insert($k, $v);
         )*

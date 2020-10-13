@@ -1,4 +1,4 @@
-use crate::util::{Angle, Numeric};
+use crate::{units::Angle, Numeric};
 
 use std::{
     error::Error as StdError,

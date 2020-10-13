@@ -1,11 +1,12 @@
 use crate::{
+    drag_tables::DragTable,
     output::Packet,
-    util::{
+    simulation::Simulation,
+    units::{
         acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
         typenum::P2, velocity, Acceleration, Length, Time, Velocity,
     },
     vectors::*,
-    DragTable, Simulation,
 };
 
 use std::iter::FusedIterator;

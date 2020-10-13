@@ -1,7 +1,7 @@
 use crate::{
-    util::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
+    simulation::Simulation,
+    units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
     vectors::*,
-    Simulation,
 };
 
 // Output of iteration, need a better name to encapsulate a moving projectile

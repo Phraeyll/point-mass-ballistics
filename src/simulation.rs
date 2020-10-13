@@ -1,14 +1,16 @@
 // use self::BcKind::*;
 use crate::{
+    consts::{FRAC_PI_2, PI},
     drag_tables::*,
+    error::{Error, Result},
     my_quantity,
-    util::{
+    units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
-        typenum::*, Acceleration, Angle, Length, Mass, MyQuantity, Numeric, Pressure,
-        ThermodynamicTemperature, Time, Velocity, FRAC_PI_2, ISQ, PI,
+        typenum::*, Acceleration, Angle, Length, Mass, MyQuantity, Pressure,
+        ThermodynamicTemperature, Time, Velocity, ISQ,
     },
-    Error, Result,
+    Numeric,
 };
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
