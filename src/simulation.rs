@@ -123,11 +123,13 @@ where
 
 impl<T> SimulationBuilder<T>
 where
-    T: From<ProjectileImpl> + AdjustProjectile,
+    T: From<ProjectileImpl>,
 {
     pub fn new() -> Self {
         Default::default()
     }
+}
+impl<T> SimulationBuilder<T> {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     pub fn init(self) -> Simulation<T> {
@@ -288,7 +290,11 @@ where
         self.builder.scope.roll = value;
         self
     }
-
+}
+impl<T> SimulationBuilder<T>
+where
+    T: AdjustProjectile,
+{
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {
