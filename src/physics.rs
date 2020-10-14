@@ -1,15 +1,12 @@
 use crate::{
     consts::PI,
-    drag_tables::DragTable,
     my_quantity,
-    simulation::{
-        Atmosphere, Flags, Projectile, Scope, SectionalDensity, Shooter, Simulation, Wind,
-    },
+    projectiles::Projectile,
+    simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
         pascal, radian, radian_per_second, ratio, typenum::*, velocity, Acceleration, Angle,
-        AngularVelocity, Area, Length, Mass, MassDensity, MolarMass, MyQuantity, Pressure, Ratio,
-        Velocity, ISQ,
+        AngularVelocity, MassDensity, MolarMass, MyQuantity, Pressure, Ratio, Velocity, ISQ,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
@@ -18,7 +15,7 @@ use crate::{
 // Drag
 impl<T> Simulation<T>
 where
-    T: DragTable,
+    T: Projectile,
 {
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
@@ -45,7 +42,6 @@ where
         self.projectile.i()
             * self
                 .projectile
-                .bc
                 .cd(self.mach(velocity).get::<ratio::ratio>())
                 .expect("CD")
     }
@@ -169,33 +165,6 @@ impl Flags {
     }
     fn gravity(&self) -> bool {
         self.gravity
-    }
-}
-impl<T> Projectile<T> {
-    // Radius of projectile cross section in meters
-    fn radius(&self) -> Length {
-        self.caliber / 2.0
-    }
-    // Area of projectile in meters, used during drag force calculation
-    fn area(&self) -> Area {
-        PI * self.radius().powi(P2::new())
-    }
-    // Mass of projectile in kgs, used during acceleration calculation in get_simulation().iteration
-    pub(crate) fn mass(&self) -> Mass {
-        self.weight
-    }
-    // Sectional density of projectile
-    fn sd(&self) -> SectionalDensity {
-        self.weight / self.caliber.powi(P2::new())
-    }
-}
-impl<T> Projectile<T>
-where
-    T: DragTable,
-{
-    // Form factor of projectile, calculated from Ballistic Coefficient and Sectional Density (sd)
-    fn i(&self) -> Ratio {
-        self.sd() / self.bc.value()
     }
 }
 impl Scope {

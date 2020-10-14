@@ -1,4 +1,5 @@
 use crate::{
+    projectiles::Projectile,
     simulation::Simulation,
     units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
     vectors::{MyVector3, Norm, Vectors},
@@ -13,7 +14,10 @@ pub struct Packet<'t, T> {
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }
 
-impl<T> Measurements for Packet<'_, T> {
+impl<T> Measurements for Packet<'_, T>
+where
+    T: Projectile,
+{
     fn time(&self) -> Time {
         self.time
     }

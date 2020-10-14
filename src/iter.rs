@@ -1,6 +1,6 @@
 use crate::{
-    drag_tables::DragTable,
     output::Packet,
+    projectiles::Projectile,
     simulation::Simulation,
     units::{
         acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
@@ -21,7 +21,10 @@ pub struct Iter<'t, T> {
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
 }
-impl<T> Simulation<T> {
+impl<T> Simulation<T>
+where
+    T: Projectile,
+{
     pub fn iter(&self) -> Iter<'_, T> {
         let position = self.absolute_projectile_position();
         let velocity = self.absolute_projectile_velocity();
@@ -36,7 +39,7 @@ impl<T> Simulation<T> {
     // Start with velocity value along X unit vector
     fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(
-            self.projectile.velocity,
+            self.projectile.velocity(),
             Velocity::new::<meter_per_second>(0.0),
             Velocity::new::<meter_per_second>(0.0),
         )
@@ -62,7 +65,7 @@ impl<T> Simulation<T> {
 // Create an new iterator over Simulation
 impl<'t, T> IntoIterator for &'t Simulation<T>
 where
-    T: DragTable,
+    T: Projectile,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = Iter<'t, T>;
@@ -113,7 +116,7 @@ where
         }
     }
 }
-impl<'t, T> FusedIterator for Iter<'t, T> where T: DragTable {}
+impl<'t, T> FusedIterator for Iter<'t, T> where T: Projectile {}
 
 pub trait Newtonian {
     fn acceleration(
@@ -148,7 +151,7 @@ pub trait Newtonian {
 
 impl<T> Newtonian for Iter<'_, T>
 where
-    T: DragTable,
+    T: Projectile,
 {
     fn acceleration(
         &self,

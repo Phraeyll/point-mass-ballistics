@@ -1,24 +1,22 @@
 // use self::BcKind::*;
 use crate::{
     consts::{FRAC_PI_2, PI},
-    drag_tables::DragTable,
     error::{Error, Result},
     my_quantity,
+    projectiles::{AdjustProjectile, ProjectileImpl},
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
-        typenum::*, Acceleration, Angle, Length, Mass, MyQuantity, Pressure,
-        ThermodynamicTemperature, Time, Velocity, ISQ,
+        Acceleration, Angle, Length, Mass, MyQuantity, Pressure, ThermodynamicTemperature, Time,
+        Velocity,
     },
     Numeric,
 };
 
-pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
-
 #[derive(Debug)]
 pub struct Simulation<T> {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile<T>, // Use same projectile for zeroing and solving
+    pub(crate) projectile: T, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
@@ -61,13 +59,6 @@ pub struct Wind {
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 #[derive(Debug)]
-pub struct Projectile<T> {
-    pub(crate) caliber: Length,    // Caliber (inches)
-    pub(crate) weight: Mass,       // Weight (grains)
-    pub(crate) bc: T,              // Ballistic Coefficient
-    pub(crate) velocity: Velocity, // Initial velocity (ft/s)
-}
-#[derive(Debug)]
 pub struct SimulationBuilder<T> {
     pub(crate) builder: Simulation<T>,
 }
@@ -83,7 +74,7 @@ impl<T> From<Simulation<T>> for SimulationBuilder<T> {
 }
 impl<T> Default for SimulationBuilder<T>
 where
-    T: DragTable,
+    T: From<ProjectileImpl>,
 {
     fn default() -> Self {
         Self {
@@ -93,12 +84,12 @@ where
                     drag: true,
                     gravity: true,
                 },
-                projectile: Projectile {
+                projectile: From::from(ProjectileImpl {
                     caliber: Length::new::<inch>(0.264),
                     weight: Mass::new::<grain>(140.0),
-                    bc: <T as DragTable>::new(0.305),
+                    bc: 0.305,
                     velocity: Velocity::new::<foot_per_second>(2710.0),
-                },
+                }),
                 scope: Scope {
                     yaw: Angle::new::<radian>(0.0),
                     pitch: Angle::new::<radian>(0.0),
@@ -132,7 +123,7 @@ where
 
 impl<T> SimulationBuilder<T>
 where
-    T: DragTable,
+    T: From<ProjectileImpl> + AdjustProjectile,
 {
     pub fn new() -> Self {
         Default::default()
@@ -301,7 +292,7 @@ where
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.caliber = value;
+            self.builder.projectile.set_caliber(value);
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter>()))
@@ -309,7 +300,7 @@ where
     }
     pub fn set_velocity(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.velocity = value;
+            self.builder.projectile.set_velocity(value);
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
@@ -317,7 +308,7 @@ where
     }
     pub fn set_mass(mut self, value: Mass) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.weight = value;
+            self.builder.projectile.set_weight(value);
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<kilogram>()))
@@ -325,7 +316,7 @@ where
     }
     pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.bc = <T as DragTable>::new(value);
+            self.builder.projectile.set_bc(value);
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value))

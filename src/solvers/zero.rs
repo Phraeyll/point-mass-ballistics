@@ -1,10 +1,10 @@
 use crate::{
     consts::{FRAC_PI_2, FRAC_PI_4},
-    drag_tables::DragTable,
     error::{Error, Result},
     my_quantity,
     output::Measurements,
     output::Packet,
+    projectiles::Projectile,
     simulation::Scope,
     simulation::Simulation,
     units::{angle, radian, Angle, Length, MyQuantity},
@@ -19,7 +19,7 @@ const DEG_90: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_2);
 
 struct IterFindAdjustments<'t, T, F, E, W>
 where
-    T: DragTable,
+    T: Projectile,
     F: Fn(&Packet<T>) -> bool,
     E: Fn(&Packet<T>) -> Angle,
     W: Fn(&Packet<T>) -> Angle,
@@ -39,7 +39,7 @@ where
 // This is just to capture reason why iteration stopped
 impl<T, F, E, W> Iterator for IterFindAdjustments<'_, T, F, E, W>
 where
-    T: DragTable,
+    T: Projectile,
     F: Fn(&Packet<T>) -> bool,
     E: Fn(&Packet<T>) -> Angle,
     W: Fn(&Packet<T>) -> Angle,
@@ -95,7 +95,7 @@ where
 
 impl<'t, T> Simulation<T>
 where
-    T: DragTable,
+    T: Projectile,
 {
     fn find_adjustments<F, E, W>(
         &'t mut self,
@@ -124,7 +124,7 @@ where
 
 impl<T> Simulation<T>
 where
-    T: DragTable,
+    T: Projectile,
 {
     // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
