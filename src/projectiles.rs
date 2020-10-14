@@ -10,6 +10,8 @@ use crate::{
     Numeric, NumericMap,
 };
 
+use std::ops::{Deref, DerefMut};
+
 use lazy_static::lazy_static;
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
@@ -28,12 +30,6 @@ pub trait Projectile {
     fn bc(&self) -> SectionalDensity;
     fn sd(&self) -> SectionalDensity;
     fn cd(&self, x: Numeric) -> Result<Numeric>;
-}
-pub trait AdjustProjectile {
-    fn set_caliber(&mut self, value: Length);
-    fn set_weight(&mut self, value: Mass);
-    fn set_bc(&mut self, value: Numeric);
-    fn set_velocity(&mut self, value: Velocity);
 }
 
 pub struct ProjectileImpl {
@@ -56,18 +52,16 @@ macro_rules! drag_tables {
                     Self(other)
                 }
             }
-            impl AdjustProjectile for $struct {
-                fn set_caliber(&mut self, value: Length) {
-                    self.0.caliber = value;
+            impl Deref for $struct {
+                type Target = ProjectileImpl;
+                fn deref(&self) -> &Self::Target {
+                    &self.0
                 }
-                fn set_weight(&mut self, value: Mass) {
-                    self.0.weight = value;
-                }
-                fn set_bc(&mut self, value: Numeric) {
-                    self.0.bc = value;
-                }
-                fn set_velocity(&mut self, value: Velocity) {
-                    self.0.velocity = value;
+            }
+            impl DerefMut for $struct
+            {
+                fn deref_mut(&mut self) -> &mut Self::Target {
+                    &mut self.0
                 }
             }
             impl Projectile for $struct {

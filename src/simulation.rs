@@ -3,7 +3,7 @@ use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
     my_quantity,
-    projectiles::{AdjustProjectile, ProjectileImpl},
+    projectiles::ProjectileImpl,
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
@@ -12,6 +12,8 @@ use crate::{
     },
     Numeric,
 };
+
+use std::ops::DerefMut;
 
 #[derive(Debug)]
 pub struct Simulation<T> {
@@ -293,12 +295,12 @@ impl<T> SimulationBuilder<T> {
 }
 impl<T> SimulationBuilder<T>
 where
-    T: AdjustProjectile,
+    T: DerefMut<Target = ProjectileImpl>,
 {
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.set_caliber(value);
+            self.builder.projectile.caliber = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter>()))
@@ -306,7 +308,7 @@ where
     }
     pub fn set_velocity(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.set_velocity(value);
+            self.builder.projectile.velocity = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
@@ -314,7 +316,7 @@ where
     }
     pub fn set_mass(mut self, value: Mass) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.set_weight(value);
+            self.builder.projectile.weight = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<kilogram>()))
@@ -322,7 +324,7 @@ where
     }
     pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.set_bc(value);
+            self.builder.projectile.bc = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value))
