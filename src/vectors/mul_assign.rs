@@ -1,6 +1,6 @@
 use crate::{
-    units::{marker, Dimension, Quantity},
-    vectors::*,
+    units::{Conversion, Dimension, Quantity, Units},
+    vectors::DimVector3,
 };
 
 use core::ops::{Add, DivAssign, MulAssign, Sub};
@@ -31,8 +31,6 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<Quantity<Dr, U
 where
     Dl: Dimension,
     Dr: Dimension,
-    Dl::Kind: marker::Mul,
-    Dr::Kind: marker::Mul,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedMul,
@@ -53,8 +51,6 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> DivAssign<Quantity<Dr, U
 where
     Dl: Dimension,
     Dr: Dimension,
-    Dl::Kind: marker::Div,
-    Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,

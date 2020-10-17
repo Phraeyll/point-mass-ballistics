@@ -1,6 +1,6 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::{
-    units::{marker, radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
+    units::{radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
     Numeric,
 };
 
@@ -139,7 +139,6 @@ where
     Ul: Units<V>,
     Ur: Units<V>,
     V: Conversion<V> + Scalar + Copy + ClosedAdd + ClosedMul + ClosedSub,
-    Dl::Kind: marker::Mul,
     Dl::L: Add<Dr::L>,
     Dl::M: Add<Dr::M>,
     Dl::T: Add<Dr::T>,

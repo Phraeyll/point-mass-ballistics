@@ -25,12 +25,13 @@ pub use uom::{
         },
         time::{self, second},
         velocity::{self, foot_per_second, meter_per_second, mile_per_hour},
-        Dimension, Quantity, Unit, Units, ISQ, SI,
     },
     str::ParseQuantityError,
 };
-pub(crate) use uom::{marker, typenum, Conversion};
+pub(crate) use uom::{
+    si::{Dimension, Quantity, Units, ISQ, SI},
+    typenum, Conversion,
+};
 
 pub(crate) type MyUnits = SI<Numeric>;
 pub(crate) type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
-// pub(crate) type MyQuantityArguments<D, N> = QuantityArguments<D, MyUnits, Numeric, N>;

@@ -1,6 +1,6 @@
 use crate::{
-    units::{marker, Conversion, Dimension, Quantity, Units},
-    vectors::*,
+    units::{Conversion, Dimension, Quantity, Units},
+    vectors::{DiffDimension, DimVector3, SumDimension},
 };
 
 use core::ops::{Add, Div, Mul, Sub};
@@ -33,8 +33,6 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Mul<Quantity<Dr, Ur, V>>
 where
     Dl: Dimension,
     Dr: Dimension,
-    Dl::Kind: marker::Mul,
-    Dr::Kind: marker::Mul,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedMul,
@@ -57,8 +55,6 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Div<Quantity<Dr, Ur, V>>
 where
     Dl: Dimension,
     Dr: Dimension,
-    Dl::Kind: marker::Div,
-    Dr::Kind: marker::Div,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
