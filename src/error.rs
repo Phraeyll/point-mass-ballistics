@@ -1,12 +1,8 @@
 use crate::{units::Angle, Numeric};
 
-use std::{
-    error::Error as StdError,
-    fmt::{self, Debug},
-    result::Result as StdResult,
-};
+use std::{error::Error as StdError, fmt, result};
 
-pub type Result<T, E = Error> = StdResult<T, E>;
+pub type Result<T, E = Error> = result::Result<T, E>;
 
 #[derive(Debug)]
 pub enum Error {
