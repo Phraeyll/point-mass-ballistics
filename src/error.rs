@@ -1,6 +1,6 @@
 use crate::{units::Angle, Numeric};
 
-use std::{error::Error as StdError, fmt, result};
+use std::{error, fmt, result};
 
 pub type Result<T, E = Error> = result::Result<T, E>;
 
@@ -60,4 +60,4 @@ impl fmt::Display for Error {
     }
 }
 
-impl StdError for Error {}
+impl error::Error for Error {}
