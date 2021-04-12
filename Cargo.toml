@@ -5,7 +5,7 @@ authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-nalgebra = "0.25.3"
+nalgebra = "0.26.1"
 ordered-float = "2.1.1"
 lazy_static = "1.4.0"
 typenum = "1.13.0"
