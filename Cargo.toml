@@ -2,12 +2,12 @@
 name = "point-mass-ballistics"
 version = "0.0.1"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-nalgebra = "0.26.1"
-ordered-float = "2.1.1"
+nalgebra = "0.29.0"
+ordered-float = "2.8.0"
 lazy_static = "1.4.0"
-typenum = "1.13.0"
+typenum = "1.14.0"
 num-traits = "0.2.14"
 uom = "0.31.1"
