@@ -305,20 +305,16 @@ fn wrap_bound(bound: Bound<&Numeric>) -> Bound<OrdF<Numeric>> {
         Bound::Included(f) => Bound::Included(OrdF(*f)),
     }
 }
-fn unwrap_mut<'k, 'v, V>(kv: (&'k OrdF<Numeric>, &'v mut V)) -> (Numeric, &'v mut V) {
-    let (&OrdF(k), v) = kv;
+fn unwrap_mut<'k, 'v, V>((&OrdF(k), v): (&'k OrdF<Numeric>, &'v mut V)) -> (Numeric, &'v mut V) {
     (k, v)
 }
-fn unwrap_ref<'k, 'v, V>(kv: (&'k OrdF<Numeric>, &'v V)) -> (Numeric, &'v V) {
-    let (&OrdF(k), v) = kv;
+fn unwrap_ref<'k, 'v, V>((&OrdF(k), v): (&'k OrdF<Numeric>, &'v V)) -> (Numeric, &'v V) {
     (k, v)
 }
-fn unwrap_own<V>(kv: (OrdF<Numeric>, V)) -> (Numeric, V) {
-    let (OrdF(k), v) = kv;
+fn unwrap_own<V>((OrdF(k), v): (OrdF<Numeric>, V)) -> (Numeric, V) {
     (k, v)
 }
-fn wrap_own<V>(kv: (Numeric, V)) -> (OrdF<Numeric>, V) {
-    let (k, v) = kv;
+fn wrap_own<V>((k, v): (Numeric, V)) -> (OrdF<Numeric>, V) {
     (OrdF(k), v)
 }
 
