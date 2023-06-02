@@ -7,11 +7,11 @@ use crate::{
         typenum::{N2, P1, Z0},
         Area, Length, Mass, MyQuantity, Ratio, Velocity, ISQ,
     },
-    Numeric,
+    Numeric, NumericMap,
 };
 
 use std::{
-    cell::OnceCell,
+    sync::OnceLock,
     ops::{Deref, DerefMut},
 };
 
@@ -86,8 +86,8 @@ macro_rules! drag_tables {
                 // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
                 fn cd(&self, x: Numeric) -> Result<Numeric> {
                     // TODO: Does not work if x exists in map as smallest key, ..x excludes it, so first step is None
-                    let table = OnceCell::new();
-                    let table = table.get_or_init($module::table);
+                    static TABLE: OnceLock<NumericMap> = OnceLock::new();
+                    let table = TABLE.get_or_init($module::table);
                     table.range(..x).rev()     // First = None if smallest key >= x, else Some((x0, &y0)) where x0 greatest key <  x
                         .zip(table.range(x..)) // First = None if greatest key <  x, else Some((x1, &y1)) where x1 smallest key >= x
                         .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0))) // Linear interpolation when x0 and x1 both exist

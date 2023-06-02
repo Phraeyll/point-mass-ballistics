@@ -5,8 +5,8 @@ use crate::{
     simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
-        pascal, radian, radian_per_second, ratio, velocity, Acceleration, Angle,
-        AngularVelocity, MassDensity, MolarMass, MolarHeatCapacity, MyQuantity, Pressure, Ratio, Velocity,
+        pascal, radian, radian_per_second, ratio, velocity, Acceleration, Angle, AngularVelocity,
+        MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
