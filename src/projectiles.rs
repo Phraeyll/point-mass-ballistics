@@ -7,12 +7,13 @@ use crate::{
         typenum::{N2, P1, Z0},
         Area, Length, Mass, MyQuantity, Ratio, Velocity, ISQ,
     },
-    Numeric, NumericMap,
+    Numeric,
 };
 
-use std::ops::{Deref, DerefMut};
-
-use lazy_static::lazy_static;
+use std::{
+    cell::OnceCell,
+    ops::{Deref, DerefMut},
+};
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
 
@@ -84,12 +85,11 @@ macro_rules! drag_tables {
                 // This funtions returns linear approximation of coefficient, for a given mach speed
                 // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
                 fn cd(&self, x: Numeric) -> Result<Numeric> {
-                    lazy_static! {
-                        static ref TABLE: NumericMap = $module::table();
-                    }
                     // TODO: Does not work if x exists in map as smallest key, ..x excludes it, so first step is None
-                    TABLE.range(..x).rev()     // First = None if smallest key >= x, else Some((x0, &y0)) where x0 greatest key <  x
-                        .zip(TABLE.range(x..)) // First = None if greatest key <  x, else Some((x1, &y1)) where x1 smallest key >= x
+                    let table = OnceCell::new();
+                    let table = table.get_or_init($module::table);
+                    table.range(..x).rev()     // First = None if smallest key >= x, else Some((x0, &y0)) where x0 greatest key <  x
+                        .zip(table.range(x..)) // First = None if greatest key <  x, else Some((x1, &y1)) where x1 smallest key >= x
                         .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0))) // Linear interpolation when x0 and x1 both exist
                         .next()
                         .ok_or(Error::VelocityLookup(x)) // None => Err: x is outside of key range: this function does not extrapolate
