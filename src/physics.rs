@@ -5,8 +5,8 @@ use crate::{
     simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
-        pascal, radian, radian_per_second, ratio, typenum::*, velocity, Acceleration, Angle,
-        AngularVelocity, MassDensity, MolarMass, MyQuantity, Pressure, Ratio, Velocity, ISQ,
+        pascal, radian, radian_per_second, ratio, velocity, Acceleration, Angle,
+        AngularVelocity, MassDensity, MolarMass, MolarHeatCapacity, MyQuantity, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
@@ -112,11 +112,10 @@ impl<T> Simulation<T> {
     }
 }
 
-type EnergyPerTempPerAmount = MyQuantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>>;
 // Helpers - maybe some of these should be moved?
 impl Atmosphere {
     // Universal gas constant (J/K*mol)
-    const MOLAR_GAS_UNIVERSAL: EnergyPerTempPerAmount = my_quantity!(8.314_462_618_153_24);
+    const MOLAR_GAS_UNIVERSAL: MolarHeatCapacity = my_quantity!(8.314_462_618_153_24);
 
     // Molar mass of dry air (kg/mol)
     const MOLAR_MASS_DRY_AIR: MolarMass = my_quantity!(0.028_964_4);
