@@ -1,11 +1,10 @@
 use crate::{
-    consts::PI,
     my_quantity,
     projectiles::Projectile,
     simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
-        pascal, radian, radian_per_second, ratio, velocity, Acceleration, Angle, AngularVelocity,
+        pascal, radian_per_second, ratio, velocity, Acceleration, Angle, AngularVelocity,
         MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
@@ -62,7 +61,7 @@ where
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.drag() {
             // Acceleration from drag force and gravity (F = ma)
-            self.drag_force(velocity) / self.projectile.mass()
+            self.drag_force(velocity) * (1.0 / self.projectile.mass())
         } else {
             MyVector3::new(
                 Acceleration::new::<meter_per_second_squared>(0.0),
@@ -230,38 +229,8 @@ impl Shooter {
 }
 impl Wind {
     // This vector indicates direction of wind flow, not source of wind
-    // so rotate by PI (adding or subtraction should have the same affect)
-    // Negative indicates 90 degree wind is from east=>west
-    // 0 degree wind is from north=>south (conventional)
-    //        (0)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //       (180)
-    //
-    //  {after rotation(+ PI)}
-    //
-    //       (180)
-    //         ^
-    //         |
-    // (-90) <---> (+90)
-    //         |
-    //         v
-    //        (0)
-    //
-    //  {after negation(-)}
-    //
-    //       (180)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //        (0)
     fn yaw(&self) -> Angle {
-        -self.yaw + Angle::new::<radian>(PI)
+        self.yaw
     }
     fn pitch(&self) -> Angle {
         self.pitch

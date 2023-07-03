@@ -11,8 +11,8 @@ use crate::{
 };
 
 use std::{
-    sync::OnceLock,
     ops::{Deref, DerefMut},
+    sync::OnceLock,
 };
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
