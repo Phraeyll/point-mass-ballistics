@@ -1,18 +1,9 @@
 use crate::{
     consts::PI,
-    error::{Error, Result},
-    units::{
-        pound, square_inch,
-        typenum::P2,
-        typenum::{N2, P1, Z0},
-        Area, Length, Mass, MyQuantity, Ratio, Velocity, ISQ,
-    },
+    error::Result,
+    units::{typenum::P2, Area, ArealMassDensity, Length, Mass, Ratio, Velocity},
     Numeric,
 };
-
-use std::ops::{Deref, DerefMut};
-
-pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
 
 pub struct Table<const N: usize> {
     x: [Numeric; N],
@@ -89,17 +80,6 @@ macro_rules! subst {
     };
 }
 
-macro_rules! table {
-    ( $($x:expr => $y:expr,)+ ) => {
-        table![$($x => $y),+];
-    };
-    ( $($x:expr => $y:expr),* ) => {
-        const SIZE: usize = count!($($x,)*);
-        pub const TABLE: $crate::projectiles::Table<SIZE> = $crate::projectiles::Table::new([$($x,)*], [$($y,)*]);
-    };
-}
-pub(crate) use table;
-
 pub trait Projectile {
     fn area(&self) -> Area {
         PI * self.radius().powi(P2::new())
@@ -111,8 +91,8 @@ pub trait Projectile {
     fn mass(&self) -> Mass;
     fn radius(&self) -> Length;
     fn velocity(&self) -> Velocity;
-    fn bc(&self) -> SectionalDensity;
-    fn sd(&self) -> SectionalDensity;
+    fn bc(&self) -> ArealMassDensity;
+    fn sd(&self) -> ArealMassDensity;
     fn cd(&self, x: Numeric) -> Result<Numeric>;
 }
 
@@ -123,69 +103,68 @@ pub struct ProjectileImpl {
     pub velocity: Velocity,
 }
 
-macro_rules! drag_tables {
-    ($($struct:ident => $module:ident,)+) => {
-        drag_tables!{$($struct => $module),+}
+macro_rules! table {
+    ( $($x:expr => $y:expr,)+ ) => {
+        table![$($x => $y),+];
     };
-    ($($struct:ident => $module:ident),*) => {
-        $(
-            mod $module;
-            pub struct $struct(ProjectileImpl);
-            impl From<ProjectileImpl> for $struct {
-                fn from(other: ProjectileImpl) -> Self {
-                    Self(other)
-                }
+    ( $($x:expr => $y:expr),* ) => {
+        pub struct P($crate::projectiles::ProjectileImpl);
+        const SIZE: usize = count!($($x,)*);
+        impl P {
+            pub const TABLE: $crate::projectiles::Table<SIZE> = $crate::projectiles::Table::new([$($x,)*], [$($y,)*]);
+        }
+        impl From<$crate::projectiles::ProjectileImpl> for P {
+            fn from(other: $crate::projectiles::ProjectileImpl) -> Self {
+                Self(other)
             }
-            impl Deref for $struct {
-                type Target = ProjectileImpl;
-                fn deref(&self) -> &Self::Target {
-                    &self.0
-                }
+        }
+        impl std::ops::Deref for P {
+            type Target = $crate::projectiles::ProjectileImpl;
+            fn deref(&self) -> &Self::Target {
+                &self.0
             }
-            impl DerefMut for $struct
-            {
-                fn deref_mut(&mut self) -> &mut Self::Target {
-                    &mut self.0
-                }
+        }
+        impl std::ops::DerefMut for P {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
             }
-            impl Projectile for $struct {
-                fn velocity(&self) -> Velocity {
-                    self.0.velocity
-                }
-                fn mass(&self) -> Mass {
-                    self.0.weight
-                }
-                fn radius(&self) -> Length {
-                    self.0.caliber / 2.0
-                }
-                fn bc(&self) -> SectionalDensity {
-                    Mass::new::<pound>(self.0.bc) / Area::new::<square_inch>(1.0)
-                }
-                fn sd(&self) -> SectionalDensity {
-                    self.0.weight / self.0.caliber.powi(P2::new())
-                }
-                // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
-                // This funtions returns linear approximation of coefficient, for a given mach speed
-                // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
-                fn cd(&self, x: Numeric) -> Result<Numeric> {
-                    // None => Err: x is outside of key range: this function does not extrapolate
-                    let (x0, y0, x1, y1) = $module::TABLE.binary_search(x).ok_or(Error::VelocityLookup(x))?;
+        }
+        impl $crate::projectiles::Projectile for P {
+            fn velocity(&self) -> $crate::units::Velocity {
+                self.0.velocity
+            }
+            fn mass(&self) -> $crate::units::Mass {
+                self.0.weight
+            }
+            fn radius(&self) -> $crate::units::Length {
+                self.0.caliber / 2.0
+            }
+            fn bc(&self) -> $crate::units::ArealMassDensity {
+                $crate::units::Mass::new::<$crate::units::pound>(self.0.bc) / $crate::units::Area::new::<$crate::units::square_inch>(1.0)
+            }
+            fn sd(&self) -> $crate::units::ArealMassDensity {
+                self.0.weight / self.0.caliber.powi($crate::units::typenum::P2::new())
+            }
+            // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
+            // This funtions returns linear approximation of coefficient, for a given mach speed
+            // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
+            fn cd(&self, x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
+                // None => Err: x is outside of key range: this function does not extrapolate
+                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x).ok_or($crate::error::Error::VelocityLookup(x))?;
 
-                    // Linear interpolation when x0 and x1 both exist
-                    Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
-                }
+                // Linear interpolation when x0 and x1 both exist
+                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             }
-        )*
+        }
     };
 }
+pub(crate) use table;
 
-drag_tables! {
-    G1 => g1,
-    G2 => g2,
-    G5 => g5,
-    G6 => g6,
-    G7 => g7,
-    G8 => g8,
-    GI => gi,
-    GS => gs,
-}
+pub mod g1;
+pub mod g2;
+pub mod g5;
+pub mod g6;
+pub mod g7;
+pub mod g8;
+pub mod gi;
+pub mod gs;
