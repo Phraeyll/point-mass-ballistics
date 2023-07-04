@@ -64,14 +64,7 @@ macro_rules! table {
     ( $($x:expr => $y:expr),* ) => {
         use super::*;
         use $crate::units::{
-            pound,
-            square_inch,
-            typenum::P2,
-            Area,
-            ArealMassDensity,
-            Length,
-            Mass,
-            Velocity,
+            pound, square_inch, typenum::P2, Area, ArealMassDensity, Length, Mass, Velocity,
         };
 
         pub struct P(ProjectileImpl);
