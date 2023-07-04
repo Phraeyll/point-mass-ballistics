@@ -78,9 +78,9 @@ macro_rules! table {
     ( $($x:expr => $y:expr,)+ ) => {
         table![$($x => $y),+]
     };
-    ( $($x:expr => $y:expr),* ) => {{
+    ( $($x:expr => $y:expr),* ) => {
         Table::new([$($x,)*], [$($y,)*])
-    }};
+    };
 }
 pub(crate) use table;
 
