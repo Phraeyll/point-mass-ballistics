@@ -106,7 +106,7 @@ where
         // how to check previous iteration values in standard iterator adaptors.
         if self.position.get_x() != position.get_x() {
             Some(Self::Item {
-                simulation: &self.simulation,
+                simulation: self.simulation,
                 time,
                 position,
                 velocity,

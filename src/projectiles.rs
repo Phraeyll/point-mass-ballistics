@@ -37,13 +37,15 @@ pub struct ProjectileImpl {
     pub velocity: Velocity,
 }
 
-const fn count_const<const N: usize>(_: [(); N]) -> usize { N }
+const fn len<const N: usize, T>(_: &[T; N]) -> usize {
+    N
+}
 macro_rules! count {
     ($($t:tt,)+) => {
         count!($($t),+)
     };
     ($($t:tt),*) => {
-        $crate::projectiles::count_const([$(subst!($t, ())),*])
+        $crate::projectiles::len(&[$(subst!($t, ())),*])
     };
 }
 pub(crate) use count;
