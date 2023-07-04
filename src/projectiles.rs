@@ -5,6 +5,117 @@ use crate::{
     Numeric,
 };
 
+pub mod g1;
+pub mod g2;
+pub mod g5;
+pub mod g6;
+pub mod g7;
+pub mod g8;
+pub mod gi;
+pub mod gs;
+
+pub trait Projectile {
+    fn area(&self) -> Area {
+        PI * self.radius().powi(P2::new())
+    }
+    fn i(&self) -> Ratio {
+        self.sd() / self.bc()
+    }
+
+    fn mass(&self) -> Mass;
+    fn radius(&self) -> Length;
+    fn velocity(&self) -> Velocity;
+    fn bc(&self) -> ArealMassDensity;
+    fn sd(&self) -> ArealMassDensity;
+    fn cd(&self, x: Numeric) -> Result<Numeric>;
+}
+
+pub struct ProjectileImpl {
+    pub caliber: Length,
+    pub weight: Mass,
+    pub bc: Numeric,
+    pub velocity: Velocity,
+}
+
+const fn count_const<const N: usize>(_: [(); N]) -> usize { N }
+macro_rules! count {
+    ($($t:tt,)+) => {
+        count!($($t),+)
+    };
+    ($($t:tt),*) => {
+        $crate::projectiles::count_const([$(subst!($t, ())),*])
+    };
+}
+pub(crate) use count;
+
+macro_rules! subst {
+    ($t:tt, $e:expr) => {
+        $e
+    };
+}
+pub(crate) use subst;
+
+macro_rules! table {
+    ( $($x:expr => $y:expr,)+ ) => {
+        table![$($x => $y),+];
+    };
+    ( $($x:expr => $y:expr),* ) => {
+        use $crate::projectiles::{count, subst};
+        pub struct P($crate::projectiles::ProjectileImpl);
+        impl P {
+            pub const TABLE: $crate::projectiles::Table<{count!($($x,)*)}> = $crate::projectiles::Table::new([$($x,)*], [$($y,)*]);
+        }
+        impl From<$crate::projectiles::ProjectileImpl> for P {
+            fn from(other: $crate::projectiles::ProjectileImpl) -> Self {
+                Self(other)
+            }
+        }
+        impl std::ops::Deref for P {
+            type Target = $crate::projectiles::ProjectileImpl;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+        impl std::ops::DerefMut for P {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+        impl $crate::projectiles::Projectile for P {
+            fn velocity(&self) -> $crate::units::Velocity {
+                self.0.velocity
+            }
+            fn mass(&self) -> $crate::units::Mass {
+                self.0.weight
+            }
+            fn radius(&self) -> $crate::units::Length {
+                self.0.caliber / 2.0
+            }
+            fn bc(&self) -> $crate::units::ArealMassDensity {
+                let mass = $crate::units::Mass::new::<$crate::units::pound>(self.0.bc);
+                let area = $crate::units::Area::new::<$crate::units::square_inch>(1.0);
+                mass / area
+            }
+            fn sd(&self) -> $crate::units::ArealMassDensity {
+                self.0.weight / self.0.caliber.powi($crate::units::typenum::P2::new())
+            }
+            // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
+            // This funtions returns linear approximation of coefficient, for a given mach speed
+            // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
+            fn cd(&self, x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
+                // None => Err: x is outside of key range: this function does not extrapolate
+                let (x0, y0, x1, y1) = Self::TABLE
+                    .binary_search(x)
+                    .ok_or($crate::error::Error::VelocityLookup(x))?;
+
+                // Linear interpolation when x0 and x1 both exist
+                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+            }
+        }
+    };
+}
+pub(crate) use table;
+
 pub struct Table<const N: usize> {
     x: [Numeric; N],
     y: [Numeric; N],
@@ -64,111 +175,3 @@ impl<const N: usize> Table<N> {
         }
     }
 }
-
-macro_rules! count {
-    ($($t:tt,)+) => {
-        count!($($t),+)
-    };
-    ($($t:tt),*) => {
-        <[()]>::len(&[$(subst!($t, ())),*])
-    };
-}
-
-macro_rules! subst {
-    ($t:tt, $e:expr) => {
-        $e
-    };
-}
-
-pub trait Projectile {
-    fn area(&self) -> Area {
-        PI * self.radius().powi(P2::new())
-    }
-    fn i(&self) -> Ratio {
-        self.sd() / self.bc()
-    }
-
-    fn mass(&self) -> Mass;
-    fn radius(&self) -> Length;
-    fn velocity(&self) -> Velocity;
-    fn bc(&self) -> ArealMassDensity;
-    fn sd(&self) -> ArealMassDensity;
-    fn cd(&self, x: Numeric) -> Result<Numeric>;
-}
-
-pub struct ProjectileImpl {
-    pub caliber: Length,
-    pub weight: Mass,
-    pub bc: Numeric,
-    pub velocity: Velocity,
-}
-
-macro_rules! table {
-    ( $($x:expr => $y:expr,)+ ) => {
-        table![$($x => $y),+];
-    };
-    ( $($x:expr => $y:expr),* ) => {
-        pub struct P($crate::projectiles::ProjectileImpl);
-        const SIZE: usize = count!($($x,)*);
-        impl P {
-            pub const TABLE: $crate::projectiles::Table<SIZE> = $crate::projectiles::Table::new([$($x,)*], [$($y,)*]);
-        }
-        impl From<$crate::projectiles::ProjectileImpl> for P {
-            fn from(other: $crate::projectiles::ProjectileImpl) -> Self {
-                Self(other)
-            }
-        }
-        impl std::ops::Deref for P {
-            type Target = $crate::projectiles::ProjectileImpl;
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-        impl std::ops::DerefMut for P {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.0
-            }
-        }
-        impl $crate::projectiles::Projectile for P {
-            fn velocity(&self) -> $crate::units::Velocity {
-                self.0.velocity
-            }
-            fn mass(&self) -> $crate::units::Mass {
-                self.0.weight
-            }
-            fn radius(&self) -> $crate::units::Length {
-                self.0.caliber / 2.0
-            }
-            fn bc(&self) -> $crate::units::ArealMassDensity {
-                let mass = $crate::units::Mass::new::<$crate::units::pound>(self.0.bc);
-                let area = $crate::units::Area::new::<$crate::units::square_inch>(1.0);
-                mass / area
-            }
-            fn sd(&self) -> $crate::units::ArealMassDensity {
-                self.0.weight / self.0.caliber.powi($crate::units::typenum::P2::new())
-            }
-            // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
-            // This funtions returns linear approximation of coefficient, for a given mach speed
-            // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
-            fn cd(&self, x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
-                // None => Err: x is outside of key range: this function does not extrapolate
-                let (x0, y0, x1, y1) = Self::TABLE
-                    .binary_search(x)
-                    .ok_or($crate::error::Error::VelocityLookup(x))?;
-
-                // Linear interpolation when x0 and x1 both exist
-                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
-            }
-        }
-    };
-}
-pub(crate) use table;
-
-pub mod g1;
-pub mod g2;
-pub mod g5;
-pub mod g6;
-pub mod g7;
-pub mod g8;
-pub mod gi;
-pub mod gs;
