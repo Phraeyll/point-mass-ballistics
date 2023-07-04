@@ -1,6 +1,6 @@
-use crate::projectiles::{table, Table};
+use crate::projectiles::table;
 
-pub const TABLE: Table<76> = table![
+table![
     0.00  => 0.1710,
     0.05  => 0.1719,
     0.10  => 0.1727,

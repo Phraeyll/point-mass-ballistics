@@ -74,12 +74,28 @@ impl<const N: usize> Table<N> {
     }
 }
 
+macro_rules! count {
+    ($($t:tt,)+) => {
+        count!($($t),+)
+    };
+    ($($t:tt),*) => {
+        <[()]>::len(&[$(subst!($t, ())),*])
+    };
+}
+
+macro_rules! subst {
+    ($t:tt, $e:expr) => {
+        $e
+    };
+}
+
 macro_rules! table {
     ( $($x:expr => $y:expr,)+ ) => {
-        table![$($x => $y),+]
+        table![$($x => $y),+];
     };
     ( $($x:expr => $y:expr),* ) => {
-        Table::new([$($x,)*], [$($y,)*])
+        const SIZE: usize = count!($($x,)*);
+        pub const TABLE: $crate::projectiles::Table<SIZE> = $crate::projectiles::Table::new([$($x,)*], [$($y,)*]);
     };
 }
 pub(crate) use table;
