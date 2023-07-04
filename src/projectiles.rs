@@ -140,7 +140,9 @@ macro_rules! table {
                 self.0.caliber / 2.0
             }
             fn bc(&self) -> $crate::units::ArealMassDensity {
-                $crate::units::Mass::new::<$crate::units::pound>(self.0.bc) / $crate::units::Area::new::<$crate::units::square_inch>(1.0)
+                let mass = $crate::units::Mass::new::<$crate::units::pound>(self.0.bc);
+                let area = $crate::units::Area::new::<$crate::units::square_inch>(1.0);
+                mass / area
             }
             fn sd(&self) -> $crate::units::ArealMassDensity {
                 self.0.weight / self.0.caliber.powi($crate::units::typenum::P2::new())
@@ -150,7 +152,9 @@ macro_rules! table {
             // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
             fn cd(&self, x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
                 // None => Err: x is outside of key range: this function does not extrapolate
-                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x).ok_or($crate::error::Error::VelocityLookup(x))?;
+                let (x0, y0, x1, y1) = Self::TABLE
+                    .binary_search(x)
+                    .ok_or($crate::error::Error::VelocityLookup(x))?;
 
                 // Linear interpolation when x0 and x1 both exist
                 Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
