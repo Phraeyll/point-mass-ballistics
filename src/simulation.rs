@@ -2,13 +2,12 @@
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
-    my_quantity,
     projectiles::ProjectileImpl,
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, meter_per_second_squared, mile_per_hour, pascal, radian, second,
-        Acceleration, Angle, Length, Mass, MyQuantity, Pressure, ThermodynamicTemperature, Time,
-        Velocity,
+        meter, meter_per_second, meter_per_second_squared, mile_per_hour, my_quantity, pascal,
+        radian, second, Acceleration, Angle, Length, Mass, MyQuantity, Pressure,
+        ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
 };

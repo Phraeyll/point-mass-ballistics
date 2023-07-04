@@ -1,8 +1,5 @@
 pub type Numeric = f64;
-pub type NumericMap = float_map::FloatMap<Numeric>;
 
-#[macro_use]
-mod float_map;
 mod consts;
 mod physics;
 mod vectors;

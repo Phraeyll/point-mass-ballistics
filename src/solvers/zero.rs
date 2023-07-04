@@ -1,13 +1,12 @@
 use crate::{
     consts::{FRAC_PI_2, FRAC_PI_4},
     error::{Error, Result},
-    my_quantity,
     output::Measurements,
     output::Packet,
     projectiles::Projectile,
     simulation::Scope,
     simulation::Simulation,
-    units::{angle, radian, Angle, Length, MyQuantity},
+    units::{angle, my_quantity, radian, Angle, Length, MyQuantity},
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)

@@ -1,6 +1,6 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::{
-    units::{radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
+    units::{quantity, radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
     Numeric,
 };
 
@@ -49,27 +49,6 @@ where
     fn from(other: DimVector3<D, U, V>) -> Self {
         other.value
     }
-}
-
-macro_rules! quantity {
-    ($value:expr) => {
-        Quantity {
-            dimension: ::std::marker::PhantomData,
-            units: ::std::marker::PhantomData,
-            value: $value,
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! my_quantity {
-    ($value:expr) => {
-        MyQuantity {
-            dimension: ::std::marker::PhantomData,
-            units: ::std::marker::PhantomData,
-            value: $value,
-        }
-    };
 }
 
 pub type SumDimension<Dl, Dr> = ISQ<

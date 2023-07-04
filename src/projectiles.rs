@@ -7,15 +7,82 @@ use crate::{
         typenum::{N2, P1, Z0},
         Area, Length, Mass, MyQuantity, Ratio, Velocity, ISQ,
     },
-    Numeric, NumericMap,
+    Numeric,
 };
 
-use std::{
-    ops::{Deref, DerefMut},
-    sync::OnceLock,
-};
+use std::ops::{Deref, DerefMut};
 
 pub type SectionalDensity = MyQuantity<ISQ<N2, P1, Z0, Z0, Z0, Z0, Z0>>;
+
+pub struct Table<const N: usize> {
+    x: [Numeric; N],
+    y: [Numeric; N],
+}
+
+impl<const N: usize> Table<N> {
+    pub const fn new(x: [Numeric; N], y: [Numeric; N]) -> Self {
+        Self { x, y }
+    }
+    pub fn search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
+        let mut iter = self.x.into_iter();
+        let mut index = 0;
+        loop {
+            if let Some(n) = iter.next() {
+                if n > x {
+                    if index > 0 {
+                        break Some((
+                            self.x[index - 1],
+                            self.y[index - 1],
+                            self.x[index],
+                            self.y[index],
+                        ));
+                    }
+                    break None;
+                }
+            } else {
+                break None;
+            }
+            index += 1;
+        }
+    }
+    pub fn binary_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
+        if self.x.is_empty() {
+            return None;
+        }
+
+        let mut low = 0;
+        let mut high = self.x.len() - 1;
+        while low <= high {
+            let index = (high + low) / 2;
+            if let Some(&current) = self.x.get(index) {
+                if current > x {
+                    if index == 0 {
+                        return None;
+                    }
+                    high = index - 1
+                }
+                if current < x {
+                    low = index + 1
+                }
+            }
+        }
+        if low < self.x.len() {
+            Some((self.x[high], self.y[high], self.x[low], self.y[low]))
+        } else {
+            None
+        }
+    }
+}
+
+macro_rules! table {
+    ( $($x:expr => $y:expr,)+ ) => {
+        table![$($x => $y),+]
+    };
+    ( $($x:expr => $y:expr),* ) => {{
+        Table::new([$($x,)*], [$($y,)*])
+    }};
+}
+pub(crate) use table;
 
 pub trait Projectile {
     fn area(&self) -> Area {
@@ -85,14 +152,11 @@ macro_rules! drag_tables {
                 // This funtions returns linear approximation of coefficient, for a given mach speed
                 // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
                 fn cd(&self, x: Numeric) -> Result<Numeric> {
-                    // TODO: Does not work if x exists in map as smallest key, ..x excludes it, so first step is None
-                    static TABLE: OnceLock<NumericMap> = OnceLock::new();
-                    let table = TABLE.get_or_init($module::table);
-                    table.range(..x).rev()     // First = None if smallest key >= x, else Some((x0, &y0)) where x0 greatest key <  x
-                        .zip(table.range(x..)) // First = None if greatest key <  x, else Some((x1, &y1)) where x1 smallest key >= x
-                        .map(|((x0, &y0), (x1, &y1))| y0 + (x - x0) * ((y1 - y0) / (x1 - x0))) // Linear interpolation when x0 and x1 both exist
-                        .next()
-                        .ok_or(Error::VelocityLookup(x)) // None => Err: x is outside of key range: this function does not extrapolate
+                    // None => Err: x is outside of key range: this function does not extrapolate
+                    let (x0, y0, x1, y1) = $module::TABLE.binary_search(x).ok_or(Error::VelocityLookup(x))?;
+
+                    // Linear interpolation when x0 and x1 both exist
+                    Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
                 }
             }
         )*

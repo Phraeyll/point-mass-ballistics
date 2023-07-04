@@ -35,3 +35,25 @@ pub(crate) use uom::{
 
 pub(crate) type MyUnits = SI<Numeric>;
 pub(crate) type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
+
+macro_rules! my_quantity {
+    ($value:expr) => {
+        MyQuantity {
+            dimension: ::std::marker::PhantomData,
+            units: ::std::marker::PhantomData,
+            value: $value,
+        }
+    };
+}
+pub(crate) use my_quantity;
+
+macro_rules! quantity {
+    ($value:expr) => {
+        Quantity {
+            dimension: ::std::marker::PhantomData,
+            units: ::std::marker::PhantomData,
+            value: $value,
+        }
+    };
+}
+pub(crate) use quantity;
