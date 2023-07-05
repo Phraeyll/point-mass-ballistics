@@ -38,20 +38,25 @@ where
     pub fn area(&self) -> Area {
         PI * self.radius().powi(P2::new())
     }
+
     pub fn i(&self) -> Ratio {
         self.sd() / self.bc()
     }
+
     pub fn radius(&self) -> Length {
         self.caliber / 2.0
     }
+
     pub fn bc(&self) -> ArealMassDensity {
         let mass = Mass::new::<pound>(self.bc);
         let area = Area::new::<square_inch>(1.0);
         mass / area
     }
+
     pub fn sd(&self) -> ArealMassDensity {
         self.weight / self.caliber.powi(P2::new())
     }
+
     pub fn cd(&self, x: Numeric) -> Result<Numeric> {
         D::cd(x)
     }
@@ -85,12 +90,14 @@ macro_rules! table {
         use super::*;
 
         pub struct Drag();
+
         impl Drag {
             pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
                 [$($x,)*],
                 [$($y,)*],
             );
         }
+
         impl DragFunction for Drag {
             // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
             // This funtions returns linear approximation of coefficient, for a given mach speed
@@ -116,6 +123,7 @@ impl<const N: usize> Table<N> {
     pub const fn new(x: [Numeric; N], y: [Numeric; N]) -> Self {
         Self { x, y }
     }
+
     pub fn linear_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
@@ -128,6 +136,7 @@ impl<const N: usize> Table<N> {
             }
         }
     }
+
     pub fn binary_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
         if self.x.is_empty() {
             unreachable!()

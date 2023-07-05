@@ -44,6 +44,7 @@ where
     W: Fn(&Packet<D>) -> Angle,
 {
     type Item = Result<(Angle, Angle, Length, Length)>;
+
     fn next(&mut self) -> Option<Self::Item> {
         // Previous pitch/yaw values to ensure angles are changing
         let &mut Self {
