@@ -121,24 +121,19 @@ impl<const N: usize> Table<N> {
     }
     pub fn linear_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
         let mut iter = self.x.into_iter();
-        let mut index = 0;
+        let mut i = 0;
         loop {
             if let Some(n) = iter.next() {
                 if n > x {
-                    if index > 0 {
-                        break Some((
-                            self.x[index - 1],
-                            self.y[index - 1],
-                            self.x[index],
-                            self.y[index],
-                        ));
+                    if i > 0 {
+                        break Some((self.x[i - 1], self.y[i - 1], self.x[i], self.y[i]));
                     }
                     break None;
                 }
             } else {
                 break None;
             }
-            index += 1;
+            i += 1;
         }
     }
     pub fn binary_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
