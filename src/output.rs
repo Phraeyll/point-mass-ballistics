@@ -1,7 +1,7 @@
 use crate::{
     projectiles::Projectile,
     simulation::Simulation,
-    units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Time, Velocity},
+    units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Ratio, Time, Velocity},
     vectors::{MyVector3, Norm, Vectors},
 };
 
@@ -23,6 +23,9 @@ where
     }
     fn velocity(&self) -> Velocity {
         self.velocity.norm()
+    }
+    fn mach(&self) -> Ratio {
+        self.simulation.mach(self.velocity)
     }
     fn energy(&self) -> Energy {
         self.velocity.norm().powi(P2::new()) * self.simulation.projectile.mass() * 0.5
@@ -94,6 +97,7 @@ where
 pub trait Measurements {
     fn time(&self) -> Time;
     fn velocity(&self) -> Velocity;
+    fn mach(&self) -> Ratio;
     fn energy(&self) -> Energy;
     fn distance(&self) -> Length;
     fn elevation(&self) -> Length;

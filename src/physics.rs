@@ -33,7 +33,7 @@ where
         velocity - self.wind_velocity()
     }
     // Velocity relative to speed of sound (c), with given atmospheric conditions
-    fn mach(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
+    pub fn mach(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
@@ -41,7 +41,7 @@ where
         self.projectile.i()
             * self
                 .projectile
-                .cd(self.mach(velocity).get::<ratio::ratio>())
+                .cd(self.mach(self.vv(velocity)).get::<ratio::ratio>()) // should self.mach() take velocity, or self.vv(velocity)?
                 .expect("CD")
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
