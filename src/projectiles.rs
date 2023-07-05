@@ -147,11 +147,16 @@ impl<const N: usize> Table<N> {
         while low <= high {
             let index = (high + low) / 2;
             if let Some(&current) = self.x.get(index) {
+                if current == x {
+                    high = index;
+                    low = index;
+                    break;
+                }
                 if current > x {
-                    high = index - 1
+                    high = index - 1;
                 }
                 if current < x {
-                    low = index + 1
+                    low = index + 1;
                 }
             }
         }
