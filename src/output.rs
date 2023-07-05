@@ -1,5 +1,5 @@
 use crate::{
-    projectiles::Projectile,
+    projectiles::DragFunction,
     simulation::Simulation,
     units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Ratio, Time, Velocity},
     vectors::{MyVector3, Norm, Vectors},
@@ -7,16 +7,19 @@ use crate::{
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
-pub struct Packet<'t, T> {
-    pub(crate) simulation: &'t Simulation<T>, //Simulation this came from, used for various calculations
+pub struct Packet<'t, D>
+where
+    D: DragFunction,
+{
+    pub(crate) simulation: &'t Simulation<D>, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                    // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }
 
-impl<T> Measurements for Packet<'_, T>
+impl<D> Measurements for Packet<'_, D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     fn time(&self) -> Time {
         self.time
@@ -28,7 +31,7 @@ where
         self.simulation.mach(self.velocity)
     }
     fn energy(&self) -> Energy {
-        self.velocity.norm().powi(P2::new()) * self.simulation.projectile.mass() * 0.5
+        self.velocity.norm().powi(P2::new()) * self.simulation.projectile.weight * 0.5
     }
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Length {

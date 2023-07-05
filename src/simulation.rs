@@ -1,8 +1,7 @@
-// use self::BcKind::*;
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
-    projectiles::ProjectileImpl,
+    projectiles::{DragFunction, Projectile},
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, my_quantity, pascal,
@@ -12,30 +11,36 @@ use crate::{
     Numeric,
 };
 
-use std::ops::DerefMut;
+use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct Simulation<T> {
+pub struct Simulation<D>
+where
+    D: DragFunction,
+{
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: T, // Use same projectile for zeroing and solving
+    pub(crate) projectile: Projectile<D>, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
     pub(crate) shooter: Shooter, // Different conditions during solving
     pub(crate) time_step: Time, // Use same timestep for zeroing and solving
 }
+
 #[derive(Debug)]
 pub struct Atmosphere {
     pub(crate) temperature: ThermodynamicTemperature, // Temperature (F)
     pub(crate) pressure: Pressure,                    // Pressure (InHg)
     pub(crate) humidity: Numeric,                     // Humidity (0-1)
 }
+
 #[derive(Debug)]
 pub struct Flags {
     pub(crate) coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
     pub(crate) drag: bool,     // Whether or not to calculate drag
     pub(crate) gravity: bool,  // Whether or not to calculate gravity
 }
+
 #[derive(Debug)]
 pub struct Scope {
     pub(crate) yaw: Angle,
@@ -44,6 +49,7 @@ pub struct Scope {
     pub(crate) height: Length, // Scope Height (inches)
     pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
 }
+
 #[derive(Debug)]
 pub struct Shooter {
     pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
@@ -52,6 +58,7 @@ pub struct Shooter {
     pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
     pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
+
 #[derive(Debug)]
 pub struct Wind {
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
@@ -59,23 +66,36 @@ pub struct Wind {
     pub(crate) roll: Angle,        // Doesn make sense, just here for consistency
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
+
 #[derive(Debug)]
-pub struct SimulationBuilder<T> {
-    pub(crate) builder: Simulation<T>,
+pub struct SimulationBuilder<D>
+where
+    D: DragFunction,
+{
+    pub(crate) builder: Simulation<D>,
 }
-impl<T> From<SimulationBuilder<T>> for Simulation<T> {
-    fn from(other: SimulationBuilder<T>) -> Self {
+
+impl<D> From<SimulationBuilder<D>> for Simulation<D>
+where
+    D: DragFunction,
+{
+    fn from(other: SimulationBuilder<D>) -> Self {
         Self { ..other.builder }
     }
 }
-impl<T> From<Simulation<T>> for SimulationBuilder<T> {
-    fn from(other: Simulation<T>) -> Self {
+
+impl<D> From<Simulation<D>> for SimulationBuilder<D>
+where
+    D: DragFunction,
+{
+    fn from(other: Simulation<D>) -> Self {
         Self { builder: other }
     }
 }
-impl<T> Default for SimulationBuilder<T>
+
+impl<D> Default for SimulationBuilder<D>
 where
-    T: From<ProjectileImpl>,
+    D: DragFunction,
 {
     fn default() -> Self {
         Self {
@@ -85,12 +105,13 @@ where
                     drag: true,
                     gravity: true,
                 },
-                projectile: From::from(ProjectileImpl {
+                projectile: Projectile {
                     caliber: Length::new::<inch>(0.264),
                     weight: Mass::new::<grain>(140.0),
                     bc: 0.305,
                     velocity: Velocity::new::<foot_per_second>(2710.0),
-                }),
+                    _marker: PhantomData,
+                },
                 scope: Scope {
                     yaw: Angle::new::<radian>(0.0),
                     pitch: Angle::new::<radian>(0.0),
@@ -122,20 +143,24 @@ where
     }
 }
 
-impl<T> SimulationBuilder<T>
+impl<D> SimulationBuilder<D>
 where
-    T: From<ProjectileImpl>,
+    D: DragFunction,
 {
     pub fn new() -> Self {
         Default::default()
     }
 }
-impl<T> SimulationBuilder<T> {
+impl<D> SimulationBuilder<D>
+where
+    D: DragFunction,
+{
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
-    pub fn init(self) -> Simulation<T> {
+    pub fn init(self) -> Simulation<D> {
         From::from(self)
     }
+
     pub fn set_time_step(mut self, value: Time) -> Result<Self> {
         let min = Time::new::<second>(0.0);
         let max = Time::new::<second>(0.1);
@@ -164,6 +189,7 @@ impl<T> SimulationBuilder<T> {
             })
         }
     }
+
     pub fn set_pressure(mut self, value: Pressure) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.atmosphere.pressure = value;
@@ -172,6 +198,7 @@ impl<T> SimulationBuilder<T> {
             Err(Error::PositiveExpected(value.get::<pascal>()))
         }
     }
+
     pub fn set_humidity(mut self, value: Numeric) -> Result<Self> {
         let (min, max) = (0.0, 1.0);
         if value >= min && value <= max {
@@ -187,10 +214,12 @@ impl<T> SimulationBuilder<T> {
         self.builder.flags.coriolis = value;
         self
     }
+
     pub fn use_drag(mut self, value: bool) -> Self {
         self.builder.flags.drag = value;
         self
     }
+
     pub fn use_gravity(mut self, value: bool) -> Self {
         self.builder.flags.gravity = value;
         self
@@ -210,6 +239,7 @@ impl<T> SimulationBuilder<T> {
             })
         }
     }
+
     pub fn set_lattitude(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-FRAC_PI_2);
         let max = Angle::new::<radian>(FRAC_PI_2);
@@ -223,6 +253,7 @@ impl<T> SimulationBuilder<T> {
             })
         }
     }
+
     pub fn set_bearing(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
@@ -236,6 +267,7 @@ impl<T> SimulationBuilder<T> {
             })
         }
     }
+
     pub fn set_gravity(mut self, value: Acceleration) -> Result<Self> {
         if value.is_sign_negative() {
             self.builder.shooter.gravity = value;
@@ -256,6 +288,7 @@ impl<T> SimulationBuilder<T> {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
         }
     }
+
     pub fn set_wind_angle(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
@@ -275,26 +308,30 @@ impl<T> SimulationBuilder<T> {
         self.builder.scope.height = value;
         self
     }
+
     pub fn set_scope_offset(mut self, value: Length) -> Self {
         self.builder.scope.offset = value;
         self
     }
+
     pub fn set_scope_pitch(mut self, value: Angle) -> Self {
         self.builder.scope.pitch = value;
         self
     }
+
     pub fn set_scope_yaw(mut self, value: Angle) -> Self {
         self.builder.scope.yaw = value;
         self
     }
+
     pub fn set_scope_roll(mut self, value: Angle) -> Self {
         self.builder.scope.roll = value;
         self
     }
 }
-impl<T> SimulationBuilder<T>
+impl<D> SimulationBuilder<D>
 where
-    T: DerefMut<Target = ProjectileImpl>,
+    D: DragFunction,
 {
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
@@ -305,6 +342,7 @@ where
             Err(Error::PositiveExpected(value.get::<meter>()))
         }
     }
+
     pub fn set_velocity(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.velocity = value;
@@ -313,6 +351,7 @@ where
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
         }
     }
+
     pub fn set_mass(mut self, value: Mass) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.weight = value;
@@ -321,6 +360,7 @@ where
             Err(Error::PositiveExpected(value.get::<kilogram>()))
         }
     }
+
     pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
             self.builder.projectile.bc = value;

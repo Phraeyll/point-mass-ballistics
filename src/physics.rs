@@ -1,5 +1,5 @@
 use crate::{
-    projectiles::Projectile,
+    projectiles::DragFunction,
     simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
@@ -12,9 +12,9 @@ use crate::{
 };
 
 // Drag
-impl<T> Simulation<T>
+impl<D> Simulation<D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     // Velocity vector of wind, only horizontal at the moment
     // Does not adjust according to line of sight, since most would measure wind
@@ -60,8 +60,8 @@ where
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.drag() {
-            // Acceleration from drag force and gravity (F = ma)
-            self.drag_force(velocity) * (1.0 / self.projectile.mass())
+            // Acceleration from drag force and gravity (D = ma)
+            self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
             MyVector3::new(
                 Acceleration::new::<meter_per_second_squared>(0.0),
@@ -73,7 +73,10 @@ where
 }
 
 // Coriolis
-impl<T> Simulation<T> {
+impl<D> Simulation<D>
+where
+    D: DragFunction,
+{
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -97,7 +100,10 @@ impl<T> Simulation<T> {
 }
 
 //Gravity
-impl<T> Simulation<T> {
+impl<D> Simulation<D>
+where
+    D: DragFunction,
+{
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()

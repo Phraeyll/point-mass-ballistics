@@ -1,6 +1,6 @@
 use crate::{
     output::Packet,
-    projectiles::Projectile,
+    projectiles::DragFunction,
     simulation::Simulation,
     units::{
         acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
@@ -15,17 +15,20 @@ use std::iter::FusedIterator;
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct Iter<'t, T> {
-    simulation: &'t Simulation<T>, // Reference to model used for calculations
+pub struct Iter<'t, D>
+where
+    D: DragFunction,
+{
+    simulation: &'t Simulation<D>, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
 }
-impl<T> Simulation<T>
+impl<D> Simulation<D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn iter(&self) -> Iter<'_, D> {
         let position = self.absolute_projectile_position();
         let velocity = self.absolute_projectile_velocity();
         Iter {
@@ -39,7 +42,7 @@ where
     // Start with velocity value along X unit vector
     fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(
-            self.projectile.velocity(),
+            self.projectile.velocity,
             Velocity::new::<meter_per_second>(0.0),
             Velocity::new::<meter_per_second>(0.0),
         )
@@ -63,12 +66,12 @@ where
     }
 }
 // Create an new iterator over Simulation
-impl<'t, T> IntoIterator for &'t Simulation<T>
+impl<'t, D> IntoIterator for &'t Simulation<D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = Iter<'t, T>;
+    type IntoIter = Iter<'t, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -76,11 +79,12 @@ where
 }
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
-impl<'t, T> Iterator for Iter<'t, T>
+impl<'t, D> Iterator for Iter<'t, D>
 where
     Self: Newtonian,
+    D: DragFunction,
 {
-    type Item = Packet<'t, T>;
+    type Item = Packet<'t, D>;
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -116,7 +120,7 @@ where
         }
     }
 }
-impl<'t, T> FusedIterator for Iter<'t, T> where T: Projectile {}
+impl<'t, D> FusedIterator for Iter<'t, D> where D: DragFunction {}
 
 pub trait Newtonian {
     fn acceleration(
@@ -149,9 +153,9 @@ pub trait Newtonian {
     }
 }
 
-impl<T> Newtonian for Iter<'_, T>
+impl<D> Newtonian for Iter<'_, D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     fn acceleration(
         &self,

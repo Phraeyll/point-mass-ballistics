@@ -3,7 +3,7 @@ use crate::{
     error::{Error, Result},
     output::Measurements,
     output::Packet,
-    projectiles::Projectile,
+    projectiles::DragFunction,
     simulation::Scope,
     simulation::Simulation,
     units::{angle, my_quantity, radian, Angle, Length, MyQuantity},
@@ -16,14 +16,14 @@ const DEG_45: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_4);
 // Also should never try to pitch this low - not sure if this ever happens in practice
 const DEG_90: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_2);
 
-struct IterFindAdjustments<'t, T, F, E, W>
+struct IterFindAdjustments<'t, D, F, E, W>
 where
-    T: Projectile,
-    F: Fn(&Packet<T>) -> bool,
-    E: Fn(&Packet<T>) -> Angle,
-    W: Fn(&Packet<T>) -> Angle,
+    D: DragFunction,
+    F: Fn(&Packet<D>) -> bool,
+    E: Fn(&Packet<D>) -> Angle,
+    W: Fn(&Packet<D>) -> Angle,
 {
-    sim: &'t mut Simulation<T>,
+    sim: &'t mut Simulation<D>,
 
     finder: F,
     elevation_adjuster: E,
@@ -36,12 +36,12 @@ where
 
 // This never returns None - it returns Some(Result) which can indicate failure instead
 // This is just to capture reason why iteration stopped
-impl<T, F, E, W> Iterator for IterFindAdjustments<'_, T, F, E, W>
+impl<D, F, E, W> Iterator for IterFindAdjustments<'_, D, F, E, W>
 where
-    T: Projectile,
-    F: Fn(&Packet<T>) -> bool,
-    E: Fn(&Packet<T>) -> Angle,
-    W: Fn(&Packet<T>) -> Angle,
+    D: DragFunction,
+    F: Fn(&Packet<D>) -> bool,
+    E: Fn(&Packet<D>) -> Angle,
+    W: Fn(&Packet<D>) -> Angle,
 {
     type Item = Result<(Angle, Angle, Length, Length)>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -92,20 +92,20 @@ where
     }
 }
 
-impl<'t, T> Simulation<T>
+impl<'t, D> Simulation<D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     fn find_adjustments<F, E, W>(
         &'t mut self,
         finder: F,
         elevation_adjuster: E,
         windage_adjuster: W,
-    ) -> IterFindAdjustments<'t, T, F, E, W>
+    ) -> IterFindAdjustments<'t, D, F, E, W>
     where
-        F: Fn(&Packet<T>) -> bool,
-        E: Fn(&Packet<T>) -> Angle,
-        W: Fn(&Packet<T>) -> Angle,
+        F: Fn(&Packet<D>) -> bool,
+        E: Fn(&Packet<D>) -> Angle,
+        W: Fn(&Packet<D>) -> Angle,
     {
         IterFindAdjustments {
             sim: self,
@@ -121,9 +121,9 @@ where
     }
 }
 
-impl<T> Simulation<T>
+impl<D> Simulation<D>
 where
-    T: Projectile,
+    D: DragFunction,
 {
     // Much more practical zeroing algorithm.  Just run flat simulation, then look at moa, and adjust
     // by that number - it's usually pretty close to the adjustment needed, so simulation only needs to be
@@ -139,9 +139,9 @@ where
     ) -> Result<(Angle, Angle)> {
         let (pitch, yaw, _, _) = self
             .find_adjustments(
-                |p: &Packet<T>| p.distance() >= distance,
-                |p: &Packet<T>| p.offset_vertical_angle(elevation_offset, tolerance),
-                |p: &Packet<T>| p.offset_horizontal_angle(windage_offset, tolerance),
+                |p: &Packet<D>| p.distance() >= distance,
+                |p: &Packet<D>| p.offset_vertical_angle(elevation_offset, tolerance),
+                |p: &Packet<D>| p.offset_horizontal_angle(windage_offset, tolerance),
             )
             .find_map(|result| match result {
                 Ok((_, _, elevation, windage)) => {
