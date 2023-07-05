@@ -84,19 +84,20 @@ macro_rules! table {
     ( $($x:expr => $y:expr),* ) => {
         use super::*;
 
-        pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
-            [$($x,)*],
-            [$($y,)*],
-        );
-
         pub struct Drag();
+        impl Drag {
+            pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
+                [$($x,)*],
+                [$($y,)*],
+            );
+        }
         impl DragFunction for Drag {
             // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
             // This funtions returns linear approximation of coefficient, for a given mach speed
             // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
             fn cd(x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
                 // None => Err: x is outside of key range: this function does not extrapolate
-                let (x0, y0, x1, y1) = TABLE
+                let (x0, y0, x1, y1) = Self::TABLE
                     .binary_search(x)
                     .ok_or($crate::error::Error::VelocityLookup(x))?;
 
