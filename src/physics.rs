@@ -252,6 +252,7 @@ impl Wind {
         .pivot_x(self.roll())
     }
 }
+
 impl<D> Projectile<D> {
     pub fn area(&self) -> Area {
         PI * self.radius().powi(P2::new())
