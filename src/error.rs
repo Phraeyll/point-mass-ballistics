@@ -6,7 +6,7 @@ pub type Result<T, E = Error> = result::Result<T, E>;
 
 #[derive(Debug)]
 pub enum Error {
-    VelocityLookup(Numeric),
+    Mach(Numeric),
     PositiveExpected(Numeric),
     NegativeExpected(Numeric),
     OutOfRange {
@@ -33,7 +33,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::VelocityLookup(err) => write!(f, "Velocity Lookup Error: {:?}", err),
+            Self::Mach(err) => write!(f, "Mach Lookup Too High: {:?}", err),
             Self::PositiveExpected(err) => write!(f, "Positive Expected Error: {:?}", err),
             Self::NegativeExpected(err) => write!(f, "Negative Expected Error: {:?}", err),
             Self::OutOfRange { min, max } => write!(

@@ -1,6 +1,6 @@
 use crate::{
     consts::PI,
-    error::Result,
+    error::{Error, Result},
     units::{
         pound, square_inch, typenum::P2, Area, ArealMassDensity, Length, Mass, Ratio, Velocity,
     },
@@ -97,10 +97,7 @@ macro_rules! table {
             // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
             fn cd(x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
                 // None => Err: x is outside of key range: this function does not extrapolate
-                let (x0, y0, x1, y1) = Self::TABLE
-                    .binary_search(x)
-                    .ok_or($crate::error::Error::VelocityLookup(x))?;
-
+                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x)?;
                 // Linear interpolation when x0 and x1 both exist
                 Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             }
@@ -119,26 +116,21 @@ impl<const N: usize> Table<N> {
     pub const fn new(x: [Numeric; N], y: [Numeric; N]) -> Self {
         Self { x, y }
     }
-    pub fn linear_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
-        let mut iter = self.x.into_iter();
-        let mut i = 0;
+    pub fn linear_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
+        let mut iter = self.x.into_iter().enumerate();
         loop {
-            if let Some(n) = iter.next() {
+            if let Some((i, n)) = iter.next() {
                 if n > x {
-                    if i > 0 {
-                        break Some((self.x[i - 1], self.y[i - 1], self.x[i], self.y[i]));
-                    }
-                    break None;
+                    break Ok((self.x[i - 1], self.y[i - 1], self.x[i], self.y[i]));
                 }
             } else {
-                break None;
+                break Err(Error::Mach(x));
             }
-            i += 1;
         }
     }
-    pub fn binary_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
+    pub fn binary_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
         if self.x.is_empty() {
-            return None;
+            unreachable!()
         }
 
         let mut low = 0;
@@ -147,9 +139,6 @@ impl<const N: usize> Table<N> {
             let index = (high + low) / 2;
             if let Some(&current) = self.x.get(index) {
                 if current > x {
-                    if index == 0 {
-                        return None;
-                    }
                     high = index - 1
                 }
                 if current < x {
@@ -158,9 +147,9 @@ impl<const N: usize> Table<N> {
             }
         }
         if low < self.x.len() {
-            Some((self.x[high], self.y[high], self.x[low], self.y[low]))
+            Ok((self.x[high], self.y[high], self.x[low], self.y[low]))
         } else {
-            None
+            Err(Error::Mach(x))
         }
     }
 }
