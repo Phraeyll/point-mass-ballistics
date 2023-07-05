@@ -3,7 +3,7 @@ use crate::{
     error::{Error, Result},
     output::Measurements,
     output::Packet,
-    projectiles::DragFunction,
+    physics::DragFunction,
     simulation::Scope,
     simulation::Simulation,
     units::{angle, my_quantity, radian, Angle, Length, MyQuantity},

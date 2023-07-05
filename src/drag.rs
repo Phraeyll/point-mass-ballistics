@@ -1,13 +1,9 @@
 use crate::{
-    consts::PI,
     error::{Error, Result},
-    units::{
-        pound, square_inch, typenum::P2, Area, ArealMassDensity, Length, Mass, Ratio, Velocity,
-    },
     Numeric,
 };
 
-use std::marker::PhantomData;
+pub use crate::physics::DragFunction;
 
 pub mod g1;
 pub mod g2;
@@ -17,50 +13,6 @@ pub mod g7;
 pub mod g8;
 pub mod gi;
 pub mod gs;
-
-pub trait DragFunction {
-    fn cd(mach: Numeric) -> Result<Numeric>;
-}
-
-#[derive(Debug)]
-pub struct Projectile<D> {
-    pub caliber: Length,
-    pub weight: Mass,
-    pub bc: Numeric,
-    pub velocity: Velocity,
-    pub _marker: PhantomData<D>,
-}
-
-impl<D> Projectile<D>
-where
-    D: DragFunction,
-{
-    pub fn area(&self) -> Area {
-        PI * self.radius().powi(P2::new())
-    }
-
-    pub fn i(&self) -> Ratio {
-        self.sd() / self.bc()
-    }
-
-    pub fn radius(&self) -> Length {
-        self.caliber / 2.0
-    }
-
-    pub fn bc(&self) -> ArealMassDensity {
-        let mass = Mass::new::<pound>(self.bc);
-        let area = Area::new::<square_inch>(1.0);
-        mass / area
-    }
-
-    pub fn sd(&self) -> ArealMassDensity {
-        self.weight / self.caliber.powi(P2::new())
-    }
-
-    pub fn cd(&self, x: Numeric) -> Result<Numeric> {
-        D::cd(x)
-    }
-}
 
 const fn len<const N: usize, T>(_: &[T; N]) -> usize {
     N
@@ -88,6 +40,11 @@ macro_rules! table {
     };
     ( $($x:expr => $y:expr),* ) => {
         use super::*;
+        use $crate::{
+            physics::DragFunction,
+            Numeric,
+            error::Result,
+        };
 
         pub struct Drag;
 
@@ -102,10 +59,10 @@ macro_rules! table {
             // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
             // This funtions returns linear approximation of coefficient, for a given mach speed
             // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
-            fn cd(x: $crate::Numeric) -> $crate::error::Result<$crate::Numeric> {
+            fn cd(x: Numeric) -> Result<Numeric> {
                 // None => Err: x is outside of key range: this function does not extrapolate
-                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x)?;
-                // Linear interpolation when x0 and x1 both exist
+                let result = Self::TABLE.binary_search(x)?;
+                let (x0, y0, x1, y1) = result;
                 Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             }
         }

@@ -1,5 +1,5 @@
 use crate::{
-    projectiles::DragFunction,
+    physics::DragFunction,
     simulation::Simulation,
     units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Ratio, Time, Velocity},
     vectors::{MyVector3, Norm, Vectors},

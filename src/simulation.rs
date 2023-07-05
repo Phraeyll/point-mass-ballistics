@@ -1,7 +1,6 @@
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
-    projectiles::Projectile,
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, my_quantity, pascal,
@@ -36,6 +35,15 @@ pub struct Flags {
     pub(crate) coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
     pub(crate) drag: bool,     // Whether or not to calculate drag
     pub(crate) gravity: bool,  // Whether or not to calculate gravity
+}
+
+#[derive(Debug)]
+pub struct Projectile<D> {
+    pub caliber: Length,
+    pub weight: Mass,
+    pub bc: Numeric,
+    pub velocity: Velocity,
+    pub _marker: PhantomData<D>,
 }
 
 #[derive(Debug)]

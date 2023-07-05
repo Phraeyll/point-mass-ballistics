@@ -1,4 +1,4 @@
-use crate::projectiles::table;
+use crate::drag::table;
 
 table![
     0.00  => 0.2629,

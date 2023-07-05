@@ -1,6 +1,6 @@
 use crate::{
     output::Packet,
-    projectiles::DragFunction,
+    physics::DragFunction,
     simulation::Simulation,
     units::{
         acceleration, length, meter, meter_per_second, meter_per_second_squared, second,

@@ -1,15 +1,20 @@
 use crate::{
-    projectiles::DragFunction,
-    simulation::{Atmosphere, Flags, Scope, Shooter, Simulation, Wind},
+    consts::PI,
+    error::Result,
+    simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
-        my_quantity, pascal, radian_per_second, ratio, velocity, Acceleration, Angle,
-        AngularVelocity, MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio,
-        Velocity,
+        my_quantity, pascal, pound, radian_per_second, ratio, square_inch, typenum::P2, velocity,
+        Acceleration, Angle, AngularVelocity, Area, ArealMassDensity, Length, Mass, MassDensity,
+        MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
 };
+
+pub trait DragFunction {
+    fn cd(x: Numeric) -> Result<Numeric>;
+}
 
 // Drag
 impl<D> Simulation<D>
@@ -38,11 +43,9 @@ where
     }
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
-        self.projectile.i()
-            * self
-                .projectile
-                .cd(self.mach(self.vv(velocity)).get::<ratio::ratio>()) // should self.mach() take velocity, or self.vv(velocity)?
-                .expect("CD")
+        let velocity = self.vv(velocity);
+        let mach = self.mach(velocity).get::<ratio::ratio>();
+        self.projectile.i() * D::cd(mach).expect("CD")
     }
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
@@ -94,10 +97,7 @@ impl<D> Simulation<D> {
             )
         }
     }
-}
 
-//Gravity
-impl<D> Simulation<D> {
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()
@@ -165,6 +165,7 @@ impl Flags {
         self.gravity
     }
 }
+
 impl Scope {
     pub(crate) fn pitch(&self) -> Angle {
         self.pitch
@@ -176,6 +177,7 @@ impl Scope {
         self.roll
     }
 }
+
 impl Shooter {
     // Angular velocity of earth, (radians)
     const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
@@ -227,6 +229,7 @@ impl Shooter {
         .pivot_z(self.lattitude)
     }
 }
+
 impl Wind {
     // This vector indicates direction of wind flow, not source of wind
     fn yaw(&self) -> Angle {
@@ -247,5 +250,37 @@ impl Wind {
         .pivot_y(self.yaw())
         .pivot_z(self.pitch())
         .pivot_x(self.roll())
+    }
+}
+impl<D> Projectile<D> {
+    pub fn area(&self) -> Area {
+        PI * self.radius().powi(P2::new())
+    }
+
+    pub fn i(&self) -> Ratio {
+        self.sd() / self.bc()
+    }
+
+    pub fn radius(&self) -> Length {
+        self.caliber / 2.0
+    }
+
+    pub fn bc(&self) -> ArealMassDensity {
+        let mass = Mass::new::<pound>(self.bc);
+        let area = Area::new::<square_inch>(1.0);
+        mass / area
+    }
+
+    pub fn sd(&self) -> ArealMassDensity {
+        self.weight / self.caliber.powi(P2::new())
+    }
+}
+
+impl<D> Projectile<D>
+where
+    D: DragFunction,
+{
+    pub fn cd(&self, x: Numeric) -> Result<Numeric> {
+        D::cd(x)
     }
 }
