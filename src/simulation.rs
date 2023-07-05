@@ -1,7 +1,7 @@
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
-    projectiles::{DragFunction, Projectile},
+    projectiles::Projectile,
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
         meter, meter_per_second, meter_per_second_squared, mile_per_hour, my_quantity, pascal,
@@ -14,10 +14,7 @@ use crate::{
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct Simulation<D>
-where
-    D: DragFunction,
-{
+pub struct Simulation<D> {
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
     pub(crate) projectile: Projectile<D>, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
@@ -68,35 +65,23 @@ pub struct Wind {
 }
 
 #[derive(Debug)]
-pub struct SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+pub struct SimulationBuilder<D> {
     pub(crate) builder: Simulation<D>,
 }
 
-impl<D> From<SimulationBuilder<D>> for Simulation<D>
-where
-    D: DragFunction,
-{
+impl<D> From<SimulationBuilder<D>> for Simulation<D> {
     fn from(other: SimulationBuilder<D>) -> Self {
         Self { ..other.builder }
     }
 }
 
-impl<D> From<Simulation<D>> for SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+impl<D> From<Simulation<D>> for SimulationBuilder<D> {
     fn from(other: Simulation<D>) -> Self {
         Self { builder: other }
     }
 }
 
-impl<D> Default for SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+impl<D> Default for SimulationBuilder<D> {
     fn default() -> Self {
         Self {
             builder: Simulation {
@@ -143,18 +128,12 @@ where
     }
 }
 
-impl<D> SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+impl<D> SimulationBuilder<D> {
     pub fn new() -> Self {
         Default::default()
     }
 }
-impl<D> SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+impl<D> SimulationBuilder<D> {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     pub fn init(self) -> Simulation<D> {
@@ -329,10 +308,7 @@ where
         self
     }
 }
-impl<D> SimulationBuilder<D>
-where
-    D: DragFunction,
-{
+impl<D> SimulationBuilder<D> {
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {

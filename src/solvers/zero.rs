@@ -18,7 +18,6 @@ const DEG_90: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_2);
 
 struct IterFindAdjustments<'t, D, F, E, W>
 where
-    D: DragFunction,
     F: Fn(&Packet<D>) -> bool,
     E: Fn(&Packet<D>) -> Angle,
     W: Fn(&Packet<D>) -> Angle,
@@ -93,10 +92,7 @@ where
     }
 }
 
-impl<'t, D> Simulation<D>
-where
-    D: DragFunction,
-{
+impl<'t, D> Simulation<D> {
     fn find_adjustments<F, E, W>(
         &'t mut self,
         finder: F,

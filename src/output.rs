@@ -7,10 +7,7 @@ use crate::{
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
-pub struct Packet<'t, D>
-where
-    D: DragFunction,
-{
+pub struct Packet<'t, D> {
     pub(crate) simulation: &'t Simulation<D>, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                    // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)

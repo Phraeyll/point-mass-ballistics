@@ -23,7 +23,7 @@ pub trait DragFunction {
 }
 
 #[derive(Debug)]
-pub struct Projectile<D: DragFunction> {
+pub struct Projectile<D> {
     pub caliber: Length,
     pub weight: Mass,
     pub bc: Numeric,

@@ -73,10 +73,7 @@ where
 }
 
 // Coriolis
-impl<D> Simulation<D>
-where
-    D: DragFunction,
-{
+impl<D> Simulation<D> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -100,10 +97,7 @@ where
 }
 
 //Gravity
-impl<D> Simulation<D>
-where
-    D: DragFunction,
-{
+impl<D> Simulation<D> {
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity() {
             self.shooter.gravity()
