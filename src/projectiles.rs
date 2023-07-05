@@ -89,7 +89,7 @@ macro_rules! table {
     ( $($x:expr => $y:expr),* ) => {
         use super::*;
 
-        pub struct Drag();
+        pub struct Drag;
 
         impl Drag {
             pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
