@@ -119,7 +119,7 @@ impl<const N: usize> Table<N> {
     pub const fn new(x: [Numeric; N], y: [Numeric; N]) -> Self {
         Self { x, y }
     }
-    pub fn search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
+    pub fn linear_search(&self, x: Numeric) -> Option<(Numeric, Numeric, Numeric, Numeric)> {
         let mut iter = self.x.into_iter();
         let mut index = 0;
         loop {
