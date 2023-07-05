@@ -3,10 +3,9 @@ use crate::{
     error::Result,
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
-        acceleration, angular_velocity, celsius, force, meter_per_second, meter_per_second_squared,
-        my_quantity, pascal, pound, radian_per_second, ratio, square_inch, typenum::P2, velocity,
-        Acceleration, Angle, AngularVelocity, Area, ArealMassDensity, Length, Mass, MassDensity,
-        MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
+        acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio,
+        square_inch, typenum::P2, velocity, Angle, AngularVelocity, Area, ArealMassDensity, Length,
+        Mass, MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm, Vectors},
     Numeric,
@@ -32,21 +31,25 @@ where
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
     }
+
     // Velocity vector, after impact from wind (actually from drag, not "being blown")
     // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
     fn vv(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<velocity::Dimension> {
         velocity - self.wind_velocity()
     }
+
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     pub fn mach(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
         velocity.norm() / self.atmosphere.speed_of_sound()
     }
+
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
     fn cd(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
         let velocity = self.vv(velocity);
         let mach = self.mach(velocity).get::<ratio::ratio>();
         self.projectile.i() * D::cd(mach).expect("CD")
     }
+
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
@@ -58,6 +61,7 @@ where
             * self.cd(velocity)
             * -0.5
     }
+
     pub(crate) fn drag_acceleration(
         &self,
         velocity: MyVector3<velocity::Dimension>,
@@ -66,16 +70,11 @@ where
             // Acceleration from drag force and gravity (D = ma)
             self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
-            MyVector3::new(
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-            )
+            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
         }
     }
 }
 
-// Coriolis
 impl<D> Simulation<D> {
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
@@ -90,11 +89,7 @@ impl<D> Simulation<D> {
         if self.flags.coriolis() {
             self.shooter.omega().cross(&velocity) * -2.0
         } else {
-            MyVector3::new(
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-            )
+            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
         }
     }
 
@@ -102,11 +97,7 @@ impl<D> Simulation<D> {
         if self.flags.gravity() {
             self.shooter.gravity()
         } else {
-            MyVector3::new(
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-                Acceleration::new::<meter_per_second_squared>(0.0),
-            )
+            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
         }
     }
 }
@@ -130,24 +121,28 @@ impl Atmosphere {
         ((self.pd() * Self::MOLAR_MASS_DRY_AIR) + (self.pv() * Self::MOLAR_MASS_WATER_VAPOR))
             / (Self::MOLAR_GAS_UNIVERSAL * self.temperature)
     }
+
     // Speed of sound at given air density and pressure
     pub(crate) fn speed_of_sound(&self) -> Velocity {
         (Self::ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
     }
+
     // Pressure of water vapor, Arden Buck equation
     fn pv(&self) -> Pressure {
-        Pressure::new::<pascal>(
+        my_quantity!(
             self.humidity
                 * 611.21
                 * ((18.678 - (self.celsius() / 234.5))
                     * (self.celsius() / (257.14 + self.celsius())))
-                .exp(),
+                .exp()
         )
     }
+
     // Pressure of dry air
     fn pd(&self) -> Pressure {
         self.pressure - self.pv()
     }
+
     // Temperature in celsius
     fn celsius(&self) -> Numeric {
         self.temperature.get::<celsius>()
@@ -158,9 +153,11 @@ impl Flags {
     fn coriolis(&self) -> bool {
         self.coriolis
     }
+
     fn drag(&self) -> bool {
         self.drag
     }
+
     fn gravity(&self) -> bool {
         self.gravity
     }
@@ -170,9 +167,11 @@ impl Scope {
     pub(crate) fn pitch(&self) -> Angle {
         self.pitch
     }
+
     pub(crate) fn yaw(&self) -> Angle {
         -self.yaw
     }
+
     pub(crate) fn roll(&self) -> Angle {
         self.roll
     }
@@ -183,12 +182,9 @@ impl Shooter {
     const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
 
     fn gravity(&self) -> MyVector3<acceleration::Dimension> {
-        MyVector3::new(
-            Acceleration::new::<meter_per_second_squared>(0.0),
-            self.gravity,
-            Acceleration::new::<meter_per_second_squared>(0.0),
-        )
+        MyVector3::new(my_quantity!(0.0), self.gravity, my_quantity!(0.0))
     }
+
     // Flip, since circle functions rotate counter-clockwise,
     // 90 degrees is east by compass bearing, but west(left) in trig
     //        (0)
@@ -211,9 +207,11 @@ impl Shooter {
     pub(crate) fn yaw(&self) -> Angle {
         -self.yaw
     }
+
     pub(crate) fn pitch(&self) -> Angle {
         self.pitch
     }
+
     pub(crate) fn roll(&self) -> Angle {
         -self.roll
     }
@@ -223,8 +221,8 @@ impl Shooter {
     fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
         MyVector3::new(
             Self::ANGULAR_VELOCITY_EARTH,
-            AngularVelocity::new::<radian_per_second>(0.0),
-            AngularVelocity::new::<radian_per_second>(0.0),
+            my_quantity!(0.0),
+            my_quantity!(0.0),
         )
         .pivot_z(self.lattitude)
     }
@@ -235,21 +233,20 @@ impl Wind {
     fn yaw(&self) -> Angle {
         self.yaw
     }
+
     fn pitch(&self) -> Angle {
         self.pitch
     }
+
     fn roll(&self) -> Angle {
         self.roll
     }
+
     fn velocity(&self) -> MyVector3<velocity::Dimension> {
-        MyVector3::new(
-            self.velocity,
-            Velocity::new::<meter_per_second>(0.0),
-            Velocity::new::<meter_per_second>(0.0),
-        )
-        .pivot_y(self.yaw())
-        .pivot_z(self.pitch())
-        .pivot_x(self.roll())
+        MyVector3::new(self.velocity, my_quantity!(0.0), my_quantity!(0.0))
+            .pivot_y(self.yaw())
+            .pivot_z(self.pitch())
+            .pivot_x(self.roll())
     }
 }
 
