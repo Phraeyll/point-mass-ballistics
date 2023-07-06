@@ -14,7 +14,7 @@ pub mod g8;
 pub mod gi;
 pub mod gs;
 
-const fn len<const N: usize, T>(_: &[T; N]) -> usize {
+const fn len<const N: usize>(_: [(); N]) -> usize {
     N
 }
 
@@ -23,7 +23,7 @@ macro_rules! count {
         count!($($t),+)
     };
     ($($t:tt),*) => {
-        len(&[$(subst!($t, ())),*])
+        len([$(subst!($t, ())),*])
     };
 }
 pub(crate) use count;
