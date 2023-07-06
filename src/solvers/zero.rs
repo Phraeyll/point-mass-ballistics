@@ -6,7 +6,7 @@ use crate::{
     physics::DragFunction,
     simulation::Scope,
     simulation::Simulation,
-    units::{angle, my_quantity, radian, Angle, Length, MyQuantity},
+    units::{angle, my_quantity, Angle, ConstZero, Length, MyQuantity},
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)
@@ -111,9 +111,9 @@ impl<'t, D> Simulation<D> {
             elevation_adjuster,
             windage_adjuster,
 
-            elevation_adjustment: Angle::new::<radian>(0.0),
-            windage_adjustment: Angle::new::<radian>(0.0),
-            count: 0u64,
+            elevation_adjustment: Angle::ZERO,
+            windage_adjustment: Angle::ZERO,
+            count: 0,
         }
     }
 }
