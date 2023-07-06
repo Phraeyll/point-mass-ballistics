@@ -1,7 +1,10 @@
 use crate::{
     physics::DragFunction,
     simulation::Simulation,
-    units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Ratio, Time, Velocity},
+    units::{
+        length, meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Ratio, Time,
+        Velocity,
+    },
     vectors::{MyVector3, Norm},
 };
 
@@ -64,20 +67,16 @@ where
     }
 
     fn angle(&self) -> Angle {
-        let compare = MyVector3::new(
-            Length::new::<meter>(1.0),
-            Length::new::<meter>(0.0),
-            Length::new::<meter>(0.0),
-        );
+        let compare = MyVector3::new(Length::new::<meter>(1.0), Length::ZERO, Length::ZERO);
         self.relative_position().angle(&compare)
     }
 
     fn vertical_angle(&self, tolerance: Length) -> Angle {
-        self.offset_vertical_angle(Length::new::<meter>(0.0), tolerance)
+        self.offset_vertical_angle(Length::ZERO, tolerance)
     }
 
     fn horizontal_angle(&self, tolerance: Length) -> Angle {
-        self.offset_horizontal_angle(Length::new::<meter>(0.0), tolerance)
+        self.offset_horizontal_angle(Length::ZERO, tolerance)
     }
 
     // During the simulation, the velocity of the projectile is rotated to allign with
@@ -100,8 +99,8 @@ where
             1.0
         };
 
-        let position = MyVector3::new(self.distance(), self.elevation(), Length::new::<meter>(0.0));
-        let desired = MyVector3::new(self.distance(), offset, Length::new::<meter>(0.0));
+        let position = MyVector3::new(self.distance(), self.elevation(), Length::ZERO);
+        let desired = MyVector3::new(self.distance(), offset, Length::ZERO);
 
         position.angle(&desired) * sign
     }
@@ -115,8 +114,8 @@ where
             1.0
         };
 
-        let position = MyVector3::new(self.distance(), Length::new::<meter>(0.0), self.windage());
-        let desired = MyVector3::new(self.distance(), Length::new::<meter>(0.0), offset);
+        let position = MyVector3::new(self.distance(), Length::ZERO, self.windage());
+        let desired = MyVector3::new(self.distance(), Length::ZERO, offset);
 
         position.angle(&desired) * sign
     }
