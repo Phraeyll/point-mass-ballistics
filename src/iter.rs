@@ -33,6 +33,7 @@ impl<D> Simulation<D> {
             time: Time::new::<second>(0.0),
         }
     }
+
     // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
     // Start with velocity value along X unit vector
     fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
@@ -47,6 +48,7 @@ impl<D> Simulation<D> {
         .pivot_z(self.shooter.pitch())
         .pivot_y(self.shooter.yaw())
     }
+
     // Projectiles position relative to scope
     fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
         MyVector3::new(
@@ -81,6 +83,7 @@ where
     Self: Newtonian,
 {
     type Item = Packet<'t, D>;
+
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
@@ -130,9 +133,11 @@ pub trait Newtonian {
             Acceleration::new::<meter_per_second_squared>(0.0),
         )
     }
+
     fn delta_time(&self) -> Time {
         Time::new::<second>(0.000_005)
     }
+
     // 'Second Equation of Motion'
     fn delta_position(
         &self,
@@ -141,6 +146,7 @@ pub trait Newtonian {
         velocity * self.delta_time()
             + (self.acceleration(velocity) * self.delta_time().powi(P2::new())) * 0.5
     }
+
     // 'First Equation of Motion'
     fn delta_velocity(
         &self,
@@ -162,6 +168,7 @@ where
             + self.simulation.drag_acceleration(velocity)
             + self.simulation.gravity_acceleration()
     }
+
     fn delta_time(&self) -> Time {
         self.simulation.time_step
     }

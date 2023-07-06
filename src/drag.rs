@@ -17,6 +17,7 @@ pub mod gs;
 const fn len<const N: usize, T>(_: &[T; N]) -> usize {
     N
 }
+
 macro_rules! count {
     ($($t:tt,)+) => {
         count!($($t),+)
