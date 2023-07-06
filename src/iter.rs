@@ -2,10 +2,7 @@ use crate::{
     output::Packet,
     physics::DragFunction,
     simulation::Simulation,
-    units::{
-        acceleration, length, meter, meter_per_second, meter_per_second_squared, second,
-        typenum::P2, velocity, Acceleration, Length, Time, Velocity,
-    },
+    units::{acceleration, length, my_quantity, typenum::P2, velocity, Time},
     vectors::MyVector3,
 };
 
@@ -30,7 +27,7 @@ impl<D> Simulation<D> {
             simulation: self,
             position,
             velocity,
-            time: Time::new::<second>(0.0),
+            time: my_quantity!(0.0),
         }
     }
 
@@ -39,8 +36,8 @@ impl<D> Simulation<D> {
     fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(
             self.projectile.velocity,
-            Velocity::new::<meter_per_second>(0.0),
-            Velocity::new::<meter_per_second>(0.0),
+            my_quantity!(0.0),
+            my_quantity!(0.0),
         )
         .pivot_y(self.scope.yaw())
         .pivot_z(self.scope.pitch())
@@ -51,15 +48,11 @@ impl<D> Simulation<D> {
 
     // Projectiles position relative to scope
     fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
-        MyVector3::new(
-            Length::new::<meter>(0.0),
-            -self.scope.height,
-            -self.scope.offset,
-        )
-        .pivot_x(self.scope.roll())
-        .pivot_x(self.shooter.roll())
-        .pivot_z(self.shooter.pitch())
-        .pivot_y(self.shooter.yaw())
+        MyVector3::new(my_quantity!(0.0), -self.scope.height, -self.scope.offset)
+            .pivot_x(self.scope.roll())
+            .pivot_x(self.shooter.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
     }
 }
 
@@ -127,15 +120,11 @@ pub trait Newtonian {
         &self,
         _velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
-        MyVector3::new(
-            Acceleration::new::<meter_per_second_squared>(0.0),
-            Acceleration::new::<meter_per_second_squared>(0.0),
-            Acceleration::new::<meter_per_second_squared>(0.0),
-        )
+        MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
     }
 
     fn delta_time(&self) -> Time {
-        Time::new::<second>(0.000_005)
+        my_quantity!(0.000_005)
     }
 
     // 'Second Equation of Motion'
