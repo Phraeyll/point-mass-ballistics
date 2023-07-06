@@ -5,7 +5,8 @@ use crate::{
     units::{
         acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
         typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
-        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, Velocity,
+        ConstZero, Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio,
+        Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
     Numeric,
@@ -70,7 +71,7 @@ where
             // Acceleration from drag force and gravity (D = ma)
             self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
-            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
+            MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
         }
     }
 }
@@ -89,7 +90,7 @@ impl<D> Simulation<D> {
         if self.flags.coriolis() {
             self.shooter.omega().cross(&velocity) * -2.0
         } else {
-            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
+            MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
         }
     }
 
@@ -97,7 +98,7 @@ impl<D> Simulation<D> {
         if self.flags.gravity() {
             self.shooter.gravity()
         } else {
-            MyVector3::new(my_quantity!(0.0), my_quantity!(0.0), my_quantity!(0.0))
+            MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
         }
     }
 }
@@ -185,7 +186,7 @@ impl Shooter {
     const GRAVITY: Acceleration = my_quantity!(-9.806_65);
 
     fn gravity(&self) -> MyVector3<acceleration::Dimension> {
-        MyVector3::new(my_quantity!(0.0), Self::GRAVITY, my_quantity!(0.0))
+        MyVector3::new(Acceleration::ZERO, Self::GRAVITY, Acceleration::ZERO)
     }
 
     // Flip, since circle functions rotate counter-clockwise,
@@ -223,8 +224,12 @@ impl Shooter {
     // Can be thought of as vector from center of earth, pointing
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
     fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
-        MyVector3::new(Self::ANGULAR_VELOCITY, my_quantity!(0.0), my_quantity!(0.0))
-            .pivot_z(self.lattitude)
+        MyVector3::new(
+            Self::ANGULAR_VELOCITY,
+            AngularVelocity::ZERO,
+            AngularVelocity::ZERO,
+        )
+        .pivot_z(self.lattitude)
     }
 }
 
@@ -243,7 +248,7 @@ impl Wind {
     }
 
     fn velocity(&self) -> MyVector3<velocity::Dimension> {
-        MyVector3::new(self.velocity, my_quantity!(0.0), my_quantity!(0.0))
+        MyVector3::new(self.velocity, Velocity::ZERO, Velocity::ZERO)
             .pivot_y(self.yaw())
             .pivot_z(self.pitch())
             .pivot_x(self.roll())

@@ -27,6 +27,7 @@ pub use uom::{
         velocity::{self, foot_per_second, meter_per_second, mile_per_hour},
     },
     str::ParseQuantityError,
+    ConstZero,
 };
 
 pub(crate) use uom::{
