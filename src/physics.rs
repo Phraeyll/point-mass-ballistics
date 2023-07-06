@@ -3,11 +3,11 @@ use crate::{
     error::Result,
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
-        acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio,
-        square_inch, typenum::P2, velocity, Angle, AngularVelocity, Area, ArealMassDensity, Length,
-        Mass, MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
+        acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
+        typenum::P2, velocity, Angle, AngularVelocity, Area, ArealMassDensity, Length, Mass,
+        MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
     },
-    vectors::{Cross, MyVector3, Norm, Vectors},
+    vectors::{Cross, MyVector3, Norm},
     Numeric,
 };
 

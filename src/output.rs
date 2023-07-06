@@ -2,8 +2,24 @@ use crate::{
     physics::DragFunction,
     simulation::Simulation,
     units::{length, meter, typenum::P2, velocity, Angle, Energy, Length, Ratio, Time, Velocity},
-    vectors::{MyVector3, Norm, Vectors},
+    vectors::{MyVector3, Norm},
 };
+
+pub trait Measurements {
+    fn time(&self) -> Time;
+    fn velocity(&self) -> Velocity;
+    fn mach(&self) -> Ratio;
+    fn energy(&self) -> Energy;
+    fn distance(&self) -> Length;
+    fn elevation(&self) -> Length;
+    fn windage(&self) -> Length;
+    fn angle(&self) -> Angle;
+    fn vertical_angle(&self, tolerance: Length) -> Angle;
+    fn horizontal_angle(&self, tolerance: Length) -> Angle;
+    fn relative_position(&self) -> MyVector3<length::Dimension>;
+    fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle;
+    fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle;
+}
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
@@ -21,25 +37,32 @@ where
     fn time(&self) -> Time {
         self.time
     }
+
     fn velocity(&self) -> Velocity {
         self.velocity.norm()
     }
+
     fn mach(&self) -> Ratio {
         self.simulation.mach(self.velocity)
     }
+
     fn energy(&self) -> Energy {
         self.velocity.norm().powi(P2::new()) * self.simulation.projectile.weight * 0.5
     }
+
     // Positions relative to line of sight (shooter_pitch)
     fn distance(&self) -> Length {
         self.relative_position().get_x()
     }
+
     fn elevation(&self) -> Length {
         self.relative_position().get_y()
     }
+
     fn windage(&self) -> Length {
         self.relative_position().get_z()
     }
+
     fn angle(&self) -> Angle {
         let compare = MyVector3::new(
             Length::new::<meter>(1.0),
@@ -48,12 +71,15 @@ where
         );
         self.relative_position().angle(&compare)
     }
+
     fn vertical_angle(&self, tolerance: Length) -> Angle {
         self.offset_vertical_angle(Length::new::<meter>(0.0), tolerance)
     }
+
     fn horizontal_angle(&self, tolerance: Length) -> Angle {
         self.offset_horizontal_angle(Length::new::<meter>(0.0), tolerance)
     }
+
     // During the simulation, the velocity of the projectile is rotated to allign with
     // the shooter's bearing (azimuth and line of sight)
     // This function returns the position rotated back to the initial frame of reference
@@ -64,6 +90,7 @@ where
             .pivot_z(-self.simulation.shooter.pitch())
             .pivot_x(-self.simulation.shooter.roll())
     }
+
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
     fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle {
@@ -78,6 +105,7 @@ where
 
         position.angle(&desired) * sign
     }
+
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
     fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle {
@@ -92,20 +120,4 @@ where
 
         position.angle(&desired) * sign
     }
-}
-
-pub trait Measurements {
-    fn time(&self) -> Time;
-    fn velocity(&self) -> Velocity;
-    fn mach(&self) -> Ratio;
-    fn energy(&self) -> Energy;
-    fn distance(&self) -> Length;
-    fn elevation(&self) -> Length;
-    fn windage(&self) -> Length;
-    fn angle(&self) -> Angle;
-    fn vertical_angle(&self, tolerance: Length) -> Angle;
-    fn horizontal_angle(&self, tolerance: Length) -> Angle;
-    fn relative_position(&self) -> MyVector3<length::Dimension>;
-    fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle;
-    fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle;
 }

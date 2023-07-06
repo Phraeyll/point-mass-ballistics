@@ -101,15 +101,6 @@ pub trait Norm {
     fn norm(&self) -> Self::Output;
 }
 
-pub trait Vectors {
-    type Output;
-
-    fn new(x: Self::Output, y: Self::Output, z: Self::Output) -> Self;
-    fn get_x(&self) -> Self::Output;
-    fn get_y(&self) -> Self::Output;
-    fn get_z(&self) -> Self::Output;
-}
-
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Cross<&DimVector3<Dr, Ur, V>>
     for DimVector3<Dl, Ul, V>
 where
@@ -146,28 +137,29 @@ where
     }
 }
 
-impl<D: ?Sized, U: ?Sized, V> Vectors for DimVector3<D, U, V>
+impl<D: ?Sized, U: ?Sized, V> DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy,
 {
-    type Output = Quantity<D, U, V>;
-
-    fn new(x: Self::Output, y: Self::Output, z: Self::Output) -> Self {
+    pub fn new(x: Quantity<D, U, V>, y: Quantity<D, U, V>, z: Quantity<D, U, V>) -> Self {
         Self {
             dimension: PhantomData,
             units: PhantomData,
             value: Vector3::new(x.value, y.value, z.value),
         }
     }
-    fn get_x(&self) -> Self::Output {
+
+    pub fn get_x(&self) -> Quantity<D, U, V> {
         quantity!(self.value.x)
     }
-    fn get_y(&self) -> Self::Output {
+
+    pub fn get_y(&self) -> Quantity<D, U, V> {
         quantity!(self.value.y)
     }
-    fn get_z(&self) -> Self::Output {
+
+    pub fn get_z(&self) -> Quantity<D, U, V> {
         quantity!(self.value.z)
     }
 }
@@ -179,16 +171,19 @@ where
     pub fn angle(self, other: &Self) -> Angle {
         Angle::new::<radian>(Vector3::from(self).angle(&other.value))
     }
+
     pub fn pivot_z(self, angle: Angle) -> Self {
         (Rotation3::from_axis_angle(&Vector3::z_axis(), angle.get::<radian>())
             * Vector3::from(self))
         .into()
     }
+
     pub fn pivot_y(self, angle: Angle) -> Self {
         (Rotation3::from_axis_angle(&Vector3::y_axis(), angle.get::<radian>())
             * Vector3::from(self))
         .into()
     }
+
     pub fn pivot_x(self, angle: Angle) -> Self {
         (Rotation3::from_axis_angle(&Vector3::x_axis(), angle.get::<radian>())
             * Vector3::from(self))
