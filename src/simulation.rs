@@ -70,65 +70,49 @@ pub struct Wind {
 }
 
 #[derive(Debug)]
-pub struct SimulationBuilder<D> {
-    pub(crate) builder: Simulation<D>,
-}
-
-impl<D> From<SimulationBuilder<D>> for Simulation<D> {
-    fn from(other: SimulationBuilder<D>) -> Self {
-        Self { ..other.builder }
-    }
-}
-
-impl<D> From<Simulation<D>> for SimulationBuilder<D> {
-    fn from(other: Simulation<D>) -> Self {
-        Self { builder: other }
-    }
-}
+pub struct SimulationBuilder<D>(Simulation<D>);
 
 impl<D> Default for SimulationBuilder<D> {
     fn default() -> Self {
-        Self {
-            builder: Simulation {
-                _marker: PhantomData,
-                flags: Flags {
-                    coriolis: true,
-                    drag: true,
-                    gravity: true,
-                },
-                projectile: Projectile {
-                    caliber: Length::ZERO,
-                    weight: Mass::ZERO,
-                    bc: 0.0,
-                    velocity: Velocity::ZERO,
-                },
-                scope: Scope {
-                    yaw: Angle::ZERO,
-                    pitch: Angle::ZERO,
-                    roll: Angle::ZERO,
-                    height: Length::ZERO,
-                    offset: Length::ZERO,
-                },
-                atmosphere: Atmosphere {
-                    temperature: ThermodynamicTemperature::ZERO,
-                    pressure: Pressure::ZERO,
-                    humidity: 0.0,
-                },
-                wind: Wind {
-                    yaw: Angle::ZERO,
-                    pitch: Angle::ZERO,
-                    roll: Angle::ZERO,
-                    velocity: Velocity::ZERO,
-                },
-                shooter: Shooter {
-                    yaw: Angle::ZERO,
-                    pitch: Angle::ZERO,
-                    roll: Angle::ZERO,
-                    lattitude: Angle::ZERO,
-                },
-                time_step: Time::ZERO,
+        Self(Simulation {
+            _marker: PhantomData,
+            flags: Flags {
+                coriolis: true,
+                drag: true,
+                gravity: true,
             },
-        }
+            projectile: Projectile {
+                caliber: Length::ZERO,
+                weight: Mass::ZERO,
+                bc: Numeric::ZERO,
+                velocity: Velocity::ZERO,
+            },
+            scope: Scope {
+                yaw: Angle::ZERO,
+                pitch: Angle::ZERO,
+                roll: Angle::ZERO,
+                height: Length::ZERO,
+                offset: Length::ZERO,
+            },
+            atmosphere: Atmosphere {
+                temperature: ThermodynamicTemperature::ZERO,
+                pressure: Pressure::ZERO,
+                humidity: Numeric::ZERO,
+            },
+            wind: Wind {
+                yaw: Angle::ZERO,
+                pitch: Angle::ZERO,
+                roll: Angle::ZERO,
+                velocity: Velocity::ZERO,
+            },
+            shooter: Shooter {
+                yaw: Angle::ZERO,
+                pitch: Angle::ZERO,
+                roll: Angle::ZERO,
+                lattitude: Angle::ZERO,
+            },
+            time_step: Time::ZERO,
+        })
     }
 }
 
@@ -142,14 +126,14 @@ impl<D> SimulationBuilder<D> {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     pub fn init(self) -> Simulation<D> {
-        From::from(self)
+        self.0
     }
 
     pub fn set_time_step(mut self, value: Time) -> Result<Self> {
-        let min = Time::new::<second>(0.0);
+        let min = Time::ZERO;
         let max = Time::new::<second>(0.1);
         if value > min && value <= max {
-            self.builder.time_step = value;
+            self.0.time_step = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -164,7 +148,7 @@ impl<D> SimulationBuilder<D> {
         let min = ThermodynamicTemperature::new::<celsius>(-80.0);
         let max = ThermodynamicTemperature::new::<celsius>(50.0);
         if value >= min && value <= max {
-            self.builder.atmosphere.temperature = value;
+            self.0.atmosphere.temperature = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -176,7 +160,7 @@ impl<D> SimulationBuilder<D> {
 
     pub fn set_pressure(mut self, value: Pressure) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.atmosphere.pressure = value;
+            self.0.atmosphere.pressure = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<pascal>()))
@@ -184,9 +168,10 @@ impl<D> SimulationBuilder<D> {
     }
 
     pub fn set_humidity(mut self, value: Numeric) -> Result<Self> {
-        let (min, max) = (0.0, 1.0);
+        let min = 0.0;
+        let max = 1.0;
         if value >= min && value <= max {
-            self.builder.atmosphere.humidity = value;
+            self.0.atmosphere.humidity = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange { min, max })
@@ -195,17 +180,17 @@ impl<D> SimulationBuilder<D> {
 
     // Flags
     pub fn use_coriolis(mut self, value: bool) -> Self {
-        self.builder.flags.coriolis = value;
+        self.0.flags.coriolis = value;
         self
     }
 
     pub fn use_drag(mut self, value: bool) -> Self {
-        self.builder.flags.drag = value;
+        self.0.flags.drag = value;
         self
     }
 
     pub fn use_gravity(mut self, value: bool) -> Self {
-        self.builder.flags.gravity = value;
+        self.0.flags.gravity = value;
         self
     }
 
@@ -214,7 +199,7 @@ impl<D> SimulationBuilder<D> {
         let min = Angle::new::<radian>(-FRAC_PI_2);
         let max = Angle::new::<radian>(FRAC_PI_2);
         if value >= min && value <= max {
-            self.builder.shooter.pitch = value;
+            self.0.shooter.pitch = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -228,7 +213,7 @@ impl<D> SimulationBuilder<D> {
         let min = Angle::new::<radian>(-FRAC_PI_2);
         let max = Angle::new::<radian>(FRAC_PI_2);
         if value >= min && value <= max {
-            self.builder.shooter.lattitude = value;
+            self.0.shooter.lattitude = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -242,7 +227,7 @@ impl<D> SimulationBuilder<D> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
         if value >= min && value <= max {
-            self.builder.shooter.yaw = value;
+            self.0.shooter.yaw = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -255,7 +240,7 @@ impl<D> SimulationBuilder<D> {
     // Wind
     pub fn set_wind_speed(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.wind.velocity = value;
+            self.0.wind.velocity = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
@@ -266,7 +251,7 @@ impl<D> SimulationBuilder<D> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
         if value >= min && value <= max {
-            self.builder.wind.yaw = value;
+            self.0.wind.yaw = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
@@ -278,34 +263,34 @@ impl<D> SimulationBuilder<D> {
 
     //Scope
     pub fn set_scope_height(mut self, value: Length) -> Self {
-        self.builder.scope.height = value;
+        self.0.scope.height = value;
         self
     }
 
     pub fn set_scope_offset(mut self, value: Length) -> Self {
-        self.builder.scope.offset = value;
+        self.0.scope.offset = value;
         self
     }
 
     pub fn set_scope_pitch(mut self, value: Angle) -> Self {
-        self.builder.scope.pitch = value;
+        self.0.scope.pitch = value;
         self
     }
 
     pub fn set_scope_yaw(mut self, value: Angle) -> Self {
-        self.builder.scope.yaw = value;
+        self.0.scope.yaw = value;
         self
     }
 
     pub fn set_scope_roll(mut self, value: Angle) -> Self {
-        self.builder.scope.roll = value;
+        self.0.scope.roll = value;
         self
     }
 
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.caliber = value;
+            self.0.projectile.caliber = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter>()))
@@ -314,7 +299,7 @@ impl<D> SimulationBuilder<D> {
 
     pub fn set_velocity(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.velocity = value;
+            self.0.projectile.velocity = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
@@ -323,7 +308,7 @@ impl<D> SimulationBuilder<D> {
 
     pub fn set_mass(mut self, value: Mass) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.weight = value;
+            self.0.projectile.weight = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<kilogram>()))
@@ -332,7 +317,7 @@ impl<D> SimulationBuilder<D> {
 
     pub fn set_bc(mut self, value: Numeric) -> Result<Self> {
         if value.is_sign_positive() {
-            self.builder.projectile.bc = value;
+            self.0.projectile.bc = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value))
