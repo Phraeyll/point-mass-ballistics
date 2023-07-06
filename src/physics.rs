@@ -1,7 +1,7 @@
 use crate::{
     consts::PI,
     error::Result,
-    simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
+    simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
         typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
@@ -67,7 +67,7 @@ where
         &self,
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
-        if self.flags.drag() {
+        if self.flags.drag {
             // Acceleration from drag force and gravity (D = ma)
             self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
@@ -87,7 +87,7 @@ impl<D> Simulation<D> {
         &self,
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
-        if self.flags.coriolis() {
+        if self.flags.coriolis {
             self.shooter.omega().cross(&velocity) * -2.0
         } else {
             MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
@@ -95,7 +95,7 @@ impl<D> Simulation<D> {
     }
 
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
-        if self.flags.gravity() {
+        if self.flags.gravity {
             self.shooter.gravity()
         } else {
             MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
@@ -150,27 +150,13 @@ impl Atmosphere {
     }
 }
 
-impl Flags {
-    fn coriolis(&self) -> bool {
-        self.coriolis
-    }
-
-    fn drag(&self) -> bool {
-        self.drag
-    }
-
-    fn gravity(&self) -> bool {
-        self.gravity
-    }
-}
-
 impl Scope {
-    pub(crate) fn pitch(&self) -> Angle {
-        self.pitch
-    }
-
     pub(crate) fn yaw(&self) -> Angle {
         -self.yaw
+    }
+
+    pub(crate) fn pitch(&self) -> Angle {
+        self.pitch
     }
 
     pub(crate) fn roll(&self) -> Angle {
