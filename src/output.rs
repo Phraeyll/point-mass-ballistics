@@ -94,9 +94,9 @@ where
     // Always done in meters for now, due to relative_position()
     fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle {
         let sign = if self.elevation() >= (offset - tolerance) {
-            -1.0
-        } else {
             1.0
+        } else {
+            -1.0
         };
 
         let position = MyVector3::new(self.distance(), self.elevation(), Length::ZERO);
@@ -109,9 +109,9 @@ where
     // Always done in meters for now, due to relative_position()
     fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle {
         let sign = if self.windage() >= (offset - tolerance) {
-            -1.0
-        } else {
             1.0
+        } else {
+            -1.0
         };
 
         let position = MyVector3::new(self.distance(), Length::ZERO, self.windage());
