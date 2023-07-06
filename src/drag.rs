@@ -96,7 +96,7 @@ impl<const N: usize> Table<N> {
 
     pub fn binary_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
         let mut low = 0;
-        let mut high = self.x.len() - 1;
+        let mut high = N - 1;
         while low <= high {
             let index = (high + low) / 2;
             let x0 = self.x[index];
@@ -110,7 +110,7 @@ impl<const N: usize> Table<N> {
                 break;
             }
         }
-        if low < self.x.len() {
+        if low < N {
             Ok((self.x[high], self.y[high], self.x[low], self.y[low]))
         } else {
             Err(Error::Mach(x))
