@@ -99,18 +99,15 @@ impl<const N: usize> Table<N> {
         let mut high = self.x.len() - 1;
         while low <= high {
             let index = (high + low) / 2;
-            if let Some(&current) = self.x.get(index) {
-                if current == x {
-                    high = index;
-                    low = index;
-                    break;
-                }
-                if current > x {
-                    high = index - 1;
-                }
-                if current < x {
-                    low = index + 1;
-                }
+            let x0 = self.x[index];
+            if x0 > x {
+                high = index - 1;
+            } else if x0 < x {
+                low = index + 1;
+            } else {
+                high = index;
+                low = index;
+                break;
             }
         }
         if low < self.x.len() {
