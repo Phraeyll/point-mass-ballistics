@@ -3,9 +3,8 @@ use crate::{
     error::{Error, Result},
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, mile_per_hour, pascal,
-        radian, second, Angle, Length, Mass, Pressure,
-        ThermodynamicTemperature, Time, Velocity,
+        meter, meter_per_second, mile_per_hour, pascal, radian, second, Angle, Length, Mass,
+        Pressure, ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
 };
@@ -14,8 +13,9 @@ use std::marker::PhantomData;
 
 #[derive(Debug)]
 pub struct Simulation<D> {
+    _marker: PhantomData<D>,
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile<D>, // Use same projectile for zeroing and solving
+    pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
     pub(crate) wind: Wind,   // Different conditions during solving
@@ -38,12 +38,11 @@ pub struct Flags {
 }
 
 #[derive(Debug)]
-pub struct Projectile<D> {
+pub struct Projectile {
     pub caliber: Length,
     pub weight: Mass,
     pub bc: Numeric,
     pub velocity: Velocity,
-    pub _marker: PhantomData<D>,
 }
 
 #[derive(Debug)]
@@ -92,6 +91,7 @@ impl<D> Default for SimulationBuilder<D> {
     fn default() -> Self {
         Self {
             builder: Simulation {
+                _marker: PhantomData,
                 flags: Flags {
                     coriolis: true,
                     drag: true,
@@ -102,7 +102,6 @@ impl<D> Default for SimulationBuilder<D> {
                     weight: Mass::new::<grain>(140.0),
                     bc: 0.305,
                     velocity: Velocity::new::<foot_per_second>(2710.0),
-                    _marker: PhantomData,
                 },
                 scope: Scope {
                     yaw: Angle::new::<radian>(0.0),

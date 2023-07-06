@@ -5,8 +5,7 @@ use crate::{
     units::{
         acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
         typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
-        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio,
-        Velocity,
+        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
     Numeric,
@@ -251,7 +250,7 @@ impl Wind {
     }
 }
 
-impl<D> Projectile<D> {
+impl Projectile {
     pub fn area(&self) -> Area {
         PI * self.radius().powi(P2::new())
     }
@@ -272,14 +271,5 @@ impl<D> Projectile<D> {
 
     pub fn sd(&self) -> ArealMassDensity {
         self.weight / self.caliber.powi(P2::new())
-    }
-}
-
-impl<D> Projectile<D>
-where
-    D: DragFunction,
-{
-    pub fn cd(&self, x: Numeric) -> Result<Numeric> {
-        D::cd(x)
     }
 }
