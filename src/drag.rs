@@ -57,17 +57,16 @@ macro_rules! table {
         }
 
         impl DragFunction for Drag {
-            // TABLE is a map of "mach speed" to "coefficients of drag", {x => y}
-            // This funtions returns linear approximation of coefficient, for a given mach speed
-            // When x is present in the map, interpolation is equivalent to TABLE.get_value(x)
+            // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
+            // This funtions returns linear approximation of drag coefficient, for a given mach speed
             fn cd(x: Numeric) -> Result<Numeric> {
-                // None => Err: x is outside of key range: this function does not extrapolate
-                let result = Self::TABLE.binary_search(x)?;
-                let (x0, y0, x1, y1) = result;
+                // Find values in table to interpolate
+                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x)?;
+
+                // Linear interpolation
                 Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             }
         }
-
     };
 }
 pub(crate) use table;
@@ -96,10 +95,6 @@ impl<const N: usize> Table<N> {
     }
 
     pub fn binary_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
-        if self.x.is_empty() {
-            unreachable!()
-        }
-
         let mut low = 0;
         let mut high = self.x.len() - 1;
         while low <= high {
