@@ -3,8 +3,8 @@ use crate::{
     error::{Error, Result},
     units::{
         celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, meter_per_second_squared, mile_per_hour, my_quantity, pascal,
-        radian, second, Acceleration, Angle, Length, Mass, MyQuantity, Pressure,
+        meter, meter_per_second, mile_per_hour, pascal,
+        radian, second, Angle, Length, Mass, Pressure,
         ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
@@ -61,7 +61,6 @@ pub struct Shooter {
     pub(crate) pitch: Angle, // Line of Sight angle (degrees)
     pub(crate) roll: Angle, // Roll relative to shooters position, ie, scope alligned with rifle
     pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
-    pub(crate) gravity: Acceleration, // Gravity (m/s^2)
 }
 
 #[derive(Debug)]
@@ -128,7 +127,6 @@ impl<D> Default for SimulationBuilder<D> {
                     pitch: Angle::new::<radian>(0.0),
                     roll: Angle::new::<radian>(0.0),
                     lattitude: Angle::new::<radian>(0.0),
-                    gravity: my_quantity!(-9.806_65),
                 },
                 time_step: Time::new::<second>(0.000_001),
             },
@@ -252,17 +250,6 @@ impl<D> SimulationBuilder<D> {
                 min: min.get::<radian>(),
                 max: max.get::<radian>(),
             })
-        }
-    }
-
-    pub fn set_gravity(mut self, value: Acceleration) -> Result<Self> {
-        if value.is_sign_negative() {
-            self.builder.shooter.gravity = value;
-            Ok(self)
-        } else {
-            Err(Error::NegativeExpected(
-                value.get::<meter_per_second_squared>(),
-            ))
         }
     }
 

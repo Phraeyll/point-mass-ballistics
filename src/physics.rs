@@ -4,8 +4,9 @@ use crate::{
     simulation::{Atmosphere, Flags, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
-        typenum::P2, velocity, Angle, AngularVelocity, Area, ArealMassDensity, Length, Mass,
-        MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio, Velocity,
+        typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
+        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio,
+        Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
     Numeric,
@@ -178,11 +179,14 @@ impl Scope {
 }
 
 impl Shooter {
-    // Angular velocity of earth, (radians)
-    const ANGULAR_VELOCITY_EARTH: AngularVelocity = my_quantity!(0.000_072_921_159);
+    // Angular velocity of earth, (radians/s)
+    const ANGULAR_VELOCITY: AngularVelocity = my_quantity!(0.000_072_921_159);
+
+    // Gravity of earth (M/s^2)
+    const GRAVITY: Acceleration = my_quantity!(-9.806_65);
 
     fn gravity(&self) -> MyVector3<acceleration::Dimension> {
-        MyVector3::new(my_quantity!(0.0), self.gravity, my_quantity!(0.0))
+        MyVector3::new(my_quantity!(0.0), Self::GRAVITY, my_quantity!(0.0))
     }
 
     // Flip, since circle functions rotate counter-clockwise,
@@ -219,12 +223,8 @@ impl Shooter {
     // Can be thought of as vector from center of earth, pointing
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
     fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
-        MyVector3::new(
-            Self::ANGULAR_VELOCITY_EARTH,
-            my_quantity!(0.0),
-            my_quantity!(0.0),
-        )
-        .pivot_z(self.lattitude)
+        MyVector3::new(Self::ANGULAR_VELOCITY, my_quantity!(0.0), my_quantity!(0.0))
+            .pivot_z(self.lattitude)
     }
 }
 
