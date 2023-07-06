@@ -2,9 +2,8 @@ use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
     units::{
-        celsius, fahrenheit, foot_per_second, grain, inch, inch_of_mercury, kelvin, kilogram,
-        meter, meter_per_second, mile_per_hour, pascal, radian, second, Angle, Length, Mass,
-        Pressure, ThermodynamicTemperature, Time, Velocity,
+        celsius, kelvin, kilogram, meter, meter_per_second, my_quantity, pascal, radian, second,
+        Angle, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
 };
@@ -98,36 +97,36 @@ impl<D> Default for SimulationBuilder<D> {
                     gravity: true,
                 },
                 projectile: Projectile {
-                    caliber: Length::new::<inch>(0.264),
-                    weight: Mass::new::<grain>(140.0),
-                    bc: 0.305,
-                    velocity: Velocity::new::<foot_per_second>(2710.0),
+                    caliber: my_quantity!(0.0),
+                    weight: my_quantity!(0.0),
+                    bc: 0.0,
+                    velocity: my_quantity!(0.0),
                 },
                 scope: Scope {
-                    yaw: Angle::new::<radian>(0.0),
-                    pitch: Angle::new::<radian>(0.0),
-                    roll: Angle::new::<radian>(0.0),
-                    height: Length::new::<inch>(1.5),
-                    offset: Length::new::<inch>(0.0),
+                    yaw: my_quantity!(0.0),
+                    pitch: my_quantity!(0.0),
+                    roll: my_quantity!(0.0),
+                    height: my_quantity!(0.0),
+                    offset: my_quantity!(0.0),
                 },
                 atmosphere: Atmosphere {
-                    temperature: ThermodynamicTemperature::new::<fahrenheit>(68.0),
-                    pressure: Pressure::new::<inch_of_mercury>(29.92),
+                    temperature: my_quantity!(0.0),
+                    pressure: my_quantity!(0.0),
                     humidity: 0.0,
                 },
                 wind: Wind {
-                    yaw: Angle::new::<radian>(0.0),
-                    pitch: Angle::new::<radian>(0.0),
-                    roll: Angle::new::<radian>(0.0),
-                    velocity: Velocity::new::<mile_per_hour>(0.0),
+                    yaw: my_quantity!(0.0),
+                    pitch: my_quantity!(0.0),
+                    roll: my_quantity!(0.0),
+                    velocity: my_quantity!(0.0),
                 },
                 shooter: Shooter {
-                    yaw: Angle::new::<radian>(0.0),
-                    pitch: Angle::new::<radian>(0.0),
-                    roll: Angle::new::<radian>(0.0),
-                    lattitude: Angle::new::<radian>(0.0),
+                    yaw: my_quantity!(0.0),
+                    pitch: my_quantity!(0.0),
+                    roll: my_quantity!(0.0),
+                    lattitude: my_quantity!(0.0),
                 },
-                time_step: Time::new::<second>(0.000_001),
+                time_step: my_quantity!(0.0),
             },
         }
     }
@@ -211,7 +210,7 @@ impl<D> SimulationBuilder<D> {
     }
 
     // Shooter
-    pub fn set_shot_angle(mut self, value: Angle) -> Result<Self> {
+    pub fn set_incline(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-FRAC_PI_2);
         let max = Angle::new::<radian>(FRAC_PI_2);
         if value >= min && value <= max {
@@ -263,7 +262,7 @@ impl<D> SimulationBuilder<D> {
         }
     }
 
-    pub fn set_wind_angle(mut self, value: Angle) -> Result<Self> {
+    pub fn set_wind_direction(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
         if value >= min && value <= max {
