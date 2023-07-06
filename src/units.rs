@@ -39,7 +39,7 @@ pub(crate) type MyQuantity<D> = Quantity<D, MyUnits, Numeric>;
 
 macro_rules! my_quantity {
     ($value:expr) => {
-        MyQuantity {
+        $crate::units::MyQuantity {
             dimension: ::std::marker::PhantomData,
             units: ::std::marker::PhantomData,
             value: $value,
@@ -50,7 +50,7 @@ pub(crate) use my_quantity;
 
 macro_rules! quantity {
     ($value:expr) => {
-        Quantity {
+        $crate::units::Quantity {
             dimension: ::std::marker::PhantomData,
             units: ::std::marker::PhantomData,
             value: $value,

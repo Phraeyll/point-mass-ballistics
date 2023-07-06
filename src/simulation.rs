@@ -139,6 +139,7 @@ impl<D> SimulationBuilder<D> {
         Default::default()
     }
 }
+
 impl<D> SimulationBuilder<D> {
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
@@ -302,8 +303,7 @@ impl<D> SimulationBuilder<D> {
         self.builder.scope.roll = value;
         self
     }
-}
-impl<D> SimulationBuilder<D> {
+
     //Projectile
     pub fn set_caliber(mut self, value: Length) -> Result<Self> {
         if value.is_sign_positive() {

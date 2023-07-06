@@ -5,7 +5,7 @@ use crate::{
     units::{
         acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
         typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
-        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, MyQuantity, Pressure, Ratio,
+        Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio,
         Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
@@ -219,6 +219,7 @@ impl Shooter {
     pub(crate) fn roll(&self) -> Angle {
         -self.roll
     }
+
     // Angular velocity vector of earth, at current lattitude
     // Can be thought of as vector from center of earth, pointing
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
