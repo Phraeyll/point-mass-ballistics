@@ -42,10 +42,11 @@ macro_rules! table {
     ( $($x:expr => $y:expr),* ) => {
         use super::*;
         use $crate::{
-            physics::DragFunction,
-            Numeric,
-            error::Result,
             consts::FRAC_PI_8,
+            error::Result,
+            physics::DragFunction,
+            units::Ratio,
+            Numeric,
             OPTIMIZE_DRAG_TABLE,
         };
 
@@ -53,19 +54,24 @@ macro_rules! table {
 
         impl Drag {
             pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
-                [$($x,)*],
-                if OPTIMIZE_DRAG_TABLE {
-                    [$(-($y * FRAC_PI_8),)*]
-                } else {
-                    [$($y,)*]
-                },
+                [$({
+                    $x
+                },)*],
+                [$({
+                    if OPTIMIZE_DRAG_TABLE {
+                        -($y * FRAC_PI_8)
+                    } else {
+                        $y
+                    }
+                },)*],
             );
         }
 
         impl DragFunction for Drag {
             // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
             // This funtions returns linear approximation of drag coefficient, for a given mach speed
-            fn cd(x: Numeric) -> Result<Numeric> {
+            fn cd(x: Ratio) -> Result<Numeric> {
+                let x = x.value;
                 // Find values in table to interpolate
                 let (x0, y0, x1, y1) = Self::TABLE.binary_search(x)?;
 

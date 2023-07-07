@@ -2,16 +2,16 @@ use crate::{
     physics::DragFunction,
     simulation::Simulation,
     units::{
-        length, meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Time, Velocity,
+        length, meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Ratio, Time,
+        Velocity,
     },
     vectors::{MyVector3, Norm},
-    Numeric,
 };
 
 pub trait Measurements {
     fn time(&self) -> Time;
     fn velocity(&self) -> Velocity;
-    fn mach(&self) -> Numeric;
+    fn mach(&self) -> Ratio;
     fn energy(&self) -> Energy;
     fn distance(&self) -> Length;
     fn elevation(&self) -> Length;
@@ -45,7 +45,7 @@ where
         self.velocity.norm()
     }
 
-    fn mach(&self) -> Numeric {
+    fn mach(&self) -> Ratio {
         self.simulation.mach(self.velocity())
     }
 

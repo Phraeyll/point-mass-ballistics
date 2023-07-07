@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub trait DragFunction {
-    fn cd(x: Numeric) -> Result<Numeric>;
+    fn cd(x: Ratio) -> Result<Numeric>;
 }
 
 // Drag
@@ -39,8 +39,8 @@ where
     }
 
     // Velocity relative to speed of sound (c), with given atmospheric conditions
-    pub fn mach(&self, velocity: Velocity) -> Numeric {
-        (velocity / self.atmosphere.speed_of_sound()).value
+    pub fn mach(&self, velocity: Velocity) -> Ratio {
+        velocity / self.atmosphere.speed_of_sound()
     }
 
     pub(crate) fn drag_acceleration(
