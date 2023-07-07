@@ -16,41 +16,19 @@ use std::iter::FusedIterator;
 #[derive(Debug)]
 pub struct Iter<'t, D> {
     simulation: &'t Simulation<D>, // Reference to model used for calculations
-    position: MyVector3<length::Dimension>, // Position (m)
-    velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
+    delta_position: MyVector3<length::Dimension>, // Position (m)
+    delta_velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
 }
 
 impl<D> Simulation<D> {
     pub fn iter(&self) -> Iter<'_, D> {
-        let position = self.absolute_projectile_position();
-        let velocity = self.absolute_projectile_velocity();
         Iter {
             simulation: self,
-            position,
-            velocity,
+            delta_position: MyVector3::new(Length::ZERO, Length::ZERO, Length::ZERO),
+            delta_velocity: MyVector3::new(Velocity::ZERO, Velocity::ZERO, Velocity::ZERO),
             time: Time::ZERO,
         }
-    }
-
-    // Rotated velocity vector, accounts for muzzle/shooter pitch, and yaw (bearing)
-    // Start with velocity value along X unit vector
-    fn absolute_projectile_velocity(&self) -> MyVector3<velocity::Dimension> {
-        MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
-            .pivot_y(self.scope.yaw())
-            .pivot_z(self.scope.pitch())
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
-    }
-
-    // Projectiles position relative to scope
-    fn absolute_projectile_position(&self) -> MyVector3<length::Dimension> {
-        MyVector3::new(Length::ZERO, -self.scope.height, -self.scope.offset)
-            .pivot_x(self.scope.roll())
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
     }
 }
 
@@ -79,14 +57,15 @@ where
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
             time,
-            position,
-            velocity,
+            delta_position,
+            delta_velocity,
             ..
         } = self;
+        let velocity = self.simulation.velocity() + self.delta_velocity;
 
         self.time += self.delta_time();
-        self.position += self.delta_position(velocity);
-        self.velocity += self.delta_velocity(velocity);
+        self.delta_position += self.delta_position(velocity);
+        self.delta_velocity += self.delta_velocity(velocity);
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -98,12 +77,12 @@ where
         // For practical purposes, this still may suffice.  I want to take this check out eventually, and
         // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
         // how to check previous iteration values in standard iterator adaptors.
-        if self.position.get_x() != position.get_x() {
+        if delta_position.get_x() != self.delta_position.get_x() {
             Some(Self::Item {
                 simulation: self.simulation,
                 time,
-                position,
-                velocity,
+                delta_position,
+                delta_velocity,
             })
         } else {
             None

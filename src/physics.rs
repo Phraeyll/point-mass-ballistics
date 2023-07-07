@@ -3,9 +3,10 @@ use crate::{
     error::Result,
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
-        acceleration, angular_velocity, celsius, my_quantity, pound, square_inch, typenum::P2,
-        velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity, ConstZero, Length,
-        Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, Velocity,
+        acceleration, angular_velocity, celsius, length, my_quantity, pound, square_inch,
+        typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
+        ConstZero, Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio,
+        Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
     Numeric, OPTIMIZE_DRAG_TABLE,
@@ -86,6 +87,24 @@ where
 }
 
 impl<D> Simulation<D> {
+    // Projectiles velocity relative to scope
+    pub(crate) fn velocity(&self) -> MyVector3<velocity::Dimension> {
+        MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
+            .pivot_y(self.scope.yaw())
+            .pivot_z(self.scope.pitch())
+            .pivot_x(self.shooter.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
+    }
+
+    // Projectiles position relative to scope
+    pub(crate) fn position(&self) -> MyVector3<length::Dimension> {
+        MyVector3::new(Length::ZERO, -self.scope.height, -self.scope.offset)
+            .pivot_x(self.scope.roll())
+            .pivot_x(self.shooter.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
+    }
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
