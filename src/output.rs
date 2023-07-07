@@ -2,16 +2,16 @@ use crate::{
     physics::DragFunction,
     simulation::Simulation,
     units::{
-        length, meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Ratio, Time,
-        Velocity,
+        length, meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Time, Velocity,
     },
     vectors::{MyVector3, Norm},
+    Numeric,
 };
 
 pub trait Measurements {
     fn time(&self) -> Time;
     fn velocity(&self) -> Velocity;
-    fn mach(&self) -> Ratio;
+    fn mach(&self) -> Numeric;
     fn energy(&self) -> Energy;
     fn distance(&self) -> Length;
     fn elevation(&self) -> Length;
@@ -45,12 +45,12 @@ where
         self.velocity.norm()
     }
 
-    fn mach(&self) -> Ratio {
-        self.simulation.mach(self.velocity)
+    fn mach(&self) -> Numeric {
+        self.simulation.mach(self.velocity())
     }
 
     fn energy(&self) -> Energy {
-        self.velocity.norm().powi(P2::new()) * self.simulation.projectile.weight * 0.5
+        self.velocity().powi(P2::new()) * self.simulation.projectile.weight * 0.5
     }
 
     // Positions relative to line of sight (shooter_pitch)
