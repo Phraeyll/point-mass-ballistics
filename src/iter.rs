@@ -1,10 +1,8 @@
-use uom::si::acceleration::Acceleration;
-
 use crate::{
     output::Packet,
     physics::DragFunction,
     simulation::Simulation,
-    units::{acceleration, length, typenum::P2, velocity, ConstZero, Length, Time, Velocity},
+    units::{length, typenum::P2, velocity, ConstZero, Length, Time, Velocity},
     vectors::MyVector3,
 };
 
@@ -49,23 +47,34 @@ where
 // Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'t, D> Iterator for Iter<'t, D>
 where
-    Self: Newtonian,
+    D: DragFunction,
 {
     type Item = Packet<'t, D>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
+            ref simulation,
             time,
             delta_position,
             delta_velocity,
             ..
         } = self;
-        let velocity = self.simulation.velocity() + self.delta_velocity;
+        let velocity = simulation.velocity() + delta_velocity;
 
-        self.time += self.delta_time();
-        self.delta_position += self.delta_position(velocity);
-        self.delta_velocity += self.delta_velocity(velocity);
+        let dt = simulation.time_step;
+        let dt_sq = dt.powi(P2::new());
+        let a = simulation.acceleration(velocity);
+
+        // Second Equation of Motion
+        let dp = velocity * dt + a * dt_sq * 0.5;
+
+        // First Equation of Motion
+        let dv = a * dt;
+
+        self.time += dt;
+        self.delta_position += dp;
+        self.delta_velocity += dv;
 
         // Only continue iteration for changing 'forward' positions
         // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
@@ -77,7 +86,7 @@ where
         // For practical purposes, this still may suffice.  I want to take this check out eventually, and
         // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
         // how to check previous iteration values in standard iterator adaptors.
-        if delta_position.get_x() != self.delta_position.get_x() {
+        if delta_velocity.get_x() != self.delta_velocity.get_x() {
             Some(Self::Item {
                 simulation: self.simulation,
                 time,
@@ -91,49 +100,3 @@ where
 }
 
 impl<'t, D> FusedIterator for Iter<'t, D> where D: DragFunction {}
-
-pub trait Newtonian {
-    fn acceleration(
-        &self,
-        _velocity: MyVector3<velocity::Dimension>,
-    ) -> MyVector3<acceleration::Dimension> {
-        MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
-    }
-
-    fn delta_time(&self) -> Time;
-
-    // 'Second Equation of Motion'
-    fn delta_position(
-        &self,
-        velocity: MyVector3<velocity::Dimension>,
-    ) -> MyVector3<length::Dimension> {
-        velocity * self.delta_time()
-            + (self.acceleration(velocity) * self.delta_time().powi(P2::new())) * 0.5
-    }
-
-    // 'First Equation of Motion'
-    fn delta_velocity(
-        &self,
-        velocity: MyVector3<velocity::Dimension>,
-    ) -> MyVector3<velocity::Dimension> {
-        self.acceleration(velocity) * self.delta_time()
-    }
-}
-
-impl<D> Newtonian for Iter<'_, D>
-where
-    D: DragFunction,
-{
-    fn acceleration(
-        &self,
-        velocity: MyVector3<velocity::Dimension>,
-    ) -> MyVector3<acceleration::Dimension> {
-        self.simulation.coriolis_acceleration(velocity)
-            + self.simulation.drag_acceleration(velocity)
-            + self.simulation.gravity_acceleration()
-    }
-
-    fn delta_time(&self) -> Time {
-        self.simulation.time_step
-    }
-}

@@ -86,7 +86,18 @@ where
     }
 }
 
-impl<D> Simulation<D> {
+impl<D> Simulation<D>
+where
+    D: DragFunction,
+{
+    pub(crate) fn acceleration(
+        &self,
+        velocity: MyVector3<velocity::Dimension>,
+    ) -> MyVector3<acceleration::Dimension> {
+        self.coriolis_acceleration(velocity)
+            + self.drag_acceleration(velocity)
+            + self.gravity_acceleration()
+    }
     // Projectiles velocity relative to scope
     pub(crate) fn velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
