@@ -33,12 +33,6 @@ where
             .pivot_y(self.shooter.yaw())
     }
 
-    // Velocity vector, after impact from wind (actually from drag, not "being blown")
-    // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
-    fn vv(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<velocity::Dimension> {
-        velocity - self.wind_velocity()
-    }
-
     // Velocity relative to speed of sound (c), with given atmospheric conditions
     pub fn mach(&self, velocity: Velocity) -> Ratio {
         velocity / self.atmosphere.speed_of_sound()
@@ -49,7 +43,9 @@ where
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.drag {
-            let velocity = self.vv(velocity);
+            // Velocity vector, after impact from wind (actually from drag, not "being blown")
+            // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
+            let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
             let mach = self.mach(norm);
             let cd = D::cd(mach).expect("CD");
