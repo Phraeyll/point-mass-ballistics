@@ -1,10 +1,9 @@
 use crate::{
-    consts::FRAC_PI_4,
     consts::PI,
     error::Result,
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
-        acceleration, angular_velocity, celsius, force, my_quantity, pound, ratio, square_inch,
+        acceleration, angular_velocity, celsius, my_quantity, pound, ratio, square_inch,
         typenum::P2, velocity, Acceleration, Angle, AngularVelocity, Area, ArealMassDensity,
         ConstZero, Length, Mass, MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio,
         Velocity,
@@ -46,29 +45,33 @@ where
     }
 
     // Coefficient of drag, as defined by a standard projectile depending on drag table used
-    fn cd(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
-        let velocity = self.vv(velocity);
-        let mach = self.mach(velocity).get::<ratio::ratio>();
-        self.projectile.i() * D::cd(mach).expect("CD")
-    }
+    // old formula, before optimization
+    // fn cd(&self, velocity: MyVector3<velocity::Dimension>) -> Ratio {
+    //     let velocity = self.vv(velocity);
+    //     let mach = self.mach(velocity).get::<ratio::ratio>();
+    //     self.projectile.i() * D::cd(mach).expect("CD")
+    // }
 
     // Force of drag for given projectile, at given mach speed, with given conditions
     // Drag force is proportional to square of velocity and area of projectile, scaled
     // by a coefficient at mach speeds (approximately)
-    fn drag_force(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<force::Dimension> {
-        self.vv(velocity)
-            * self.vv(velocity).norm()
-            * self.atmosphere.rho()
-            * self.projectile.area()
-            * self.cd(velocity)
-            * -0.5
-    }
+    // old formula, before optimization
+    // fn drag_force(&self, velocity: MyVector3<velocity::Dimension>) -> MyVector3<force::Dimension> {
+    //     self.vv(velocity)
+    //         * self.vv(velocity).norm()
+    //         * self.atmosphere.rho()
+    //         * self.projectile.area()
+    //         * self.cd(velocity)
+    //         * -0.5
+    // }
 
     pub(crate) fn drag_acceleration(
         &self,
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
         // Optimization: Mass/Area do not impact function, they cancel out and leave factor of FRAC_PI_4
+        // which can be further reduced to FRAC_PI_8 (due to the multiplication by -0.5)
+        // -FRAC_PI_8 can be inlined into table at compile time
         //f = -0.5 * cd * rho * V * v * area * i * 1/m
         // i = sd/bc
         // sd = m/d^2
@@ -79,23 +82,18 @@ where
         // area = pi/4 * d^2
 
         // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
-        // a = V * v * rho(h) * cd(v) * pi/4 * (1/bc) * -0.5
+        // a = -(V * v * rho(h) * cd(v) * pi/8 * (1/bc))
         // this means constants can be moved and multipled into "y's" of drag table
         // a = V * v * cd(v)
-        if true {
+        if self.flags.drag {
+            // Acceleration from drag force and gravity (f = ma)
             let velocity = self.vv(velocity);
             let mach = self.mach(velocity).get::<ratio::ratio>();
             let cd = D::cd(mach).expect("CD");
-            velocity
-                * velocity.norm()
-                * self.atmosphere.rho()
-                * cd
-                * FRAC_PI_4
-                * (1.0 / self.projectile.bc())
-                * -0.5
-        } else if self.flags.drag {
-            // Acceleration from drag force and gravity (f = ma)
-            self.drag_force(velocity) * (1.0 / self.projectile.weight)
+            let cd = cd * self.atmosphere.rho() / self.projectile.bc();
+            velocity * velocity.norm() * cd
+            // old formula, before optimization
+            // self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
             MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
         }

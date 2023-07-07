@@ -45,6 +45,7 @@ macro_rules! table {
             physics::DragFunction,
             Numeric,
             error::Result,
+            consts::FRAC_PI_8,
         };
 
         pub struct Drag;
@@ -52,7 +53,7 @@ macro_rules! table {
         impl Drag {
             pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
                 [$($x,)*],
-                [$($y,)*],
+                [$(-($y * FRAC_PI_8),)*],
             );
         }
 
