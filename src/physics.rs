@@ -1,4 +1,5 @@
 use crate::{
+    consts::FRAC_PI_4,
     consts::PI,
     error::Result,
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
@@ -67,8 +68,33 @@ where
         &self,
         velocity: MyVector3<velocity::Dimension>,
     ) -> MyVector3<acceleration::Dimension> {
-        if self.flags.drag {
-            // Acceleration from drag force and gravity (D = ma)
+        // Optimization: Mass/Area do not impact function, they cancel out and leave factor of FRAC_PI_4
+        //f = -0.5 * cd * rho * V * v * area * i * 1/m
+        // i = sd/bc
+        // sd = m/d^2
+        // i = m/d^2 * (1/bc)
+
+        // area = ((1/2) * d)^2 * pi
+        // area = (1/4) * d^2 * pi
+        // area = pi/4 * d^2
+
+        // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
+        // a = V * v * rho(h) * cd(v) * pi/4 * (1/bc) * -0.5
+        // this means constants can be moved and multipled into "y's" of drag table
+        // a = V * v * cd(v)
+        if true {
+            let velocity = self.vv(velocity);
+            let mach = self.mach(velocity).get::<ratio::ratio>();
+            let cd = D::cd(mach).expect("CD");
+            velocity
+                * velocity.norm()
+                * self.atmosphere.rho()
+                * cd
+                * FRAC_PI_4
+                * (1.0 / self.projectile.bc())
+                * -0.5
+        } else if self.flags.drag {
+            // Acceleration from drag force and gravity (f = ma)
             self.drag_force(velocity) * (1.0 / self.projectile.weight)
         } else {
             MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
@@ -118,13 +144,13 @@ impl Atmosphere {
     const ADIABATIC_INDEX_AIR: Numeric = 1.4;
 
     // Density of air, using pressure, humidity, and temperature
-    pub(crate) fn rho(&self) -> MassDensity {
+    pub fn rho(&self) -> MassDensity {
         ((self.pd() * Self::MOLAR_MASS_DRY_AIR) + (self.pv() * Self::MOLAR_MASS_WATER_VAPOR))
             / (Self::MOLAR_GAS_UNIVERSAL * self.temperature)
     }
 
     // Speed of sound at given air density and pressure
-    pub(crate) fn speed_of_sound(&self) -> Velocity {
+    pub fn speed_of_sound(&self) -> Velocity {
         (Self::ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
     }
 
