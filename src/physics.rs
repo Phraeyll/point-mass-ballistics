@@ -69,7 +69,7 @@ where
 
                     // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
                     // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * m/d^2 * 1/bc * 1/m
-                    // a = -(V * v * rho(h) * cd(v) * pi/8 * (1/bc))
+                    // a = -pi/8 * cd(v) * V * v * rho * (1/bc)
                     // this means constants can be moved and multipled into "y's" of drag table
                     // a = V * v * cd(v) * rho * 1/bc
                     self.atmosphere.rho() / self.projectile.bc()
