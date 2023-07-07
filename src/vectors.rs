@@ -158,11 +158,7 @@ where
     V: Num + Conversion<V> + Scalar + Copy,
 {
     pub fn new(x: Quantity<D, U, V>, y: Quantity<D, U, V>, z: Quantity<D, U, V>) -> Self {
-        Self {
-            dimension: PhantomData,
-            units: PhantomData,
-            value: Vector3::new(x.value, y.value, z.value),
-        }
+        From::from(Vector3::new(x.value, y.value, z.value))
     }
 
     pub fn get_x(&self) -> Quantity<D, U, V> {
