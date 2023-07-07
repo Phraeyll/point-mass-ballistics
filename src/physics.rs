@@ -81,7 +81,7 @@ where
                 };
             velocity * norm * cd
         } else {
-            return MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO);
+            MyVector3::ZERO
         }
     }
 }
@@ -98,6 +98,7 @@ where
             + self.drag_acceleration(velocity)
             + self.gravity_acceleration()
     }
+
     // Projectiles velocity relative to scope
     pub(crate) fn velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
@@ -116,6 +117,7 @@ where
             .pivot_z(self.shooter.pitch())
             .pivot_y(self.shooter.yaw())
     }
+
     // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
@@ -129,7 +131,7 @@ where
         if self.flags.coriolis {
             self.shooter.omega().cross(&velocity) * -2.0
         } else {
-            MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
+            MyVector3::ZERO
         }
     }
 
@@ -137,7 +139,7 @@ where
         if self.flags.gravity {
             self.shooter.gravity()
         } else {
-            MyVector3::new(Acceleration::ZERO, Acceleration::ZERO, Acceleration::ZERO)
+            MyVector3::ZERO
         }
     }
 }

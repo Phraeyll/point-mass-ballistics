@@ -2,7 +2,7 @@ use crate::{
     output::Packet,
     physics::DragFunction,
     simulation::Simulation,
-    units::{length, typenum::P2, velocity, ConstZero, Length, Time, Velocity},
+    units::{length, typenum::P2, velocity, ConstZero, Time},
     vectors::MyVector3,
 };
 
@@ -23,8 +23,8 @@ impl<D> Simulation<D> {
     pub fn iter(&self) -> Iter<'_, D> {
         Iter {
             simulation: self,
-            delta_position: MyVector3::new(Length::ZERO, Length::ZERO, Length::ZERO),
-            delta_velocity: MyVector3::new(Velocity::ZERO, Velocity::ZERO, Velocity::ZERO),
+            delta_position: MyVector3::ZERO,
+            delta_velocity: MyVector3::ZERO,
             time: Time::ZERO,
         }
     }

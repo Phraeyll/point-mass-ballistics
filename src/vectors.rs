@@ -1,6 +1,8 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::{
-    units::{quantity, radian, Angle, Conversion, Dimension, MyUnits, Quantity, Units, ISQ},
+    units::{
+        quantity, radian, Angle, ConstZero, Conversion, Dimension, MyUnits, Quantity, Units, ISQ,
+    },
     Numeric,
 };
 
@@ -49,6 +51,17 @@ where
     fn from(other: DimVector3<D, U, V>) -> Self {
         other.value
     }
+}
+
+impl<D: ?Sized, U: ?Sized, V> ConstZero for DimVector3<D, U, V>
+where
+    V: Scalar + ConstZero,
+{
+    const ZERO: Self = Self {
+        dimension: PhantomData,
+        units: PhantomData,
+        value: Vector3::new(V::ZERO, V::ZERO, V::ZERO),
+    };
 }
 
 pub type SumDimension<Dl, Dr> = ISQ<
