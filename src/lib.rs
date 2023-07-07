@@ -1,4 +1,5 @@
 pub type Numeric = f64;
+const OPTIMIZE_DRAG_TABLE: bool = true;
 
 mod consts;
 mod physics;

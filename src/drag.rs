@@ -46,6 +46,7 @@ macro_rules! table {
             Numeric,
             error::Result,
             consts::FRAC_PI_8,
+            OPTIMIZE_DRAG_TABLE,
         };
 
         pub struct Drag;
@@ -53,7 +54,11 @@ macro_rules! table {
         impl Drag {
             pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
                 [$($x,)*],
-                [$(-($y * FRAC_PI_8),)*],
+                if OPTIMIZE_DRAG_TABLE {
+                    [$(-($y * FRAC_PI_8),)*]
+                } else {
+                    [$($y,)*]
+                },
             );
         }
 
