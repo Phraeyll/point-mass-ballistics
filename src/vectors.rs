@@ -1,7 +1,8 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::{
     units::{
-        quantity, radian,
+        angle::radian,
+        quantity,
         typenum::operator_aliases::{Diff, Sum},
         Angle, ConstZero, Conversion, Dimension, MyUnits, Num, Quantity, Units, ISQ,
     },

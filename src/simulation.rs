@@ -2,8 +2,14 @@ use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
     units::{
-        celsius, kelvin, kilogram, meter, meter_per_second, pascal, radian, second, Angle,
-        ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
+        angle::radian,
+        length::meter,
+        mass::kilogram,
+        pressure::pascal,
+        thermodynamic_temperature::{degree_celsius as celsius, kelvin},
+        time::second,
+        velocity::meter_per_second,
+        Angle, ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
 };
