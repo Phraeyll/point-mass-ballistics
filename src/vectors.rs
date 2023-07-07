@@ -1,7 +1,9 @@
 pub use self::{add::*, add_assign::*, mul::*, mul_assign::*};
 use crate::{
     units::{
-        quantity, radian, Angle, ConstZero, Conversion, Dimension, MyUnits, Quantity, Units, ISQ,
+        quantity, radian,
+        typenum::operator_aliases::{Diff, Sum},
+        Angle, ConstZero, Conversion, Dimension, MyUnits, Num, Quantity, Units, ISQ,
     },
     Numeric,
 };
@@ -12,8 +14,6 @@ use std::{fmt, marker::PhantomData};
 use nalgebra::{
     base::Scalar, ClosedAdd, ClosedMul, ClosedSub, Rotation3, SimdComplexField, Vector3,
 };
-use num_traits::Num;
-use typenum::operator_aliases::{Diff, Sum};
 
 mod add;
 mod add_assign;

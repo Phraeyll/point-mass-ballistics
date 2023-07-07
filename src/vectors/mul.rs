@@ -5,8 +5,8 @@ use crate::{
 
 use core::ops::{Add, Div, Mul, Sub};
 
+use crate::units::Num;
 use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
-use num_traits::Num;
 
 impl<D: ?Sized, U: ?Sized, V> Mul<V> for DimVector3<D, U, V>
 where

@@ -31,6 +31,7 @@ pub use uom::{
 };
 
 pub(crate) use uom::{
+    num_traits::Num,
     si::{Dimension, Quantity, Units, ISQ, SI},
     typenum, Conversion,
 };
@@ -59,3 +60,25 @@ macro_rules! quantity {
     };
 }
 pub(crate) use quantity;
+
+// pub(crate) fn powi<E>(
+//     self,
+//     _e: E
+// ) -> Quantity<ISQ<Prod<D::L, E>, Prod<D::M, E>, Prod<D::T, E>, Prod<D::I, E>, Prod<D::Th, E>, Prod<D::N, E>, Prod<D::J, E>>, U, f32>
+// where
+//     D::L: Mul<E>,
+//     <D::L as Mul<E>>::Output: Integer,
+//     D::M: Mul<E>,
+//     <D::M as Mul<E>>::Output: Integer,
+//     D::T: Mul<E>,
+//     <D::T as Mul<E>>::Output: Integer,
+//     D::I: Mul<E>,
+//     <D::I as Mul<E>>::Output: Integer,
+//     D::Th: Mul<E>,
+//     <D::Th as Mul<E>>::Output: Integer,
+//     D::N: Mul<E>,
+//     <D::N as Mul<E>>::Output: Integer,
+//     D::J: Mul<E>,
+//     <D::J as Mul<E>>::Output: Integer,
+//     D::Kind: Mul,
+//     E: Integer,

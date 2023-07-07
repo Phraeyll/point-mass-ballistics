@@ -51,6 +51,7 @@ where
 {
     type Item = Packet<'t, D>;
 
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
