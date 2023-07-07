@@ -60,14 +60,14 @@ where
             delta_velocity,
             ..
         } = self;
-        let velocity = simulation.velocity() + delta_velocity;
+        let v = simulation.velocity() + delta_velocity;
 
         let dt = simulation.time_step;
         let dt_sq = dt.powi(P2::new());
-        let a = simulation.acceleration(velocity);
+        let a = simulation.acceleration(v);
 
         // Second Equation of Motion
-        let dp = velocity * dt + a * dt_sq * 0.5;
+        let dp = v * dt + a * dt_sq * 0.5;
 
         // First Equation of Motion
         let dv = a * dt;
