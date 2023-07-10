@@ -48,8 +48,7 @@ where
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
             let mach = self.mach(norm);
-            let cd = D::cd(mach).expect("CD");
-            let cd = cd
+            let cd = D::cd(mach).expect("CD")
                 * if OPTIMIZE_DRAG_TABLE {
                     // Optimization: Mass/Area do not impact function, they cancel out and leave factor of FRAC_PI_4
                     // which can be further reduced to FRAC_PI_8 (due to the multiplication by -0.5)
