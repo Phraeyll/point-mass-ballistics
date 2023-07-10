@@ -23,17 +23,17 @@ macro_rules! count {
         count!($($t),+)
     };
     ($($t:tt),*) => {
-        len([$(subst!($t, ())),*])
+        len([$(void!($t)),*])
     };
 }
 pub(crate) use count;
 
-macro_rules! subst {
-    ($t:tt, $e:expr) => {
-        $e
+macro_rules! void {
+    ($t:tt) => {
+        ()
     };
 }
-pub(crate) use subst;
+pub(crate) use void;
 
 macro_rules! table {
     ( $($x:expr => $y:expr,)+ ) => {
