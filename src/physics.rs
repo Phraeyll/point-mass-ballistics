@@ -33,7 +33,7 @@ where
             .pivot_y(self.shooter.yaw())
     }
 
-    // Velocity relative to speed of sound (c), with given atmospheric conditions
+    // Velocity relative to speed of sound, with given atmospheric conditions
     pub fn mach(&self, velocity: Velocity) -> Ratio {
         velocity / self.atmosphere.speed_of_sound()
     }
@@ -83,12 +83,7 @@ where
             MyVector3::ZERO
         }
     }
-}
 
-impl<D> Simulation<D>
-where
-    D: DragFunction,
-{
     pub(crate) fn acceleration(
         &self,
         velocity: MyVector3<velocity::Dimension>,
@@ -97,8 +92,13 @@ where
             + self.drag_acceleration(velocity)
             + self.gravity_acceleration()
     }
+}
 
-    // Projectiles velocity relative to scope
+impl<D> Simulation<D>
+where
+    D: DragFunction,
+{
+    // Projectiles initial velocity relative to scope
     pub(crate) fn velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
             .pivot_y(self.scope.yaw())
@@ -108,7 +108,7 @@ where
             .pivot_y(self.shooter.yaw())
     }
 
-    // Projectiles position relative to scope
+    // Projectiles initial position relative to scope
     pub(crate) fn position(&self) -> MyVector3<length::Dimension> {
         MyVector3::new(Length::ZERO, -self.scope.height, -self.scope.offset)
             .pivot_x(self.scope.roll())
@@ -117,7 +117,8 @@ where
             .pivot_y(self.shooter.yaw())
     }
 
-    // Coriolis/Eotovos acceleration vector.  Accounts for Left/Right drift due to Earth's spin
+    // Coriolis/Eotovos acceleration vector.
+    // Accounts for Left/Right drift due to Earth's spin
     // This drift is always right (+z relative) in the northern hemisphere, regardless of initial bearing
     // This drive is always left (-z relative) in the southern hemisphere, regardless of initial bearing
     // Also accounts for elevation changes when launching projectils East/West, regardless of hemisphere
@@ -134,6 +135,7 @@ where
         }
     }
 
+    // Gravity acceleration vector
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity {
             self.shooter.gravity()
@@ -205,10 +207,10 @@ impl Scope {
 }
 
 impl Shooter {
-    // Angular velocity of earth, (radians/s)
+    // Angular velocity of earth, (rad/s)
     const ANGULAR_VELOCITY: AngularVelocity = my_quantity!(0.000_072_921_159);
 
-    // Gravity of earth (M/s^2)
+    // Gravity of earth (m/s^2)
     const GRAVITY: Acceleration = my_quantity!(-9.806_65);
 
     fn gravity(&self) -> MyVector3<acceleration::Dimension> {
