@@ -44,33 +44,36 @@ where
     ) -> MyVector3<acceleration::Dimension> {
         if self.flags.drag {
             // Velocity vector, after impact from wind (actually from drag, not "being blown")
-            // This is why the velocity from wind is subtracted, and vv is not used to find next velocity
+            // This is why the velocity from wind is subtracted here, but not in determining next velocity
+            // Force of drag for given projectile, at given mach speed, with given conditions
+            // Drag force is proportional to square of velocity and area of projectile, scaled
+            // by a coefficient at mach speeds (approximately)
+            // Optimization: Mass/Area do not impact function, they cancel out and leave factor of FRAC_PI_4
+            // which can be further reduced to FRAC_PI_8 (due to the multiplication by -0.5)
+            // -FRAC_PI_8 can be inlined into table at compile time
+
+            // a = -0.5 * cd * rho * V * v * area * i * 1/m
+            // i = sd/bc
+            // sd = m/d^2
+            // i = m/d^2 * (1/bc)
+
+            // area = ((1/2) * d)^2 * pi
+            // area = (1/4) * d^2 * pi
+            // area = pi/4 * d^2
+
+            // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
+            // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * m/d^2 * 1/bc * 1/m
+            // a = -pi/8 * cd(v) * V * v * rho * (1/bc)
+            // this means constants can be moved and multipled into "y's" of drag table
+
+            // FAST: a = V * v * cd'(v) * rho * 1/bc
+            // SLOW: a = V * v * cd(v) * rho *  area * i * 1/m * -0.5
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
             let cd = D::cd(self.mach(norm)).expect("CD")
                 * if OPTIMIZE_DRAG_TABLE {
-                    // Optimization: Mass/Area do not impact function, they cancel out and leave factor of FRAC_PI_4
-                    // which can be further reduced to FRAC_PI_8 (due to the multiplication by -0.5)
-                    // -FRAC_PI_8 can be inlined into table at compile time
-                    // a = -0.5 * cd * rho * V * v * area * i * 1/m
-                    // i = sd/bc
-                    // sd = m/d^2
-                    // i = m/d^2 * (1/bc)
-
-                    // area = ((1/2) * d)^2 * pi
-                    // area = (1/4) * d^2 * pi
-                    // area = pi/4 * d^2
-
-                    // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
-                    // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * m/d^2 * 1/bc * 1/m
-                    // a = -pi/8 * cd(v) * V * v * rho * (1/bc)
-                    // this means constants can be moved and multipled into "y's" of drag table
-                    // a = V * v * cd(v) * rho * 1/bc
                     self.atmosphere.rho() / self.projectile.bc()
                 } else {
-                    // Force of drag for given projectile, at given mach speed, with given conditions
-                    // Drag force is proportional to square of velocity and area of projectile, scaled
-                    // by a coefficient at mach speeds (approximately)
                     -0.5 * self.projectile.i() * self.atmosphere.rho() * self.projectile.area()
                         / self.projectile.weight
                 };
