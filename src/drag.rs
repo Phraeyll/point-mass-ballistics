@@ -108,10 +108,10 @@ impl<const N: usize> Table<N> {
         let mut high = N - 1;
         while low <= high {
             let index = (high + low) / 2;
-            let x0 = self.x[index];
-            if x0 > x {
+            let n = self.x[index];
+            if n > x {
                 high = index - 1;
-            } else if x0 < x {
+            } else if n < x {
                 low = index + 1;
             } else {
                 high = index;
