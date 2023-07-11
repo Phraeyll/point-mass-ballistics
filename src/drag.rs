@@ -1,6 +1,5 @@
 use crate::{
     error::{Error, Result},
-    units::Ratio,
     Numeric,
 };
 
@@ -72,7 +71,13 @@ macro_rules! table {
             // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
             // This funtions returns linear approximation of drag coefficient, for a given mach speed
             fn cd(x: Ratio) -> Result<Numeric> {
-                Self::TABLE.cd(x)
+                let x = x.value;
+                // Find values in table to interpolate
+                let (i, j) = Self::TABLE.binary_search(x)?;
+                let (x0, y0, x1, y1) = (Self::TABLE.x[i], Self::TABLE.y[i], Self::TABLE.x[j], Self::TABLE.y[j]);
+
+                // Linear interpolation
+                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
             }
         }
     };
@@ -85,23 +90,12 @@ pub struct Table<const N: usize> {
 }
 
 impl<const N: usize> Table<N> {
-    pub fn cd(&self, x: Ratio) -> Result<Numeric> {
-        let x = x.value;
-        // Find values in table to interpolate
-        let i = self.binary_search(x)?;
-        let j = i + 1;
-        let (x0, y0, x1, y1) = (self.x[i], self.y[i], self.x[j], self.y[j]);
-
-        // Linear interpolation
-        Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
-    }
-
-    pub fn linear_search(&self, x: Numeric) -> Result<usize> {
+    pub fn linear_search(&self, x: Numeric) -> Result<(usize, usize)> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
             if let Some((i, n)) = iter.next() {
                 if n > x {
-                    break Ok(i - 1);
+                    break Ok((i - 1, i));
                 }
             } else {
                 break Err(Error::Mach(x));
@@ -109,7 +103,7 @@ impl<const N: usize> Table<N> {
         }
     }
 
-    pub fn binary_search(&self, x: Numeric) -> Result<usize> {
+    pub fn binary_search(&self, x: Numeric) -> Result<(usize, usize)> {
         let mut low = 0;
         let mut high = N - 1;
         while low <= high {
@@ -126,7 +120,7 @@ impl<const N: usize> Table<N> {
             }
         }
         if low < N {
-            Ok(high)
+            Ok((high, low))
         } else {
             Err(Error::Mach(x))
         }
