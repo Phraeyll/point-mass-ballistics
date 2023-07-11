@@ -85,7 +85,7 @@ pub struct Table<const N: usize> {
 }
 
 impl<const N: usize> Table<N> {
-    fn cd(&self, x: Ratio) -> Result<Numeric> {
+    pub fn cd(&self, x: Ratio) -> Result<Numeric> {
         let x = x.value;
         // Find values in table to interpolate
         let i = self.binary_search(x)?;
