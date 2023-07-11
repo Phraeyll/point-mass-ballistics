@@ -1,5 +1,6 @@
 use crate::{
     error::{Error, Result},
+    units::Ratio,
     Numeric,
 };
 
@@ -26,14 +27,14 @@ macro_rules! count {
         len([$(void!($t)),*])
     };
 }
-pub(crate) use count;
+use count;
 
 macro_rules! void {
     ($t:tt) => {
         ()
     };
 }
-pub(crate) use void;
+use void;
 
 macro_rules! table {
     ( $($x:expr => $y:expr,)+ ) => {
@@ -53,35 +54,30 @@ macro_rules! table {
         pub struct Drag;
 
         impl Drag {
-            pub const TABLE: Table<{count!($($x,)*)}> = Table::new(
-                [$({
-                    $x
-                },)*],
-                [$({
-                    if OPTIMIZE_DRAG_TABLE {
-                        -($y * FRAC_PI_8)
-                    } else {
-                        $y
-                    }
-                },)*],
-            );
+            pub const TABLE: Table<{count!($($x,)*)}> = Table {
+                x: [
+                    $(
+                        $x
+                    ,)
+                *],
+                y: [
+                    $(
+                        if OPTIMIZE_DRAG_TABLE { -($y * FRAC_PI_8) } else { $y }
+                    ,)*
+                ],
+            };
         }
 
         impl DragFunction for Drag {
             // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
             // This funtions returns linear approximation of drag coefficient, for a given mach speed
             fn cd(x: Ratio) -> Result<Numeric> {
-                let x = x.value;
-                // Find values in table to interpolate
-                let (x0, y0, x1, y1) = Self::TABLE.binary_search(x)?;
-
-                // Linear interpolation
-                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+                Self::TABLE.cd(x)
             }
         }
     };
 }
-pub(crate) use table;
+use table;
 
 pub struct Table<const N: usize> {
     x: [Numeric; N],
@@ -89,16 +85,23 @@ pub struct Table<const N: usize> {
 }
 
 impl<const N: usize> Table<N> {
-    pub const fn new(x: [Numeric; N], y: [Numeric; N]) -> Self {
-        Self { x, y }
+    fn cd(&self, x: Ratio) -> Result<Numeric> {
+        let x = x.value;
+        // Find values in table to interpolate
+        let i = self.binary_search(x)?;
+        let j = i + 1;
+        let (x0, y0, x1, y1) = (self.x[i], self.y[i], self.x[j], self.y[j]);
+
+        // Linear interpolation
+        Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
     }
 
-    pub fn linear_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
+    pub fn linear_search(&self, x: Numeric) -> Result<usize> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
             if let Some((i, n)) = iter.next() {
                 if n > x {
-                    break Ok((self.x[i - 1], self.y[i - 1], self.x[i], self.y[i]));
+                    break Ok(i - 1);
                 }
             } else {
                 break Err(Error::Mach(x));
@@ -106,7 +109,7 @@ impl<const N: usize> Table<N> {
         }
     }
 
-    pub fn binary_search(&self, x: Numeric) -> Result<(Numeric, Numeric, Numeric, Numeric)> {
+    pub fn binary_search(&self, x: Numeric) -> Result<usize> {
         let mut low = 0;
         let mut high = N - 1;
         while low <= high {
@@ -123,7 +126,7 @@ impl<const N: usize> Table<N> {
             }
         }
         if low < N {
-            Ok((self.x[high], self.y[high], self.x[low], self.y[low]))
+            Ok(high)
         } else {
             Err(Error::Mach(x))
         }
