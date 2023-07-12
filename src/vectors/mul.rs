@@ -1,11 +1,10 @@
 use crate::{
-    units::{Conversion, Dimension, Quantity, Units},
+    units::{Conversion, Dimension, Num, Quantity, Units},
     vectors::{DiffDimension, DimVector3, SumDimension},
 };
 
-use core::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
-use crate::units::Num;
 use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
 
 impl<D: ?Sized, U: ?Sized, V> Mul<V> for DimVector3<D, U, V>

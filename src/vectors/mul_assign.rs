@@ -1,10 +1,9 @@
 use crate::{
-    units::Num,
-    units::{Conversion, Dimension, Quantity, Units},
+    units::{Conversion, Dimension, Num, Quantity, Units},
     vectors::DimVector3,
 };
 
-use core::ops::{Add, DivAssign, MulAssign, Sub};
+use std::ops::{Add, DivAssign, MulAssign, Sub};
 
 use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
 

@@ -9,8 +9,7 @@ use crate::{
     Numeric,
 };
 
-use core::ops::Add;
-use std::{fmt, marker::PhantomData};
+use std::{fmt, marker::PhantomData, ops::Add};
 
 use nalgebra::{
     base::Scalar, ClosedAdd, ClosedMul, ClosedSub, Rotation3, SimdComplexField, Vector3,

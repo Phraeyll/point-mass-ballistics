@@ -1,6 +1,6 @@
 use crate::vectors::DimVector3;
 
-use core::ops::{AddAssign, SubAssign};
+use std::ops::{AddAssign, SubAssign};
 
 use nalgebra::{base::Scalar, ClosedAdd, ClosedSub};
 
