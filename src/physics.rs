@@ -9,11 +9,11 @@ use crate::{
         MolarHeatCapacity, MolarMass, Pressure, Ratio, Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
-    Numeric, OPTIMIZE_DRAG_TABLE,
+    Numeric,
 };
 
 pub trait DragFunction {
-    fn cd(x: Ratio) -> Result<Numeric>;
+    fn cd(x: Numeric) -> Result<Numeric>;
 }
 
 // Drag
@@ -21,21 +21,12 @@ impl<D> Simulation<D>
 where
     D: DragFunction,
 {
-    // Velocity vector of wind, only horizontal at the moment
-    // Does not adjust according to line of sight, since most would measure wind
-    // along relative bearing - I don't think many would factor in a 'downhill' wind for example
-    // This would be interresting to think of, however.
-    fn wind_velocity(&self) -> MyVector3<velocity::Dimension> {
-        self.wind
-            .velocity()
-            .pivot_x(self.shooter.roll())
-            .pivot_z(self.shooter.pitch())
-            .pivot_y(self.shooter.yaw())
-    }
+    // Initial work to predetermine terminal velocity - not sure how to determine which value to use for
+    // cd without solving ODE
+    pub fn terminal_velocity(&self) -> Velocity {
+        let icd = self.projectile.bc() / (self.atmosphere.rho() * D::cd(0.562).expect("CD"));
 
-    // Velocity relative to speed of sound, with given atmospheric conditions
-    pub fn mach(&self, velocity: Velocity) -> Ratio {
-        velocity / self.atmosphere.speed_of_sound()
+        (self.shooter.gravity() * icd).norm().sqrt()
     }
 
     // Drag acceleration vector
@@ -71,13 +62,8 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let cd = D::cd(self.mach(norm)).expect("CD")
-                * if OPTIMIZE_DRAG_TABLE {
-                    self.atmosphere.rho() / self.projectile.bc()
-                } else {
-                    -0.5 * self.projectile.i() * self.atmosphere.rho() * self.projectile.area()
-                        / self.projectile.weight
-                };
+            let cd = D::cd(self.mach(norm).value).expect("CD") * self.atmosphere.rho()
+                / self.projectile.bc();
             velocity * norm * cd
         } else {
             MyVector3::ZERO
@@ -94,10 +80,28 @@ where
     }
 }
 
-impl<D> Simulation<D>
-where
-    D: DragFunction,
-{
+impl<D> Simulation<D> {
+    pub fn speed_of_sound(&self) -> Velocity {
+        self.atmosphere.speed_of_sound()
+    }
+
+    // Velocity relative to speed of sound, with given atmospheric conditions
+    pub fn mach(&self, velocity: Velocity) -> Ratio {
+        velocity / self.speed_of_sound()
+    }
+
+    // Velocity vector of wind, only horizontal at the moment
+    // Does not adjust according to line of sight, since most would measure wind
+    // along relative bearing - I don't think many would factor in a 'downhill' wind for example
+    // This would be interresting to think of, however.
+    pub(crate) fn wind_velocity(&self) -> MyVector3<velocity::Dimension> {
+        self.wind
+            .velocity()
+            .pivot_x(self.shooter.roll())
+            .pivot_z(self.shooter.pitch())
+            .pivot_y(self.shooter.yaw())
+    }
+
     // Projectiles initial velocity relative to scope
     pub(crate) fn velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(self.projectile.velocity, Velocity::ZERO, Velocity::ZERO)
@@ -213,7 +217,7 @@ impl Shooter {
     // Gravity of earth (m/s^2)
     const GRAVITY: Acceleration = my_quantity!(-9.806_65);
 
-    fn gravity(&self) -> MyVector3<acceleration::Dimension> {
+    pub fn gravity(&self) -> MyVector3<acceleration::Dimension> {
         MyVector3::new(Acceleration::ZERO, Self::GRAVITY, Acceleration::ZERO)
     }
 
@@ -251,7 +255,7 @@ impl Shooter {
     // Angular velocity vector of earth, at current lattitude
     // Can be thought of as vector from center of earth, pointing
     // to lines of lattitude.  Maximum effect at +/-90 degrees (poles)
-    fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
+    pub fn omega(&self) -> MyVector3<angular_velocity::Dimension> {
         MyVector3::new(
             Self::ANGULAR_VELOCITY,
             AngularVelocity::ZERO,

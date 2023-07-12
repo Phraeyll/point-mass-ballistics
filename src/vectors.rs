@@ -17,6 +17,7 @@ use nalgebra::{
 
 mod add;
 mod add_assign;
+mod eq;
 mod mul;
 mod mul_assign;
 
@@ -26,9 +27,9 @@ pub struct DimVector3<D: ?Sized, U: ?Sized, V>
 where
     V: Scalar,
 {
-    dimension: PhantomData<D>,
-    units: PhantomData<U>,
-    value: Vector3<V>,
+    pub dimension: PhantomData<D>,
+    pub units: PhantomData<U>,
+    pub value: Vector3<V>,
 }
 
 impl<D: ?Sized, U: ?Sized, V> From<Vector3<V>> for DimVector3<D, U, V>

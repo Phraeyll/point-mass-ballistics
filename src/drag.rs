@@ -45,9 +45,7 @@ macro_rules! table {
             consts::FRAC_PI_8,
             error::Result,
             physics::DragFunction,
-            units::Ratio,
             Numeric,
-            OPTIMIZE_DRAG_TABLE,
         };
 
         pub struct Drag;
@@ -61,7 +59,7 @@ macro_rules! table {
                 *],
                 y: [
                     $(
-                        if OPTIMIZE_DRAG_TABLE { -($y * FRAC_PI_8) } else { $y }
+                        -($y * FRAC_PI_8)
                     ,)*
                 ],
             };
@@ -70,8 +68,7 @@ macro_rules! table {
         impl DragFunction for Drag {
             // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
             // This funtions returns linear approximation of drag coefficient, for a given mach speed
-            fn cd(x: Ratio) -> Result<Numeric> {
-                let x = x.value;
+            fn cd(x: Numeric) -> Result<Numeric> {
                 // Find values in table to interpolate
                 let (i, j) = Self::TABLE.binary_search(x)?;
                 let (x0, y0, x1, y1) = (Self::TABLE.x[i], Self::TABLE.y[i], Self::TABLE.x[j], Self::TABLE.y[j]);

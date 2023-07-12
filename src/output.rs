@@ -59,7 +59,10 @@ where
     }
 
     fn mach(&self) -> Ratio {
-        self.simulation.mach(self.velocity())
+        let velocity =
+            self.simulation.velocity() + self.delta_velocity - self.simulation.wind_velocity();
+        let velocity = velocity.norm();
+        self.simulation.mach(velocity)
     }
 
     fn energy(&self) -> Energy {

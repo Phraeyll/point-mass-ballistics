@@ -17,6 +17,7 @@ pub struct Iter<'t, D> {
     delta_position: MyVector3<length::Dimension>, // Position (m)
     delta_velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
+    terminal: bool, // Records if last velocity was same as current (terminal velocity)
 }
 
 impl<D> Simulation<D> {
@@ -26,6 +27,7 @@ impl<D> Simulation<D> {
             delta_position: MyVector3::ZERO,
             delta_velocity: MyVector3::ZERO,
             time: Time::ZERO,
+            terminal: false,
         }
     }
 }
@@ -77,17 +79,12 @@ where
         self.delta_position += dp;
         self.delta_velocity += dv;
 
-        // Only continue iteration for changing 'forward' positions
-        // Old check for norm may show up in false positives - norm could be same for 'valid' velocities
-        // that are changing direction, but could still be traversion forward - norm loses information
-        // It is only a magnitude.  It could be that the norm is the same for two different velocities
-        // that are still moving forward, just at different angles
-        //
-        // This position check is still bad, however, as position may take a few ticks to change.
-        // For practical purposes, this still may suffice.  I want to take this check out eventually, and
-        // somehow allow caller to decide when to halt, ie, through filtering adaptors, although am not sure
-        // how to check previous iteration values in standard iterator adaptors.
-        if delta_velocity.get_x() != self.delta_velocity.get_x() {
+        // Just check if velocity is exactly equal to determine terminal velocity
+        // may run longer, but should be accurate
+        if !self.terminal {
+            if delta_velocity == self.delta_velocity {
+                self.terminal = true;
+            }
             Some(Self::Item {
                 simulation: self.simulation,
                 time,
