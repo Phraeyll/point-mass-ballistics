@@ -51,6 +51,8 @@ macro_rules! table {
         pub struct Drag;
 
         impl Drag {
+            // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
+            // This funtions returns linear approximation of drag coefficient, for a given mach speed
             pub const TABLE: Table<{count!($($x,)*)}> = Table {
                 x: [
                     $(
@@ -66,15 +68,8 @@ macro_rules! table {
         }
 
         impl DragFunction for Drag {
-            // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
-            // This funtions returns linear approximation of drag coefficient, for a given mach speed
             fn cd(x: Numeric) -> Result<Numeric> {
-                // Find values in table to interpolate
-                let (i, j) = Self::TABLE.binary_search(x)?;
-                let (x0, y0, x1, y1) = (Self::TABLE.x[i], Self::TABLE.y[i], Self::TABLE.x[j], Self::TABLE.y[j]);
-
-                // Linear interpolation
-                Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+                Self::TABLE.cd(x)
             }
         }
     };
@@ -87,6 +82,16 @@ pub struct Table<const N: usize> {
 }
 
 impl<const N: usize> Table<N> {
+    #[inline(always)]
+    pub fn cd(&self, x: Numeric) -> Result<Numeric> {
+        // Find values in table to interpolate
+        let (i, j) = self.binary_search(x)?;
+        let (x0, y0, x1, y1) = (self.x[i], self.y[i], self.x[j], self.y[j]);
+
+        // Linear interpolation
+        Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+    }
+
     pub fn linear_search(&self, x: Numeric) -> Result<(usize, usize)> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
