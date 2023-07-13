@@ -57,7 +57,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
-            ref simulation,
+            simulation,
             time,
             delta_position,
             delta_velocity,
