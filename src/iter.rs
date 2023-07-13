@@ -79,14 +79,14 @@ where
         self.delta_position += dp;
         self.delta_velocity += dv;
 
-        // Just check if velocity is exactly equal to determine terminal velocity
-        // may run longer, but should be accurate
+        // Check is projectile is moving "forward" - stop iteration if not
+        // Close/Equal to terminal velocity
         if !self.terminal {
-            if delta_velocity == self.delta_velocity {
+            if delta_velocity.get_x() == self.delta_velocity.get_x() {
                 self.terminal = true;
             }
             Some(Self::Item {
-                simulation: self.simulation,
+                simulation,
                 time,
                 delta_position,
                 delta_velocity,
