@@ -82,7 +82,7 @@ where
         // Check is projectile is moving "forward" - stop iteration if not
         // Close/Equal to terminal velocity
         if !self.terminal {
-            if delta_velocity.get_x() == self.delta_velocity.get_x() {
+            if delta_position.get_x() == self.delta_position.get_x() {
                 self.terminal = true;
             }
             Some(Self::Item {
