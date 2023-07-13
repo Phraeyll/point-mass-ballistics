@@ -58,9 +58,9 @@ where
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
             simulation,
-            time,
             delta_position,
             delta_velocity,
+            time,
             ..
         } = self;
         let v = simulation.velocity() + delta_velocity;
@@ -87,9 +87,9 @@ where
             }
             Some(Self::Item {
                 simulation,
-                time,
                 delta_position,
                 delta_velocity,
+                time,
             })
         } else {
             None
