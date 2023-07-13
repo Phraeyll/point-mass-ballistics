@@ -86,7 +86,8 @@ impl<const N: usize> Table<N> {
     pub fn cd(&self, x: Numeric) -> Result<Numeric> {
         // Find values in table to interpolate
         let (i, j) = self.binary_search(x)?;
-        let (x0, y0, x1, y1) = (self.x[i], self.y[i], self.x[j], self.y[j]);
+        let (x0, y0) = (self.x[i], self.y[i]);
+        let (x1, y1) = (self.x[j], self.y[j]);
 
         // Linear interpolation
         Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
