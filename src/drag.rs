@@ -90,7 +90,11 @@ impl<const N: usize> Table<N> {
         let (x1, y1) = (self.x[j], self.y[j]);
 
         // Linear interpolation
-        Ok(y0 + (x - x0) * ((y1 - y0) / (x1 - x0)))
+        let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
+        // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
+        // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
+        // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+        Ok(y)
     }
 
     pub fn linear_search(&self, x: Numeric) -> Result<(usize, usize)> {
