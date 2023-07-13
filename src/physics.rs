@@ -24,7 +24,7 @@ where
     // Initial work to predetermine terminal velocity - not sure how to determine which value to use for
     // cd without solving ODE
     pub fn terminal_velocity(&self) -> Velocity {
-        let icd = self.projectile.bc() / (self.atmosphere.rho() * D::cd(0.562).expect("CD"));
+        let icd = self.projectile.bc() / (D::cd(0.562).expect("CD") * self.atmosphere.rho());
 
         (self.shooter.gravity() * icd).norm().sqrt()
     }
