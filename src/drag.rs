@@ -1,7 +1,6 @@
 use crate::{
     error::{Error, Result},
-    units::ReciprocalLength,
-    Numeric,
+    units::{ReciprocalLength, Velocity},
 };
 
 pub use crate::physics::DragFunction;
@@ -46,28 +45,32 @@ macro_rules! table {
             consts::FRAC_PI_8,
             error::Result,
             physics::DragFunction,
-            units::{Ratio, ArealMassDensity, MassDensity, ReciprocalLength},
+            simulation::Atmosphere,
+            units::{ArealMassDensity, ReciprocalLength, Velocity},
         };
 
         use std::sync::OnceLock;
 
         const SIZE: usize = count!($($x,)*);
+        static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
         pub struct Drag;
         impl DragFunction for Drag {
-            fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength> {
-                static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
+            fn init(atmosphere: &Atmosphere, bc: ArealMassDensity) {
                 TABLE.get_or_init(|| Table {
                     x: [
                         $(
-                            $x
+                            $x * atmosphere.sound_velocity()
                         ),*
                     ],
                     y: [
                         $(
-                            -($y * FRAC_PI_8) * rho / bc
+                            -($y * FRAC_PI_8) * atmosphere.rho() / bc
                         ),*
                     ],
-                }).lerp(x.value)
+                });
+            }
+            fn cd(velocity: Velocity) -> Result<ReciprocalLength> {
+                TABLE.get().unwrap().lerp(velocity)
             }
         }
     };
@@ -75,13 +78,13 @@ macro_rules! table {
 use table;
 
 pub struct Table<const N: usize> {
-    x: [Numeric; N],
+    x: [Velocity; N],
     y: [ReciprocalLength; N],
 }
 
 impl<const N: usize> Table<N> {
     #[inline(always)]
-    pub fn lerp(&self, x: Numeric) -> Result<ReciprocalLength> {
+    pub fn lerp(&self, x: Velocity) -> Result<ReciprocalLength> {
         // Find values in table to interpolate
         let (i, j) = self.binary_search(x)?;
         let (x0, y0) = (self.x[i], self.y[i]);
@@ -95,7 +98,7 @@ impl<const N: usize> Table<N> {
         Ok(y)
     }
 
-    pub fn linear_search(&self, x: Numeric) -> Result<(usize, usize)> {
+    pub fn linear_search(&self, x: Velocity) -> Result<(usize, usize)> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
             if let Some((i, n)) = iter.next() {
@@ -103,12 +106,12 @@ impl<const N: usize> Table<N> {
                     break Ok((i - 1, i));
                 }
             } else {
-                break Err(Error::Mach(x));
+                break Err(Error::Velocity(x));
             }
         }
     }
 
-    pub fn binary_search(&self, x: Numeric) -> Result<(usize, usize)> {
+    pub fn binary_search(&self, x: Velocity) -> Result<(usize, usize)> {
         let mut low = 0;
         let mut high = N - 1;
         while low <= high {
@@ -127,7 +130,7 @@ impl<const N: usize> Table<N> {
         if low < N {
             Ok((high, low))
         } else {
-            Err(Error::Mach(x))
+            Err(Error::Velocity(x))
         }
     }
 }

@@ -1,6 +1,7 @@
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
+    physics::DragFunction,
     units::{
         angle::radian,
         length::meter,
@@ -128,10 +129,14 @@ impl<D> SimulationBuilder<D> {
     }
 }
 
-impl<D> SimulationBuilder<D> {
+impl<D> SimulationBuilder<D>
+where
+    D: DragFunction,
+{
     // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
     // Starting from flat fire pitch (0.0)
     pub fn init(self) -> Simulation<D> {
+        D::init(&self.0.atmosphere, self.0.projectile.bc());
         self.0
     }
 

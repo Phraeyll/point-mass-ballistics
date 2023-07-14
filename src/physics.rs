@@ -13,7 +13,8 @@ use crate::{
 };
 
 pub trait DragFunction {
-    fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength>;
+    fn init(atmosphere: &Atmosphere, bc: ArealMassDensity);
+    fn cd(velocity: Velocity) -> Result<ReciprocalLength>;
 }
 
 // Drag
@@ -62,8 +63,7 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let mach = self.mach(norm);
-            let cd = D::cd(mach, self.atmosphere.rho(), self.projectile.bc()).expect("CD");
+            let cd = D::cd(norm).expect("CD");
             velocity * norm * cd
         } else {
             MyVector3::ZERO
@@ -81,13 +81,13 @@ where
 }
 
 impl<D> Simulation<D> {
-    pub fn speed_of_sound(&self) -> Velocity {
-        self.atmosphere.speed_of_sound()
+    pub fn sound_velocity(&self) -> Velocity {
+        self.atmosphere.sound_velocity()
     }
 
     // Velocity relative to speed of sound, with given atmospheric conditions
     pub fn mach(&self, velocity: Velocity) -> Ratio {
-        velocity / self.speed_of_sound()
+        velocity / self.sound_velocity()
     }
 
     // Velocity vector of wind, only horizontal at the moment
@@ -170,7 +170,7 @@ impl Atmosphere {
     }
 
     // Speed of sound at given air density and pressure
-    pub fn speed_of_sound(&self) -> Velocity {
+    pub fn sound_velocity(&self) -> Velocity {
         (Self::ADIABATIC_INDEX_AIR * (self.pressure / self.rho())).sqrt()
     }
 
