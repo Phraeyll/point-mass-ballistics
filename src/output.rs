@@ -18,11 +18,11 @@ pub trait Measurements {
     fn elevation(&self) -> Length;
     fn windage(&self) -> Length;
     fn angle(&self) -> Angle;
-    fn vertical_angle(&self, tolerance: Length) -> Angle;
-    fn horizontal_angle(&self, tolerance: Length) -> Angle;
+    fn vertical_angle(&self) -> Angle;
+    fn horizontal_angle(&self) -> Angle;
     fn position(&self) -> MyVector3<length::Dimension>;
-    fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle;
-    fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle;
+    fn offset_vertical_angle(&self, offset: Length) -> Angle;
+    fn offset_horizontal_angle(&self, offset: Length) -> Angle;
 }
 
 // Output of iteration, need a better name to encapsulate a moving projectile
@@ -92,18 +92,18 @@ where
         self.position().angle(&compare)
     }
 
-    fn vertical_angle(&self, tolerance: Length) -> Angle {
-        self.offset_vertical_angle(Length::ZERO, tolerance)
+    fn vertical_angle(&self) -> Angle {
+        self.offset_vertical_angle(Length::ZERO)
     }
 
-    fn horizontal_angle(&self, tolerance: Length) -> Angle {
-        self.offset_horizontal_angle(Length::ZERO, tolerance)
+    fn horizontal_angle(&self) -> Angle {
+        self.offset_horizontal_angle(Length::ZERO)
     }
 
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    fn offset_vertical_angle(&self, offset: Length, tolerance: Length) -> Angle {
-        let sign = if self.elevation() >= (offset - tolerance) {
+    fn offset_vertical_angle(&self, offset: Length) -> Angle {
+        let sign = if self.elevation() >= offset {
             1.0
         } else {
             -1.0
@@ -117,12 +117,8 @@ where
 
     // This gives adjustment - opposite sign relative to desired offset
     // Always done in meters for now, due to relative_position()
-    fn offset_horizontal_angle(&self, offset: Length, tolerance: Length) -> Angle {
-        let sign = if self.windage() >= (offset - tolerance) {
-            1.0
-        } else {
-            -1.0
-        };
+    fn offset_horizontal_angle(&self, offset: Length) -> Angle {
+        let sign = if self.windage() >= offset { 1.0 } else { -1.0 };
 
         let position = MyVector3::new(self.distance(), Length::ZERO, self.windage());
         let desired = MyVector3::new(self.distance(), Length::ZERO, offset);
