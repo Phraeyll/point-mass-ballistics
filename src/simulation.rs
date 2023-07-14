@@ -133,8 +133,7 @@ impl<D> SimulationBuilder<D>
 where
     D: DragFunction,
 {
-    // Create simulation with conditions used to find muzzle_pitch for 'zeroing'
-    // Starting from flat fire pitch (0.0)
+    // Initialize drag table with atmospheric conditions and projectile bc
     pub fn init(self) -> Simulation<D> {
         D::init(&self.0.atmosphere, self.0.projectile.bc());
         self.0
