@@ -54,23 +54,6 @@ macro_rules! table {
         const SIZE: usize = count!($($x,)*);
         pub struct Drag;
 
-        impl Drag {
-            // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
-            // This funtions returns linear approximation of drag coefficient, for a given mach speed
-            // pub const TABLE: Table<{count!($($x,)*)}> = Table {
-            //     x: [
-            //         $(
-            //             $x
-            //         ,)
-            //     *],
-            //     y: [
-            //         $(
-            //             -($y * FRAC_PI_8)
-            //         ,)*
-            //     ],
-            // };
-        }
-
         impl DragFunction for Drag {
             fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength> {
                 static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
