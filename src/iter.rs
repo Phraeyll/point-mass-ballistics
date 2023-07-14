@@ -14,8 +14,8 @@ use std::iter::FusedIterator;
 #[derive(Debug)]
 pub struct Iter<'t, D> {
     simulation: &'t Simulation<D>, // Reference to model used for calculations
-    delta_position: MyVector3<length::Dimension>, // Position (m)
-    delta_velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
+    position: MyVector3<length::Dimension>, // Position (m)
+    velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
     terminal: bool, // Records if last velocity was same as current (terminal velocity)
 }
@@ -24,8 +24,8 @@ impl<D> Simulation<D> {
     pub fn iter(&self) -> Iter<'_, D> {
         Iter {
             simulation: self,
-            delta_position: MyVector3::ZERO,
-            delta_velocity: MyVector3::ZERO,
+            position: MyVector3::ZERO,
+            velocity: MyVector3::ZERO,
             time: Time::ZERO,
             terminal: false,
         }
@@ -58,12 +58,12 @@ where
         // Previous values captured to be returned, so that time 0 can be accounted for
         let &mut Self {
             simulation,
-            delta_position,
-            delta_velocity,
+            position,
+            velocity,
             time,
-            ..
+            terminal,
         } = self;
-        let v = simulation.velocity() + delta_velocity;
+        let v = simulation.velocity() + velocity;
 
         let dt = simulation.time_step;
         let dt_sq = dt.powi(P2::new());
@@ -76,19 +76,19 @@ where
         let dv = a * dt;
 
         self.time += dt;
-        self.delta_position += dp;
-        self.delta_velocity += dv;
+        self.position += dp;
+        self.velocity += dv;
 
         // Check is projectile is moving "forward" - stop iteration if not
         // Close/Equal to terminal velocity
-        if !self.terminal {
-            if delta_position.get_x() == self.delta_position.get_x() {
+        if !terminal {
+            if position.get_x() == self.position.get_x() {
                 self.terminal = true;
             }
             Some(Self::Item {
                 simulation,
-                delta_position,
-                delta_velocity,
+                position,
+                velocity,
                 time,
             })
         } else {

@@ -29,8 +29,8 @@ pub trait Measurements {
 pub struct Packet<'t, D> {
     pub(crate) simulation: &'t Simulation<D>, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                    // Position in time (s)
-    pub(crate) delta_position: MyVector3<length::Dimension>, // Position (m)
-    pub(crate) delta_velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
+    pub(crate) position: MyVector3<length::Dimension>, // Position (m)
+    pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
 }
 
 impl<D> Measurements for Packet<'_, D>
@@ -42,7 +42,7 @@ where
     }
 
     fn velocity(&self) -> Velocity {
-        let velocity = self.simulation.velocity() + self.delta_velocity;
+        let velocity = self.simulation.velocity() + self.velocity;
         velocity.norm()
     }
 
@@ -51,7 +51,7 @@ where
     // This function returns the position rotated back to the initial frame of reference
     // This is used during zero'ing and is output in the drop table
     fn position(&self) -> MyVector3<length::Dimension> {
-        let position = self.simulation.position() + self.delta_position;
+        let position = self.simulation.position() + self.position;
         position
             .pivot_y(-self.simulation.shooter.yaw())
             .pivot_z(-self.simulation.shooter.pitch())
@@ -59,8 +59,7 @@ where
     }
 
     fn mach(&self) -> Ratio {
-        let velocity =
-            self.simulation.velocity() + self.delta_velocity - self.simulation.wind_velocity();
+        let velocity = self.simulation.velocity() + self.velocity - self.simulation.wind_velocity();
         let velocity = velocity.norm();
         self.simulation.mach(velocity)
     }
