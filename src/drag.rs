@@ -53,24 +53,20 @@ macro_rules! table {
 
         const SIZE: usize = count!($($x,)*);
         pub struct Drag;
-
         impl DragFunction for Drag {
             fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength> {
                 static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
-                TABLE.get_or_init(|| {
-                    Table {
-                        x: [
-                            $(
-                                $x
-                            ,)
-                        *],
-                        y: [
-                            $(
-                                -($y * FRAC_PI_8) * rho / bc
-                            ,)*
-                        ],
-
-                    }
+                TABLE.get_or_init(|| Table {
+                    x: [
+                        $(
+                            $x
+                        ),*
+                    ],
+                    y: [
+                        $(
+                            -($y * FRAC_PI_8) * rho / bc
+                        ),*
+                    ],
                 }).lerp(x.value)
             }
         }

@@ -62,8 +62,8 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let cd =
-                D::cd(self.mach(norm), self.atmosphere.rho(), self.projectile.bc()).expect("CD");
+            let mach = self.mach(norm);
+            let cd = D::cd(mach, self.atmosphere.rho(), self.projectile.bc()).expect("CD");
             velocity * norm * cd
         } else {
             MyVector3::ZERO
