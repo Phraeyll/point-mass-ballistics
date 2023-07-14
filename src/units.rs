@@ -4,8 +4,8 @@ pub use uom::si::{
     acceleration, angle, angular_velocity, area, energy,
     f64::{
         Acceleration, Angle, AngularVelocity, Area, ArealMassDensity, Energy, Length, Mass,
-        MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, ThermodynamicTemperature, Time,
-        Velocity,
+        MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, ReciprocalLength,
+        ThermodynamicTemperature, Time, Velocity,
     },
     force, length, mass, mass_density, molar_mass, pressure, reciprocal_length,
     thermodynamic_temperature, time, velocity,

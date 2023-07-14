@@ -1,5 +1,6 @@
 use crate::{
     error::{Error, Result},
+    units::ReciprocalLength,
     Numeric,
 };
 
@@ -45,31 +46,49 @@ macro_rules! table {
             consts::FRAC_PI_8,
             error::Result,
             physics::DragFunction,
-            Numeric,
+            units::{Ratio, ArealMassDensity, MassDensity, ReciprocalLength},
         };
 
+        use std::sync::OnceLock;
+
+        const SIZE: usize = count!($($x,)*);
         pub struct Drag;
 
         impl Drag {
             // TABLE is a effictely a map of "mach speed" to "drag coefficients", {x => y}
             // This funtions returns linear approximation of drag coefficient, for a given mach speed
-            pub const TABLE: Table<{count!($($x,)*)}> = Table {
-                x: [
-                    $(
-                        $x
-                    ,)
-                *],
-                y: [
-                    $(
-                        -($y * FRAC_PI_8)
-                    ,)*
-                ],
-            };
+            // pub const TABLE: Table<{count!($($x,)*)}> = Table {
+            //     x: [
+            //         $(
+            //             $x
+            //         ,)
+            //     *],
+            //     y: [
+            //         $(
+            //             -($y * FRAC_PI_8)
+            //         ,)*
+            //     ],
+            // };
         }
 
         impl DragFunction for Drag {
-            fn cd(x: Numeric) -> Result<Numeric> {
-                Self::TABLE.cd(x)
+            fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength> {
+                static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
+                TABLE.get_or_init(|| {
+                    Table {
+                        x: [
+                            $(
+                                $x
+                            ,)
+                        *],
+                        y: [
+                            $(
+                                -($y * FRAC_PI_8) * rho / bc
+                            ,)*
+                        ],
+
+                    }
+                }).lerp(x.value)
             }
         }
     };
@@ -78,12 +97,12 @@ use table;
 
 pub struct Table<const N: usize> {
     x: [Numeric; N],
-    y: [Numeric; N],
+    y: [ReciprocalLength; N],
 }
 
 impl<const N: usize> Table<N> {
     #[inline(always)]
-    pub fn cd(&self, x: Numeric) -> Result<Numeric> {
+    pub fn lerp(&self, x: Numeric) -> Result<ReciprocalLength> {
         // Find values in table to interpolate
         let (i, j) = self.binary_search(x)?;
         let (x0, y0) = (self.x[i], self.y[i]);

@@ -6,14 +6,14 @@ use crate::{
         acceleration, angular_velocity, area::square_inch, length, mass::pound, my_quantity,
         thermodynamic_temperature::degree_celsius as celsius, typenum::P2, velocity, Acceleration,
         Angle, AngularVelocity, Area, ArealMassDensity, ConstZero, Length, Mass, MassDensity,
-        MolarHeatCapacity, MolarMass, Pressure, Ratio, Velocity,
+        MolarHeatCapacity, MolarMass, Pressure, Ratio, ReciprocalLength, Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
     Numeric,
 };
 
 pub trait DragFunction {
-    fn cd(x: Numeric) -> Result<Numeric>;
+    fn cd(x: Ratio, rho: MassDensity, bc: ArealMassDensity) -> Result<ReciprocalLength>;
 }
 
 // Drag
@@ -23,11 +23,11 @@ where
 {
     // Initial work to predetermine terminal velocity - not sure how to determine which value to use for
     // cd without solving ODE
-    pub fn terminal_velocity(&self) -> Velocity {
-        let icd = self.projectile.bc() / (D::cd(0.562).expect("CD") * self.atmosphere.rho());
+    // pub fn terminal_velocity(&self) -> Velocity {
+    //     let icd = self.projectile.bc() / (D::cd(0.562).expect("CD") * self.atmosphere.rho());
 
-        (self.shooter.gravity() * icd).norm().sqrt()
-    }
+    //     (self.shooter.gravity() * icd).norm().sqrt()
+    // }
 
     // Drag acceleration vector
     // The velocity used is projectile.velocity - wind.velocity because wind will have a negative impact
@@ -62,8 +62,8 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let cd = D::cd(self.mach(norm).value).expect("CD") * self.atmosphere.rho()
-                / self.projectile.bc();
+            let cd =
+                D::cd(self.mach(norm), self.atmosphere.rho(), self.projectile.bc()).expect("CD");
             velocity * norm * cd
         } else {
             MyVector3::ZERO
