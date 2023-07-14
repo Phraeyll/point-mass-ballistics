@@ -51,8 +51,8 @@ macro_rules! table {
 
         use std::sync::OnceLock;
 
-        const SIZE: usize = count!($($x,)*);
-        static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
+        pub const SIZE: usize = count!($($x,)*);
+        pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
         pub struct Drag;
         impl DragFunction for Drag {
             fn init(atmosphere: &Atmosphere, bc: ArealMassDensity) {
