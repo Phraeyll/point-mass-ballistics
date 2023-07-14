@@ -2,14 +2,15 @@ use crate::{
     physics::DragFunction,
     simulation::Simulation,
     units::{
-        length, length::meter, typenum::P2, velocity, Angle, ConstZero, Energy, Length, Ratio,
-        Time, Velocity,
+        acceleration, length, length::meter, typenum::P2, velocity, Acceleration, Angle, ConstZero,
+        Energy, Length, Ratio, Time, Velocity,
     },
     vectors::{MyVector3, Norm},
 };
 
 pub trait Measurements {
     fn time(&self) -> Time;
+    fn acceleration(&self) -> Acceleration;
     fn velocity(&self) -> Velocity;
     fn mach(&self) -> Ratio;
     fn energy(&self) -> Energy;
@@ -26,11 +27,12 @@ pub trait Measurements {
 
 // Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
-pub struct Packet<'t, D> {
-    pub(crate) simulation: &'t Simulation<D>, //Simulation this came from, used for various calculations
+pub struct Packet<'a, D> {
+    pub(crate) simulation: &'a Simulation<D>, //Simulation this came from, used for various calculations
     pub(crate) time: Time,                    // Position in time (s)
     pub(crate) position: MyVector3<length::Dimension>, // Position (m)
     pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
+    pub(crate) acceleration: MyVector3<acceleration::Dimension>, // Acceleration (m/s^2)
 }
 
 impl<D> Measurements for Packet<'_, D>
@@ -39,6 +41,10 @@ where
 {
     fn time(&self) -> Time {
         self.time
+    }
+
+    fn acceleration(&self) -> Acceleration {
+        self.acceleration.norm()
     }
 
     fn velocity(&self) -> Velocity {

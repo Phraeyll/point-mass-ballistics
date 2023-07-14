@@ -16,13 +16,13 @@ const DEG_45: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_4);
 // Also should never try to pitch this low - not sure if this ever happens in practice
 const DEG_90: MyQuantity<angle::Dimension> = my_quantity!(FRAC_PI_2);
 
-struct IterFindAdjustments<'t, D, F, E, W>
+struct IterFindAdjustments<'a, D, F, E, W>
 where
     F: Fn(&Packet<D>) -> bool,
     E: Fn(&Packet<D>) -> Angle,
     W: Fn(&Packet<D>) -> Angle,
 {
-    sim: &'t mut Simulation<D>,
+    sim: &'a mut Simulation<D>,
 
     finder: F,
     elevation_adjuster: E,
@@ -61,7 +61,7 @@ where
         } = self;
 
         // Capture current adjustments/count for use during checks later
-        // Cannot return pitch/yaw here, as zeroth iteration doesn't have
+        // Cannot return pitch/yaw here, as zeroth iteration doesn'a have
         // meaningful value for elevation/windage - really have to run iter at least once
         self.count += 1;
         self.sim.scope.pitch += self.elevation_adjustment;
@@ -92,13 +92,13 @@ where
     }
 }
 
-impl<'t, D> Simulation<D> {
+impl<'a, D> Simulation<D> {
     fn find_adjustments<F, E, W>(
-        &'t mut self,
+        &'a mut self,
         finder: F,
         elevation_adjuster: E,
         windage_adjuster: W,
-    ) -> IterFindAdjustments<'t, D, F, E, W>
+    ) -> IterFindAdjustments<'a, D, F, E, W>
     where
         F: Fn(&Packet<D>) -> bool,
         E: Fn(&Packet<D>) -> Angle,

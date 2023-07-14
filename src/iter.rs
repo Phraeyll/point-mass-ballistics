@@ -12,8 +12,8 @@ use std::iter::FusedIterator;
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
 #[derive(Debug)]
-pub struct Iter<'t, D> {
-    simulation: &'t Simulation<D>, // Reference to model used for calculations
+pub struct Iter<'a, D> {
+    simulation: &'a Simulation<D>, // Reference to model used for calculations
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
@@ -33,12 +33,12 @@ impl<D> Simulation<D> {
 }
 
 // Create an new iterator over Simulation
-impl<'t, D> IntoIterator for &'t Simulation<D>
+impl<'a, D> IntoIterator for &'a Simulation<D>
 where
     D: DragFunction,
 {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = Iter<'t, D>;
+    type IntoIter = Iter<'a, D>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -47,11 +47,11 @@ where
 
 // Produce new 'packet', based on drag, coriolis acceleration, and gravity
 // Contains time, position, and velocity of projectile, and reference to simulation used
-impl<'t, D> Iterator for Iter<'t, D>
+impl<'a, D> Iterator for Iter<'a, D>
 where
     D: DragFunction,
 {
-    type Item = Packet<'t, D>;
+    type Item = Packet<'a, D>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
@@ -85,9 +85,10 @@ where
         if !terminal {
             Some(Self::Item {
                 simulation,
+                time,
                 position,
                 velocity,
-                time,
+                acceleration: a,
             })
         } else {
             None
@@ -95,4 +96,4 @@ where
     }
 }
 
-impl<'t, D> FusedIterator for Iter<'t, D> where D: DragFunction {}
+impl<'a, D> FusedIterator for Iter<'a, D> where D: DragFunction {}
