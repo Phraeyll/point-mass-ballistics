@@ -123,12 +123,6 @@ impl<D> Default for SimulationBuilder<D> {
     }
 }
 
-impl<D> SimulationBuilder<D> {
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
-
 impl<D> SimulationBuilder<D>
 where
     D: DragFunction,
@@ -137,6 +131,12 @@ where
     pub fn init(self) -> Simulation<D> {
         D::init(&self.0.atmosphere, self.0.projectile.bc());
         self.0
+    }
+}
+
+impl<D> SimulationBuilder<D> {
+    pub fn new() -> Self {
+        Default::default()
     }
 
     pub fn set_time_step(mut self, value: Time) -> Result<Self> {
