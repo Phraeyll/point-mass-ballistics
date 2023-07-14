@@ -78,13 +78,11 @@ where
         self.time += dt;
         self.position += dp;
         self.velocity += dv;
+        self.terminal = self.velocity.get_x() == velocity.get_x();
 
         // Check is projectile is moving "forward" - stop iteration if not
         // Close/Equal to terminal velocity
         if !terminal {
-            if position.get_x() == self.position.get_x() {
-                self.terminal = true;
-            }
             Some(Self::Item {
                 simulation,
                 position,
