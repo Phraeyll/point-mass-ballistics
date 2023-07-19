@@ -63,8 +63,8 @@ where
             time,
             terminal,
         } = self;
-        let v = simulation.velocity() + velocity;
 
+        let v = simulation.velocity() + velocity;
         let dt = simulation.time_step;
         let dt_sq = dt.powi(P2::new());
         let a = simulation.acceleration(v);
