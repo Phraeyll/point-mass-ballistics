@@ -12,8 +12,8 @@ use crate::{
     Numeric,
 };
 
-pub trait DragFunction {
-    fn init(atmosphere: &Atmosphere, bc: ArealMassDensity);
+pub trait DragFunction: Sized {
+    fn init(simulation: &Simulation<Self>);
     fn cd(velocity: Velocity) -> Result<ReciprocalLength>;
 }
 

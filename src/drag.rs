@@ -45,8 +45,8 @@ macro_rules! table {
             consts::FRAC_PI_8,
             error::Result,
             physics::DragFunction,
-            simulation::Atmosphere,
-            units::{ArealMassDensity, ReciprocalLength, Velocity},
+            simulation::Simulation,
+            units::{ReciprocalLength, Velocity},
         };
 
         use std::sync::OnceLock;
@@ -55,16 +55,16 @@ macro_rules! table {
         pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
         pub struct Drag;
         impl DragFunction for Drag {
-            fn init(atmosphere: &Atmosphere, bc: ArealMassDensity) {
-                TABLE.get_or_init(|| Table {
+            fn init(simulation: &Simulation<Self>) {
+                let _ = TABLE.set(Table {
                     x: [
                         $(
-                            $x * atmosphere.sound_velocity()
+                            $x * simulation.atmosphere.sound_velocity()
                         ),*
                     ],
                     y: [
                         $(
-                            -($y * FRAC_PI_8) * atmosphere.rho() / bc
+                            -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
                         ),*
                     ],
                 });
@@ -83,7 +83,6 @@ pub struct Table<const N: usize> {
 }
 
 impl<const N: usize> Table<N> {
-    #[inline(always)]
     pub fn lerp(&self, x: Velocity) -> Result<ReciprocalLength> {
         // Find values in table to interpolate
         let (i, j) = self.binary_search(x)?;

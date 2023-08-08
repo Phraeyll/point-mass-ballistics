@@ -129,7 +129,7 @@ where
 {
     // Initialize drag table with atmospheric conditions and projectile bc
     pub fn init(self) -> Simulation<D> {
-        D::init(&self.0.atmosphere, self.0.projectile.bc());
+        D::init(&self.0);
         self.0
     }
 }
