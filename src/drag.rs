@@ -112,17 +112,17 @@ impl<const N: usize> Table<N> {
 
     pub fn binary_search(&self, x: Velocity) -> Result<(usize, usize)> {
         let mut low = 0;
-        let mut high = N - 1;
+        let mut high = N;
         while low <= high {
-            let index = (high + low) / 2;
-            let n = self.x[index];
-            if n > x {
-                high = index - 1;
-            } else if n < x {
-                low = index + 1;
+            let mid = low + (high - low) / 2;
+            let n = self.x[mid];
+            if x < n {
+                high = mid - 1;
+            } else if x > n {
+                low = mid + 1;
             } else {
-                high = index;
-                low = index;
+                high = mid;
+                low = mid;
                 break;
             }
         }
