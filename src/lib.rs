@@ -1,12 +1,7 @@
 pub type Numeric = f64;
 
 mod consts {
-    pub use std::f64::consts::{
-        PI,
-        FRAC_PI_2,
-        FRAC_PI_4,
-        FRAC_PI_8,
-    };
+    pub use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_8, PI};
 }
 mod physics;
 mod vectors;
