@@ -95,7 +95,8 @@ impl<D> Simulation<D> {
     // along relative bearing - I don't think many would factor in a 'downhill' wind for example
     // This would be interresting to think of, however.
     pub(crate) fn wind_velocity(&self) -> MyVector3<velocity::Dimension> {
-        self.wind
+        self.atmosphere
+            .wind
             .velocity()
             .pivot_x(self.shooter.roll())
             .pivot_z(self.shooter.pitch())

@@ -24,7 +24,6 @@ pub struct Simulation<D> {
     pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
     pub(crate) atmosphere: Atmosphere, // Different conditions during solving
-    pub(crate) wind: Wind,   // Different conditions during solving
     pub(crate) shooter: Shooter, // Different conditions during solving
     pub(crate) time_step: Time, // Use same timestep for zeroing and solving
 }
@@ -34,6 +33,7 @@ pub struct Atmosphere {
     pub(crate) temperature: ThermodynamicTemperature, // Temperature (F)
     pub(crate) pressure: Pressure,                    // Pressure (InHg)
     pub(crate) humidity: Numeric,                     // Humidity (0-1)
+    pub(crate) wind: Wind,
 }
 
 #[derive(Debug)]
@@ -105,12 +105,12 @@ impl<D> Default for SimulationBuilder<D> {
                 temperature: ThermodynamicTemperature::ZERO,
                 pressure: Pressure::ZERO,
                 humidity: Numeric::ZERO,
-            },
-            wind: Wind {
-                yaw: Angle::ZERO,
-                pitch: Angle::ZERO,
-                roll: Angle::ZERO,
-                velocity: Velocity::ZERO,
+                wind: Wind {
+                    yaw: Angle::ZERO,
+                    pitch: Angle::ZERO,
+                    roll: Angle::ZERO,
+                    velocity: Velocity::ZERO,
+                },
             },
             shooter: Shooter {
                 yaw: Angle::ZERO,
@@ -250,7 +250,7 @@ impl<D> SimulationBuilder<D> {
     // Wind
     pub fn set_wind_speed(mut self, value: Velocity) -> Result<Self> {
         if value.is_sign_positive() {
-            self.0.wind.velocity = value;
+            self.0.atmosphere.wind.velocity = value;
             Ok(self)
         } else {
             Err(Error::PositiveExpected(value.get::<meter_per_second>()))
@@ -261,7 +261,7 @@ impl<D> SimulationBuilder<D> {
         let min = Angle::new::<radian>(-2.0 * PI);
         let max = Angle::new::<radian>(2.0 * PI);
         if value >= min && value <= max {
-            self.0.wind.yaw = value;
+            self.0.atmosphere.wind.yaw = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
