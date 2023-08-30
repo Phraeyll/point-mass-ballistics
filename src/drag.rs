@@ -126,4 +126,21 @@ impl<const N: usize> Table<N> {
             Err(Error::Velocity(x))
         }
     }
+
+    pub fn experimental_search(&self, x: Velocity) -> Result<(usize, usize)> {
+        let mut index = 0;
+        let mut len = N;
+        while len > 1 {
+            let half = len >> 1;
+            let mid = index + half;
+            let next = [index, mid];
+            index = next[(self.x[mid] < x) as usize];
+            len -= half;
+        }
+        if index + 1 < N {
+            Ok((index, index + 1))
+        } else {
+            Err(Error::Velocity(x))
+        }
+    }
 }
