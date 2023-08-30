@@ -19,10 +19,7 @@ const fn len<const N: usize>(_: [(); N]) -> usize {
 }
 
 macro_rules! count {
-    ($($t:tt,)+) => {
-        count!($($t),+)
-    };
-    ($($t:tt),*) => {
+    ($($t:tt),* $(,)?) => {
         len([$(void!($t)),*])
     };
 }
@@ -36,10 +33,7 @@ macro_rules! void {
 use void;
 
 macro_rules! table {
-    ( $($x:expr => $y:expr,)+ ) => {
-        table![$($x => $y),+];
-    };
-    ( $($x:expr => $y:expr),* ) => {
+    ($($x:expr => $y:expr),* $(,)?) => {
         use super::*;
         use $crate::{
             consts::FRAC_PI_8,
@@ -51,7 +45,7 @@ macro_rules! table {
 
         use std::sync::OnceLock;
 
-        pub const SIZE: usize = count!($($x,)*);
+        pub const SIZE: usize = count!($($x),*);
         pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
         pub struct Drag;
         impl DragFunction for Drag {
