@@ -79,7 +79,11 @@ pub struct Table<const N: usize> {
 impl<const N: usize> Table<N> {
     pub fn lerp(&self, x: Velocity) -> Result<ReciprocalLength> {
         // Find values in table to interpolate
-        let (i, j) = self.binary_search(x)?;
+        let i = self.binary_search(x);
+        let j = i + 1;
+        if j == N {
+            return Err(Error::Velocity(x));
+        };
         let (x0, y0) = (self.x[i], self.y[i]);
         let (x1, y1) = (self.x[j], self.y[j]);
 
@@ -91,20 +95,18 @@ impl<const N: usize> Table<N> {
         Ok(y)
     }
 
-    pub fn linear_search(&self, x: Velocity) -> Result<(usize, usize)> {
+    pub fn linear_search(&self, x: Velocity) -> usize {
         let mut iter = self.x.into_iter().enumerate();
         loop {
             if let Some((i, n)) = iter.next() {
                 if n > x {
-                    break Ok((i - 1, i));
+                    break i - 1;
                 }
-            } else {
-                break Err(Error::Velocity(x));
             }
         }
     }
 
-    pub fn binary_search(&self, x: Velocity) -> Result<(usize, usize)> {
+    pub fn binary_search(&self, x: Velocity) -> usize {
         let mut low = 0;
         let mut high = N;
         while low <= high {
@@ -112,35 +114,24 @@ impl<const N: usize> Table<N> {
             let n = self.x[mid];
             if n < x {
                 low = mid + 1;
-            } else if n > x {
-                high = mid - 1;
             } else {
-                high = mid;
-                low = mid;
-                break;
+                high = mid - 1;
             }
         }
-        if low < N {
-            Ok((high, low))
-        } else {
-            Err(Error::Velocity(x))
-        }
+        high
     }
 
-    pub fn experimental_search(&self, x: Velocity) -> Result<(usize, usize)> {
+    pub fn experimental_search(&self, x: Velocity) -> usize {
         let mut index = 0;
         let mut len = N;
         while len > 1 {
             let half = len >> 1;
             let mid = index + half;
-            let next = [index, mid];
-            index = next[(self.x[mid] < x) as usize];
+            if self.x[mid] < x {
+                index = mid
+            };
             len -= half;
         }
-        if index + 1 < N {
-            Ok((index, index + 1))
-        } else {
-            Err(Error::Velocity(x))
-        }
+        index
     }
 }
