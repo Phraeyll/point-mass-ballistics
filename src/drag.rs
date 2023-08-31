@@ -109,15 +109,15 @@ impl<const N: usize> Table<N> {
     pub fn binary_search(&self, x: Velocity) -> usize {
         let mut low = 0;
         let mut high = N;
-        while low <= high {
+        while low < high {
             let mid = low + ((high - low) >> 1);
             if self.x[mid] < x {
                 low = mid + 1;
             } else {
-                high = mid - 1;
+                high = mid;
             }
         }
-        high
+        high - 1
     }
 
     pub fn experimental_search(&self, x: Velocity) -> usize {
