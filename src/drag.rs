@@ -99,7 +99,7 @@ impl<const N: usize> Table<N> {
         let mut iter = self.x.into_iter().enumerate();
         loop {
             if let Some((i, n)) = iter.next() {
-                if n > x {
+                if n >= x {
                     break i - 1;
                 }
             }
