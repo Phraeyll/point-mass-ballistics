@@ -96,14 +96,14 @@ impl<const N: usize> Table<N> {
     }
 
     pub fn linear_search(&self, x: Velocity) -> usize {
-        let mut iter = self.x.into_iter().enumerate();
-        loop {
-            if let Some((i, n)) = iter.next() {
-                if n >= x {
-                    break i - 1;
-                }
+        let mut index = 0;
+        while index < N {
+            if self.x[index] >= x {
+                break;
             }
+            index += 1;
         }
+        index - 1
     }
 
     pub fn binary_search(&self, x: Velocity) -> usize {
