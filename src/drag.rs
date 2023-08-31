@@ -111,8 +111,7 @@ impl<const N: usize> Table<N> {
         let mut high = N;
         while low <= high {
             let mid = low + ((high - low) >> 1);
-            let n = self.x[mid];
-            if n < x {
+            if self.x[mid] < x {
                 low = mid + 1;
             } else {
                 high = mid - 1;
