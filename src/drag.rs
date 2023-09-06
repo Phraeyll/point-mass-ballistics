@@ -35,6 +35,7 @@ use void;
 macro_rules! table {
     ($($x:expr => $y:expr),* $(,)?) => {
         use super::*;
+
         use $crate::{
             consts::FRAC_PI_8,
             error::Result,
@@ -47,7 +48,9 @@ macro_rules! table {
 
         pub const SIZE: usize = count!($($x),*);
         pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
+
         pub struct Drag;
+
         impl DragFunction for Drag {
             fn init(simulation: &Simulation<Self>) {
                 let _ = TABLE.set(Table {
