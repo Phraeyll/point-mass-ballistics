@@ -49,6 +49,7 @@ macro_rules! table {
         pub const SIZE: usize = count!($($x),*);
         pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
 
+        #[derive(Debug)]
         pub struct Drag;
 
         impl DragFunction for Drag {
