@@ -1,4 +1,4 @@
-use crate::drag::table;
+use super::table;
 
 table![
     0.00   => 0.1198,
