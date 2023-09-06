@@ -1,7 +1,6 @@
-use crate::{
-    units::{Conversion, Dimension, Num, Quantity, Units},
-    vectors::{DiffDimension, DimVector3, SumDimension},
-};
+use super::{DiffDimension, DimVector3, SumDimension};
+
+use crate::units::{Conversion, Dimension, Num, Quantity, Units};
 
 use std::ops::{Add, Div, Mul, Sub};
 

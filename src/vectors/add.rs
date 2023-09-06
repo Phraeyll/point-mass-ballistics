@@ -1,4 +1,4 @@
-use crate::vectors::DimVector3;
+use super::DimVector3;
 
 use std::ops::{Add, Sub};
 
