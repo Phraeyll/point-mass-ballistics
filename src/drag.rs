@@ -80,7 +80,7 @@ pub struct Table<const N: usize> {
     y: [ReciprocalLength; N],
 }
 
-impl<const N: usize> Table<N> {
+impl<const N: usize> Table<{ N }> {
     pub fn lerp(&self, x: Velocity) -> Result<ReciprocalLength> {
         // Find values in table to interpolate
         let i = self.binary_search(x);
