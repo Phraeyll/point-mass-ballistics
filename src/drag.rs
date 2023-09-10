@@ -47,7 +47,7 @@ macro_rules! table {
         use std::sync::OnceLock;
 
         pub const SIZE: usize = count!($($x),*);
-        pub static TABLE: OnceLock<Table<SIZE>> = OnceLock::new();
+        pub static TABLE: OnceLock<Table<{ SIZE }>> = OnceLock::new();
 
         #[derive(Debug)]
         pub struct Drag;
