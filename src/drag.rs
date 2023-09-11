@@ -48,7 +48,7 @@ macro_rules! table {
 
         #[derive(Debug)]
         pub struct Drag {
-            table: [(Velocity, ReciprocalLength); { count!($($x),*) }],
+            table: [Entry; { count!($($x),*) }],
         }
 
         impl DragFunction for Drag {
