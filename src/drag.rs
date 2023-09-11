@@ -50,31 +50,36 @@ macro_rules! table {
         pub static TABLE: Mutex<Option<Table<{ SIZE }>>> = Mutex::new(None);
 
         #[derive(Debug)]
-        pub struct Drag;
+        pub struct Drag {
+            table: Table<{ SIZE }>,
+        }
 
         impl DragFunction for Drag {
-            fn init(simulation: &Simulation<Self>) {
-                *TABLE.lock().unwrap() = Some(Table {
-                    x: [
-                        $(
-                            $x * simulation.atmosphere.sound_velocity()
-                        ),*
-                    ],
-                    y: [
-                        $(
-                            -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
-                        ),*
-                    ],
-                });
+            fn new(simulation: &Simulation<Self>) -> Self {
+                Self {
+                    table: Table {
+                        x: [
+                            $(
+                                $x * simulation.atmosphere.sound_velocity()
+                            ),*
+                        ],
+                        y: [
+                            $(
+                                -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
+                            ),*
+                        ],
+                    }
+                }
             }
-            fn cd(velocity: Velocity) -> Result<ReciprocalLength> {
-                TABLE.lock().unwrap().as_ref().unwrap().lerp(velocity)
+            fn cd(&self, velocity: Velocity) -> Result<ReciprocalLength> {
+                self.table.lerp(velocity)
             }
         }
     };
 }
 use table;
 
+#[derive(Debug)]
 pub struct Table<const N: usize> {
     x: [Velocity; N],
     y: [ReciprocalLength; N],

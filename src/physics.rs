@@ -13,8 +13,8 @@ use crate::{
 };
 
 pub trait DragFunction: Sized {
-    fn init(simulation: &Simulation<Self>);
-    fn cd(velocity: Velocity) -> Result<ReciprocalLength>;
+    fn new(simulation: &Simulation<Self>) -> Self;
+    fn cd(&self, velocity: Velocity) -> Result<ReciprocalLength>;
 }
 
 // Drag
@@ -63,7 +63,7 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let cd = D::cd(norm).expect("CD");
+            let cd = self.drag.as_ref().unwrap().cd(norm).expect("CD");
             velocity * norm * cd
         } else {
             MyVector3::ZERO

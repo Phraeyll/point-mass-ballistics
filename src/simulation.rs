@@ -15,11 +15,9 @@ use crate::{
     Numeric,
 };
 
-use std::marker::PhantomData;
-
 #[derive(Debug)]
 pub struct Simulation<D> {
-    _marker: PhantomData<D>,
+    pub(crate) drag: Option<D>,
     pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
     pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
     pub(crate) scope: Scope, // Use same scope for zeroing and solving
@@ -82,7 +80,7 @@ pub struct SimulationBuilder<D>(Simulation<D>);
 impl<D> Default for SimulationBuilder<D> {
     fn default() -> Self {
         Self(Simulation {
-            _marker: PhantomData,
+            drag: None,
             flags: Flags {
                 coriolis: true,
                 drag: true,
@@ -128,8 +126,8 @@ where
     D: DragFunction,
 {
     // Initialize drag table with atmospheric conditions and projectile bc
-    pub fn init(self) -> Simulation<D> {
-        D::init(&self.0);
+    pub fn init(mut self) -> Simulation<D> {
+        self.0.drag = Some(D::new(&self.0));
         self.0
     }
 }
