@@ -14,6 +14,8 @@ pub mod g8;
 pub mod gi;
 pub mod gs;
 
+pub type Entry = (Velocity, ReciprocalLength);
+
 const fn len<const N: usize>(_: [(); N]) -> usize {
     N
 }
@@ -46,95 +48,81 @@ macro_rules! table {
 
         #[derive(Debug)]
         pub struct Drag {
-            table: Table<{ count!($($x),*) }>,
+            table: [(Velocity, ReciprocalLength); { count!($($x),*) }],
         }
 
         impl DragFunction for Drag {
             fn new(simulation: &Simulation<Self>) -> Self {
                 Self {
-                    table: Table {
-                        x: [
-                            $(
-                                $x * simulation.atmosphere.sound_velocity()
-                            ),*
-                        ],
-                        y: [
-                            $(
-                                -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
-                            ),*
-                        ],
-                    }
+                    table: [
+                        $((
+                            $x * simulation.atmosphere.sound_velocity(),
+                            -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
+                        )),*
+                    ]
                 }
             }
             fn cd(&self, velocity: Velocity) -> Result<ReciprocalLength> {
-                self.table.lerp(velocity)
+                lerp(&self.table, velocity)
             }
         }
     };
 }
 use table;
 
-#[derive(Debug)]
-pub struct Table<const N: usize> {
-    x: [Velocity; N],
-    y: [ReciprocalLength; N],
+pub fn lerp(slice: &[Entry], x: Velocity) -> Result<ReciprocalLength> {
+    // Find values in table to interpolate
+    let i = binary_search(slice, x);
+    let j = i + 1;
+    if j == slice.len() {
+        return Err(Error::Velocity(x));
+    };
+    let (x0, y0) = (slice[i].0, slice[i].1);
+    let (x1, y1) = (slice[j].0, slice[j].1);
+
+    // Linear interpolation
+    let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
+    // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
+    // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
+    // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+    Ok(y)
 }
 
-impl<const N: usize> Table<{ N }> {
-    pub fn lerp(&self, x: Velocity) -> Result<ReciprocalLength> {
-        // Find values in table to interpolate
-        let i = self.binary_search(x);
-        let j = i + 1;
-        if j == N {
-            return Err(Error::Velocity(x));
+pub fn linear_search(slice: &[Entry], x: Velocity) -> usize {
+    let mut index = 0;
+    while index < slice.len() {
+        if slice[index].0 >= x {
+            break;
+        }
+        index += 1;
+    }
+    index - 1
+}
+
+pub fn binary_search(slice: &[(Velocity, ReciprocalLength)], x: Velocity) -> usize {
+    let mut low = 0;
+    let mut high = slice.len();
+    while low < high {
+        let mid = low + ((high - low) >> 1);
+        if slice[mid].0 < x {
+            low = mid + 1;
+        } else {
+            high = mid;
+        }
+    }
+    high - 1
+}
+
+pub fn experimental_search(slice: &[Entry], x: Velocity) -> usize {
+    let mut index = 0;
+    let mut len = slice.len();
+    while len > 1 {
+        let half = len >> 1;
+        let mid = index + half;
+        if slice[mid].0 < x {
+            index = mid
         };
-        let (x0, y0) = (self.x[i], self.y[i]);
-        let (x1, y1) = (self.x[j], self.y[j]);
-
-        // Linear interpolation
-        let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
-        // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
-        // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
-        // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
-        Ok(y)
+        len -= half;
     }
-
-    pub fn linear_search(&self, x: Velocity) -> usize {
-        let mut index = 0;
-        while index < N {
-            if self.x[index] >= x {
-                break;
-            }
-            index += 1;
-        }
-        index - 1
-    }
-
-    pub fn binary_search(&self, x: Velocity) -> usize {
-        let mut low = 0;
-        let mut high = N;
-        while low < high {
-            let mid = low + ((high - low) >> 1);
-            if self.x[mid] < x {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-        }
-        high - 1
-    }
-
-    pub fn experimental_search(&self, x: Velocity) -> usize {
-        let mut index = 0;
-        let mut len = N;
-        while len > 1 {
-            let half = len >> 1;
-            let mid = index + half;
-            if self.x[mid] < x {
-                index = mid
-            };
-            len -= half;
-        }
-        index
-    }
+    index
 }
