@@ -44,11 +44,9 @@ macro_rules! table {
             units::{ReciprocalLength, Velocity},
         };
 
-        pub const SIZE: usize = count!($($x),*);
-
         #[derive(Debug)]
         pub struct Drag {
-            table: Table<{ SIZE }>,
+            table: Table<{ count!($($x),*) }>,
         }
 
         impl DragFunction for Drag {
