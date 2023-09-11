@@ -77,11 +77,12 @@ pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> Reciprocal
         return ys[j];
     }
 
+    let i = j - 1;
+
     if j == ys.len() {
-        return ys[j - 1];
+        return ys[i];
     };
 
-    let i = j - 1;
 
     let (x0, y0) = (xs[i], ys[i]);
     let (x1, y1) = (xs[j], ys[j]);
