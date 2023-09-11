@@ -1,7 +1,4 @@
-use crate::{
-    units::{Angle, Velocity},
-    Numeric,
-};
+use crate::{units::Angle, Numeric};
 
 use std::{error, fmt, result};
 
@@ -9,7 +6,6 @@ pub type Result<T, E = Error> = result::Result<T, E>;
 
 #[derive(Debug)]
 pub enum Error {
-    Velocity(Velocity),
     PositiveExpected(Numeric),
     NegativeExpected(Numeric),
     OutOfRange {
@@ -36,7 +32,6 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Velocity(err) => write!(f, "Velocity Lookup Too High: {:?}", err),
             Self::PositiveExpected(err) => write!(f, "Positive Expected Error: {:?}", err),
             Self::NegativeExpected(err) => write!(f, "Negative Expected Error: {:?}", err),
             Self::OutOfRange { min, max } => write!(

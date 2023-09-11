@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    units::{ReciprocalLength, Velocity},
-};
+use crate::units::{ReciprocalLength, Velocity};
 
 pub use crate::physics::DragFunction;
 
@@ -38,7 +35,6 @@ macro_rules! table {
 
         use $crate::{
             consts::FRAC_PI_8,
-            error::Result,
             physics::DragFunction,
             simulation::Simulation,
             units::{ReciprocalLength, Velocity},
@@ -65,7 +61,7 @@ macro_rules! table {
                     ],
                 }
             }
-            fn cd(&self, velocity: Velocity) -> Result<ReciprocalLength> {
+            fn cd(&self, velocity: Velocity) -> ReciprocalLength {
                 lerp(&self.x, &self.y, velocity)
             }
         }
@@ -73,13 +69,20 @@ macro_rules! table {
 }
 use table;
 
-pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> Result<ReciprocalLength> {
+pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> ReciprocalLength {
     // Find values in table to interpolate
-    let i = binary_search(xs, x);
-    let j = i + 1;
+    let j = search(xs, x);
+
+    if j == 0 {
+        return ys[j];
+    }
+
     if j == ys.len() {
-        return Err(Error::Velocity(x));
+        return ys[j - 1];
     };
+
+    let i = j - 1;
+
     let (x0, y0) = (xs[i], ys[i]);
     let (x1, y1) = (xs[j], ys[j]);
 
@@ -88,24 +91,10 @@ pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> Result<Rec
     // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
     // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
     // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
-    Ok(y)
+    y
 }
 
-pub fn linear_search<T>(slice: &[T], x: T) -> usize
-where
-    T: PartialOrd,
-{
-    let mut index = 0;
-    while index < slice.len() {
-        if slice[index] >= x {
-            break;
-        }
-        index += 1;
-    }
-    index - 1
-}
-
-pub fn binary_search<T>(slice: &[T], x: T) -> usize
+pub fn search<T>(slice: &[T], x: T) -> usize
 where
     T: PartialOrd,
 {
@@ -119,22 +108,5 @@ where
             high = mid;
         }
     }
-    high - 1
-}
-
-pub fn experimental_search<T>(slice: &[T], x: T) -> usize
-where
-    T: PartialOrd,
-{
-    let mut index = 0;
-    let mut len = slice.len();
-    while len > 1 {
-        let half = len >> 1;
-        let mid = index + half;
-        if slice[mid] < x {
-            index = mid
-        };
-        len -= half;
-    }
-    index
+    high
 }

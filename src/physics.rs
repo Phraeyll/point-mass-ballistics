@@ -1,6 +1,5 @@
 use crate::{
     consts::PI,
-    error::Result,
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, area::square_inch, length, mass::pound, my_quantity,
@@ -14,7 +13,7 @@ use crate::{
 
 pub trait DragFunction: Sized {
     fn new(simulation: &Simulation<Self>) -> Self;
-    fn cd(&self, velocity: Velocity) -> Result<ReciprocalLength>;
+    fn cd(&self, velocity: Velocity) -> ReciprocalLength;
 }
 
 // Drag
@@ -63,7 +62,7 @@ where
         if self.flags.drag {
             let velocity = velocity - self.wind_velocity();
             let norm = velocity.norm();
-            let cd = self.drag.as_ref().unwrap().cd(norm).expect("CD");
+            let cd = self.drag.as_ref().unwrap().cd(norm);
             velocity * norm * cd
         } else {
             MyVector3::ZERO
