@@ -17,11 +17,6 @@ pub enum Error {
         pitch: Angle,
         yaw: Angle,
     },
-    TerminalVelocity {
-        count: u64,
-        pitch: Angle,
-        yaw: Angle,
-    },
     AngleNotChanging {
         count: u64,
         pitch: Angle,
@@ -42,11 +37,6 @@ impl fmt::Display for Error {
             Self::AngleRange { count, pitch, yaw } => write!(
                 f,
                 "{}: Outside Valid Range Error => pitch: {:#?}, yaw: {:#?}",
-                count, pitch, yaw
-            ),
-            Self::TerminalVelocity { count, pitch, yaw } => write!(
-                f,
-                "{}: Terminal Velocity Error => pitch: {:#?}, yaw: {:#?}",
                 count, pitch, yaw
             ),
             Self::AngleNotChanging { count, pitch, yaw } => write!(
