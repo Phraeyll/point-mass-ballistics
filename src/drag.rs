@@ -44,17 +44,17 @@ macro_rules! table {
             units::{ReciprocalLength, Velocity},
         };
 
-        use std::sync::OnceLock;
+        use std::sync::Mutex;
 
         pub const SIZE: usize = count!($($x),*);
-        pub static TABLE: OnceLock<Table<{ SIZE }>> = OnceLock::new();
+        pub static TABLE: Mutex<Option<Table<{ SIZE }>>> = Mutex::new(None);
 
         #[derive(Debug)]
         pub struct Drag;
 
         impl DragFunction for Drag {
             fn init(simulation: &Simulation<Self>) {
-                let _ = TABLE.set(Table {
+                *TABLE.lock().unwrap() = Some(Table {
                     x: [
                         $(
                             $x * simulation.atmosphere.sound_velocity()
@@ -68,7 +68,7 @@ macro_rules! table {
                 });
             }
             fn cd(velocity: Velocity) -> Result<ReciprocalLength> {
-                TABLE.get().unwrap().lerp(velocity)
+                TABLE.lock().unwrap().as_ref().unwrap().lerp(velocity)
             }
         }
     };
