@@ -99,7 +99,7 @@ pub fn linear_search(slice: &[Entry], x: Velocity) -> usize {
     index - 1
 }
 
-pub fn binary_search(slice: &[(Velocity, ReciprocalLength)], x: Velocity) -> usize {
+pub fn binary_search(slice: &[Entry], x: Velocity) -> usize {
     let mut low = 0;
     let mut high = slice.len();
     while low < high {
