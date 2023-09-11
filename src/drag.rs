@@ -44,10 +44,7 @@ macro_rules! table {
             units::{ReciprocalLength, Velocity},
         };
 
-        use std::sync::Mutex;
-
         pub const SIZE: usize = count!($($x),*);
-        pub static TABLE: Mutex<Option<Table<{ SIZE }>>> = Mutex::new(None);
 
         #[derive(Debug)]
         pub struct Drag {
