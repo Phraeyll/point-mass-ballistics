@@ -87,7 +87,7 @@ where
             let windage = packet.windage();
             Some(Ok((pitch, yaw, elevation, windage)))
         } else {
-            Some(Err(Error::TerminalVelocity { count, pitch, yaw }))
+            None
         }
     }
 }
