@@ -153,7 +153,7 @@ where
                         None
                     }
                 }
-                err @ Err(_) => Some(err),
+                err => Some(err),
             })
             .unwrap()?; // The iterator always returns Some - unwrap to inner result, then handle with "?"
         Ok((pitch, yaw))
