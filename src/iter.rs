@@ -6,8 +6,6 @@ use crate::{
     vectors::MyVector3,
 };
 
-use std::iter::FusedIterator;
-
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
@@ -17,7 +15,6 @@ pub struct Iter<'a, D> {
     position: MyVector3<length::Dimension>, // Position (m)
     velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
     time: Time,                    // Position in time (s)
-    terminal: bool, // Records if last velocity was same as current (terminal velocity)
 }
 
 impl<D> Simulation<D> {
@@ -27,7 +24,6 @@ impl<D> Simulation<D> {
             position: MyVector3::ZERO,
             velocity: MyVector3::ZERO,
             time: Time::ZERO,
-            terminal: false,
         }
     }
 }
@@ -61,7 +57,6 @@ where
             position,
             velocity,
             time,
-            terminal,
         } = self;
 
         let v = simulation.velocity() + velocity;
@@ -78,22 +73,13 @@ where
         self.time += dt;
         self.position += dp;
         self.velocity += dv;
-        self.terminal = self.velocity.get_x() == velocity.get_x();
 
-        // Check is projectile is moving "forward" - stop iteration if not
-        // Close/Equal to terminal velocity
-        if !terminal {
-            Some(Self::Item {
-                simulation,
-                time,
-                position,
-                velocity,
-                acceleration: a,
-            })
-        } else {
-            None
-        }
+        Some(Self::Item {
+            simulation,
+            time,
+            position,
+            velocity,
+            acceleration: a,
+        })
     }
 }
-
-impl<'a, D> FusedIterator for Iter<'a, D> where D: DragFunction {}
