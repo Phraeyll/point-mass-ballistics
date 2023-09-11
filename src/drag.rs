@@ -73,14 +73,14 @@ pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> Reciprocal
     // Find values in table to interpolate
     let j = search(xs, x);
 
-    // Restrain to lowest
+    // Bound to lowest index
     if j == 0 {
         return ys[j];
     }
 
     let i = j - 1;
 
-    // Restrain to highest
+    // Bound to highest index
     if j == ys.len() {
         return ys[i];
     };
