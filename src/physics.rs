@@ -54,7 +54,7 @@ where
     // this means constants can be moved and multipled into "y's" of drag table
 
     // FAST: a = V * v * cd'(v) * rho * 1/bc
-    // SLOW: a = V * v * cd(v) * rho *  area * i * 1/m * -0.5
+    // SLOW: a = V * v * cd(v) * rho * area * i * 1/m * -0.5
     pub(crate) fn drag_acceleration(
         &self,
         velocity: MyVector3<velocity::Dimension>,
