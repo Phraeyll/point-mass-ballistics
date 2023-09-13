@@ -35,7 +35,6 @@ macro_rules! table {
 
         use $crate::{
             consts::FRAC_PI_8,
-            physics::DragFunction,
             simulation::Simulation,
             units::{ReciprocalLength, Velocity},
         };
