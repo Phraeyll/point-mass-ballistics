@@ -6,6 +6,8 @@ use crate::{
     vectors::MyVector3,
 };
 
+use std::iter::FusedIterator;
+
 // Iterator over PointMassModel, steps through time and adjust position and velocity vectors
 // Has reference to current simulation model for calculations
 // Item lifetime also timed to this lifetime
@@ -83,3 +85,5 @@ where
         })
     }
 }
+
+impl<'a, D> FusedIterator for Iter<'a, D> where D: DragFunction {}
