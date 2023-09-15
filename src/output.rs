@@ -23,6 +23,7 @@ pub trait Measurements {
     fn position(&self) -> MyVector3<length::Dimension>;
     fn offset_vertical_angle(&self, offset: Length) -> Angle;
     fn offset_horizontal_angle(&self, offset: Length) -> Angle;
+    fn lerp(&self, other: &Self, x: Length) -> Self;
 }
 
 // Output of iteration, need a better name to encapsulate a moving projectile
@@ -124,5 +125,28 @@ where
         let desired = MyVector3::new(self.distance(), Length::ZERO, offset);
 
         position.angle(&desired) * sign
+    }
+
+    fn lerp(&self, other: &Self, x: Length) -> Self {
+        let dp = other.position - self.position;
+        let dv = other.velocity - self.velocity;
+        let da = other.acceleration - self.acceleration;
+        let dt = other.time - self.time;
+
+        let dx = x - self.distance();
+        let slope = dx / dp.get_x();
+
+        let position = self.position + dp * slope;
+        let velocity = self.velocity + dv * slope;
+        let acceleration = self.acceleration + da * slope;
+        let time = self.time + dt * slope;
+
+        Self {
+            simulation: self.simulation,
+            time,
+            position,
+            velocity,
+            acceleration,
+        }
     }
 }
