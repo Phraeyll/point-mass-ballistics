@@ -88,10 +88,15 @@ pub type DiffDimension<Dl, Dr> = ISQ<
 
 impl<D: ?Sized, U: ?Sized, V> fmt::Debug for DimVector3<D, U, V>
 where
-    V: Scalar + fmt::Display,
+    D: Dimension,
+    U: Units<V>,
+    V: Num + Conversion<V> + Scalar + Copy + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.value.fmt(f)
+        let x: Quantity<D, U, V> = quantity!(self.value.x);
+        let y: Quantity<D, U, V> = quantity!(self.value.y);
+        let z: Quantity<D, U, V> = quantity!(self.value.z);
+        write!(f, "{:#?}", [x, y, z])
     }
 }
 
