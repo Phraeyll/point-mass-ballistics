@@ -1,6 +1,7 @@
-pub use crate::physics::DragFunction;
-
-use std::ops::{Add, Div, Mul, Sub};
+pub use crate::{
+    physics::DragFunction,
+    units::{ReciprocalLength, Velocity},
+};
 
 pub mod g1;
 pub mod g2;
@@ -68,13 +69,7 @@ macro_rules! table {
 }
 use table;
 
-pub fn lerp<T, U>(xs: &[T], ys: &[U], x: T) -> U
-where
-    T: Copy + PartialOrd + Sub,
-    U: Copy + Sub + Add<<<T as Sub>::Output as Mul<<<U as Sub>::Output as Div<<T as Sub>::Output>>::Output>>::Output, Output = U>,
-    <U as Sub>::Output: Div<<T as Sub>::Output>,
-    <T as Sub>::Output: Mul<<<U as Sub>::Output as Div<<T as Sub>::Output>>::Output>,
-{
+pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> ReciprocalLength {
     // Find values in table to interpolate
     let j = search(xs, x);
 
