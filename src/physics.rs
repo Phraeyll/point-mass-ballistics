@@ -261,7 +261,7 @@ impl Shooter {
             AngularVelocity::ZERO,
             AngularVelocity::ZERO,
         )
-        .pivot_z(self.lattitude)
+        .pivot_z(self.latitude)
     }
 }
 

@@ -63,7 +63,7 @@ pub struct Shooter {
     pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
     pub(crate) pitch: Angle, // Line of Sight angle (degrees)
     pub(crate) roll: Angle, // Roll relative to shooters position, ie, scope alligned with rifle
-    pub(crate) lattitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) latitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
 }
 
 #[derive(Debug)]
@@ -114,7 +114,7 @@ impl<D> Default for SimulationBuilder<D> {
                 yaw: Angle::ZERO,
                 pitch: Angle::ZERO,
                 roll: Angle::ZERO,
-                lattitude: Angle::ZERO,
+                latitude: Angle::ZERO,
             },
             time_step: Time::ZERO,
         })
@@ -217,11 +217,11 @@ impl<D> SimulationBuilder<D> {
         }
     }
 
-    pub fn set_lattitude(mut self, value: Angle) -> Result<Self> {
+    pub fn set_latitude(mut self, value: Angle) -> Result<Self> {
         let min = Angle::new::<radian>(-FRAC_PI_2);
         let max = Angle::new::<radian>(FRAC_PI_2);
         if value >= min && value <= max {
-            self.0.shooter.lattitude = value;
+            self.0.shooter.latitude = value;
             Ok(self)
         } else {
             Err(Error::OutOfRange {
