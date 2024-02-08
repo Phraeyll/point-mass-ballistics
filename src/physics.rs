@@ -11,9 +11,12 @@ use crate::{
     Numeric,
 };
 
-pub trait DragFunction: Sized {
-    fn new(simulation: &Simulation<Self>) -> Self;
+pub trait DragFunction {
     fn cd(&self, velocity: Velocity) -> ReciprocalLength;
+}
+
+pub trait DragInit: Sized {
+    fn new(simulation: &Simulation<Self>) -> Self;
 }
 
 // Drag

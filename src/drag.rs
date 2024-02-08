@@ -1,7 +1,9 @@
 pub use crate::{
-    physics::DragFunction,
+    physics::{DragFunction, DragInit},
     units::{ReciprocalLength, Velocity},
 };
+
+use std::ops::Deref;
 
 pub mod g1;
 pub mod g2;
@@ -37,18 +39,18 @@ macro_rules! table {
         use $crate::{
             consts::FRAC_PI_8,
             simulation::Simulation,
-            units::{ReciprocalLength, Velocity},
         };
 
-        #[derive(Debug)]
-        pub struct Drag {
-            x: [Velocity; { count!($($x),*) }],
-            y: [ReciprocalLength; { count!($($y),*) }],
-        }
+        use std::ops::Deref;
 
-        impl DragFunction for Drag {
+        const SIZE: usize = count!($($x),*);
+
+        #[derive(Debug)]
+        pub struct Drag(Table<{ SIZE }>);
+
+        impl DragInit for Drag {
             fn new(simulation: &Simulation<Self>) -> Self {
-                Self {
+                Self(Table {
                     x: [
                         $(
                             $x * simulation.atmosphere.sound_velocity()
@@ -59,15 +61,34 @@ macro_rules! table {
                             -($y * FRAC_PI_8) * simulation.atmosphere.rho() / simulation.projectile.bc()
                         ),*
                     ],
-                }
+                })
             }
-            fn cd(&self, velocity: Velocity) -> ReciprocalLength {
-                lerp(&self.x, &self.y, velocity)
+        }
+
+        impl Deref for Drag {
+            type Target = Table<{ SIZE }>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
             }
         }
     };
 }
 use table;
+
+#[derive(Debug)]
+pub struct Table<const N: usize> {
+    x: [Velocity; N],
+    y: [ReciprocalLength; N],
+}
+
+impl<const N: usize, T> DragFunction for T
+where
+    T: Deref<Target = Table<N>>,
+{
+    fn cd(&self, velocity: Velocity) -> ReciprocalLength {
+        lerp(&self.x, &self.y, velocity)
+    }
+}
 
 pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> ReciprocalLength {
     // Find values in table to interpolate
