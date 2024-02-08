@@ -41,8 +41,6 @@ macro_rules! table {
             simulation::Simulation,
         };
 
-        use std::ops::Deref;
-
         const SIZE: usize = count!($($x),*);
 
         #[derive(Debug)]
