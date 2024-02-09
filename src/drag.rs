@@ -3,7 +3,7 @@ pub use crate::{
     units::{ReciprocalLength, Velocity},
 };
 
-use std::ops::Deref;
+use std::ops::{Add, Deref, Div, Mul, Sub};
 
 pub mod g1;
 pub mod g2;
@@ -43,8 +43,10 @@ macro_rules! table {
 
         const SIZE: usize = count!($($x),*);
 
+        type Tabl = Table<{ SIZE }, Velocity, ReciprocalLength>;
+
         #[derive(Debug)]
-        pub struct Drag(Table<{ SIZE }>);
+        pub struct Drag(Tabl);
 
         impl DragInit for Drag {
             fn new(simulation: &Simulation<Self>) -> Self {
@@ -64,7 +66,7 @@ macro_rules! table {
         }
 
         impl Deref for Drag {
-            type Target = Table<{ SIZE }>;
+            type Target = Tabl;
             fn deref(&self) -> &Self::Target {
                 &self.0
             }
@@ -74,45 +76,61 @@ macro_rules! table {
 use table;
 
 #[derive(Debug)]
-pub struct Table<const N: usize> {
-    x: [Velocity; N],
-    y: [ReciprocalLength; N],
+pub struct Table<const N: usize, X, Y> {
+    x: [X; N],
+    y: [Y; N],
 }
 
 impl<const N: usize, T> DragFunction for T
 where
-    T: Deref<Target = Table<N>>,
+    T: Deref<Target = Table<N, Velocity, ReciprocalLength>>,
 {
     fn cd(&self, velocity: Velocity) -> ReciprocalLength {
-        lerp(&self.x, &self.y, velocity)
+        self.lerp(velocity)
     }
 }
 
-pub fn lerp(xs: &[Velocity], ys: &[ReciprocalLength], x: Velocity) -> ReciprocalLength {
-    // Find values in table to interpolate
-    let j = search(xs, x);
+impl<const N: usize, X, Y> Table<N, X, Y> {
+    pub fn lerp(&self, x: X) -> Y
+    where
+        X: Copy + PartialOrd + Sub,
+        Y:
+            Copy
+                + Sub
+                + Add<
+                    <<X as Sub>::Output as Mul<
+                        <<Y as Sub>::Output as Div<<X as Sub>::Output>>::Output,
+                    >>::Output,
+                    Output = Y,
+                >,
+        <Y as Sub>::Output: Div<<X as Sub>::Output>,
+        <X as Sub>::Output: Mul<<<Y as Sub>::Output as Div<<X as Sub>::Output>>::Output>,
+    {
+        // Find values in table to interpolate
+        let j = search(&self.x, x);
 
-    // Bound to lowest index
-    if j == 0 {
-        return ys[j];
+        // Bound to lowest index
+        if j == 0 {
+            return self.y[j];
+        }
+
+        let i = j - 1;
+
+        // Bound to highest index
+        if j == N {
+            return self.y[i];
+        };
+
+        let (x0, y0) = (self.x[i], self.y[i]);
+        let (x1, y1) = (self.x[j], self.y[j]);
+
+        // Linear interpolation
+        let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
+        // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
+        // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
+        // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+        y
     }
-
-    let i = j - 1;
-
-    // Bound to highest index
-    if j == ys.len() {
-        return ys[i];
-    };
-
-    let (x0, y0) = (xs[i], ys[i]);
-    let (x1, y1) = (xs[j], ys[j]);
-
-    // Linear interpolation
-    let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
-    // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
-    // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
-    // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
-    y
 }
 
 pub fn search<T>(slice: &[T], x: T) -> usize
