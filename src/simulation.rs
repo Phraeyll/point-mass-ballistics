@@ -1,7 +1,7 @@
 use crate::{
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
-    physics::{DragFunction, DragInit},
+    physics::DragInit,
     units::{
         angle::radian,
         length::meter,
@@ -123,7 +123,7 @@ impl<D> Default for SimulationBuilder<D> {
 
 impl<D> SimulationBuilder<D>
 where
-    D: DragFunction + DragInit,
+    D: DragInit,
 {
     // Initialize drag table with atmospheric conditions and projectile bc
     pub fn init(mut self) -> Simulation<D> {
