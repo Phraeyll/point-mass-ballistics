@@ -5,5 +5,5 @@ edition = "2021"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
-nalgebra = "0.32.3"
+nalgebra = "0.32.4"
 uom = "0.35.0"
