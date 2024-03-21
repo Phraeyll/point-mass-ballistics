@@ -6,4 +6,4 @@ authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
 nalgebra = "0.32.4"
-uom = "0.35.0"
+uom = "0.36.0"
