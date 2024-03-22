@@ -154,5 +154,5 @@ where
             right = mid; // right < previous
         }
     }
-    right
+    left
 }
