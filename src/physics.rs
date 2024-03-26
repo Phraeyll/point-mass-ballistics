@@ -278,15 +278,10 @@ impl Wind {
         self.pitch
     }
 
-    fn roll(&self) -> Angle {
-        self.roll
-    }
-
     fn velocity(&self) -> MyVector3<velocity::Dimension> {
         MyVector3::new(self.velocity, Velocity::ZERO, Velocity::ZERO)
             .pivot_y(self.yaw())
             .pivot_z(self.pitch())
-            .pivot_x(self.roll())
     }
 }
 

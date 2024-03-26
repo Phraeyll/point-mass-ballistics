@@ -70,7 +70,6 @@ pub struct Shooter {
 pub struct Wind {
     pub(crate) yaw: Angle,         // Wind Angle (degrees)
     pub(crate) pitch: Angle,       // Wind Pitch (degrees)
-    pub(crate) roll: Angle,        // Doesn make sense, just here for consistency
     pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
 }
 
@@ -106,7 +105,6 @@ impl<D> Default for SimulationBuilder<D> {
                 wind: Wind {
                     yaw: Angle::ZERO,
                     pitch: Angle::ZERO,
-                    roll: Angle::ZERO,
                     velocity: Velocity::ZERO,
                 },
             },

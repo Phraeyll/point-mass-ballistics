@@ -143,11 +143,11 @@ where
         let size = right - left; // right == left + size
         let half = size / 2; // half < size
         let mid = left + half; // mid >= left && mid < right
-        // SAFETY: mid is guaranteed to be in bounds by following:
-        // 1.) invariants listed above in comments (mid >= left && mid < right)
-        // 2.) initial assignments above loop (mid >= 0, mid < len)
-        // 3.) invariants listed below in variable assignments (left can only grow, right can only shrink)
-        // 4.) loop condition maintains invariants; not entered when right <= left
+                               // SAFETY: mid is guaranteed to be in bounds by following:
+                               // 1.) invariants listed above in comments (mid >= left && mid < right)
+                               // 2.) initial assignments above loop (mid >= 0, mid < len)
+                               // 3.) invariants listed below in variable assignments (left can only grow, right can only shrink)
+                               // 4.) loop condition maintains invariants; not entered when right <= left
         if *unsafe { slice.get_unchecked(mid) } < x {
             left = mid + 1; // left >= previous
         } else {
