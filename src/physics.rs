@@ -56,7 +56,7 @@ where
     // a = -pi/8 * cd(v) * V * v * rho * (1/bc)
     // this means constants can be moved and multipled into "y's" of drag table
 
-    // FAST: a = V * v * cd'(v) * rho * 1/bc
+    // FAST: a = V * v * cd'(v)
     // SLOW: a = V * v * cd(v) * rho * area * i * 1/m * -0.5
     pub(crate) fn drag_acceleration(
         &self,
