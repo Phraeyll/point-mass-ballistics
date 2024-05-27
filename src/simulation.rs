@@ -31,7 +31,7 @@ pub struct Atmosphere {
     pub(crate) temperature: ThermodynamicTemperature,
     pub(crate) pressure: Pressure,
     pub(crate) humidity: Numeric,
-    pub(crate) wind: Wind
+    pub(crate) wind: Wind,
 }
 
 #[derive(Debug)]
