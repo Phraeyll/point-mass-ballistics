@@ -8,15 +8,12 @@ use crate::{
 
 use std::iter::FusedIterator;
 
-// Iterator over PointMassModel, steps through time and adjust position and velocity vectors
-// Has reference to current simulation model for calculations
-// Item lifetime also timed to this lifetime
 #[derive(Debug)]
 pub struct Iter<'a, D> {
-    simulation: &'a Simulation<D>, // Reference to model used for calculations
-    position: MyVector3<length::Dimension>, // Position (m)
-    velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
-    time: Time,                    // Position in time (s)
+    simulation: &'a Simulation<D>,
+    position: MyVector3<length::Dimension>,
+    velocity: MyVector3<velocity::Dimension>,
+    time: Time,
 }
 
 impl<D> Simulation<D> {
@@ -30,7 +27,6 @@ impl<D> Simulation<D> {
     }
 }
 
-// Create an new iterator over Simulation
 impl<'a, D> IntoIterator for &'a Simulation<D>
 where
     D: DragFunction,
@@ -43,8 +39,6 @@ where
     }
 }
 
-// Produce new 'packet', based on drag, coriolis acceleration, and gravity
-// Contains time, position, and velocity of projectile, and reference to simulation used
 impl<'a, D> Iterator for Iter<'a, D>
 where
     D: DragFunction,

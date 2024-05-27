@@ -26,14 +26,13 @@ pub trait Measurements {
     fn lerp(&self, other: &Self, x: Length) -> Self;
 }
 
-// Output of iteration, need a better name to encapsulate a moving projectile
 #[derive(Debug)]
 pub struct Packet<'a, D> {
-    pub(crate) simulation: &'a Simulation<D>, //Simulation this came from, used for various calculations
-    pub(crate) time: Time,                    // Position in time (s)
-    pub(crate) position: MyVector3<length::Dimension>, // Position (m)
-    pub(crate) velocity: MyVector3<velocity::Dimension>, // Velocity (m/s)
-    pub(crate) acceleration: MyVector3<acceleration::Dimension>, // Acceleration (m/s^2)
+    pub(crate) simulation: &'a Simulation<D>,
+    pub(crate) time: Time,
+    pub(crate) position: MyVector3<length::Dimension>,
+    pub(crate) velocity: MyVector3<velocity::Dimension>,
+    pub(crate) acceleration: MyVector3<acceleration::Dimension>,
 }
 
 impl<D> Measurements for Packet<'_, D>
@@ -101,8 +100,6 @@ where
         self.offset_horizontal_angle(Length::ZERO)
     }
 
-    // This gives adjustment - opposite sign relative to desired offset
-    // Always done in meters for now, due to relative_position()
     fn offset_vertical_angle(&self, offset: Length) -> Angle {
         let sign = if self.elevation() >= offset {
             1.0
@@ -116,8 +113,6 @@ where
         position.angle(&desired) * sign
     }
 
-    // This gives adjustment - opposite sign relative to desired offset
-    // Always done in meters for now, due to relative_position()
     fn offset_horizontal_angle(&self, offset: Length) -> Angle {
         let sign = if self.windage() >= offset { 1.0 } else { -1.0 };
 

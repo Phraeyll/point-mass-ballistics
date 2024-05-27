@@ -87,7 +87,6 @@ impl<D> Simulation<D> {
         self.atmosphere.sound_velocity()
     }
 
-    // Velocity relative to speed of sound, with given atmospheric conditions
     pub fn mach(&self, velocity: Velocity) -> Ratio {
         velocity / self.sound_velocity()
     }
@@ -142,7 +141,6 @@ impl<D> Simulation<D> {
         }
     }
 
-    // Gravity acceleration vector
     pub(crate) fn gravity_acceleration(&self) -> MyVector3<acceleration::Dimension> {
         if self.flags.gravity {
             self.shooter.gravity()
@@ -152,7 +150,6 @@ impl<D> Simulation<D> {
     }
 }
 
-// Helpers - maybe some of these should be moved?
 impl Atmosphere {
     // Universal gas constant (J/K*mol)
     const MOLAR_GAS_UNIVERSAL: MolarHeatCapacity = my_quantity!(8.314_462_618_153_24);
@@ -224,25 +221,6 @@ impl Shooter {
         MyVector3::new(Acceleration::ZERO, Self::GRAVITY, Acceleration::ZERO)
     }
 
-    // Flip, since circle functions rotate counter-clockwise,
-    // 90 degrees is east by compass bearing, but west(left) in trig
-    //        (0)
-    //         ^
-    //         |
-    // (+90) <---> (-90)
-    //         |
-    //         v
-    //       (180)
-    //
-    //  {after negation(-)}
-    //
-    //        (0)
-    //         ^
-    //         |
-    // (-90) <---> (+90)
-    //         |
-    //         v
-    //       (180)
     pub(crate) fn yaw(&self) -> Angle {
         -self.yaw
     }

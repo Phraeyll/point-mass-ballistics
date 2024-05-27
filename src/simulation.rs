@@ -18,27 +18,27 @@ use crate::{
 #[derive(Debug)]
 pub struct Simulation<D> {
     pub(crate) drag: Option<D>,
-    pub(crate) flags: Flags, // Flags to enable/disable certain parts of simulation
-    pub(crate) projectile: Projectile, // Use same projectile for zeroing and solving
-    pub(crate) scope: Scope, // Use same scope for zeroing and solving
-    pub(crate) atmosphere: Atmosphere, // Different conditions during solving
-    pub(crate) shooter: Shooter, // Different conditions during solving
-    pub(crate) time_step: Time, // Use same timestep for zeroing and solving
+    pub(crate) flags: Flags,
+    pub(crate) projectile: Projectile,
+    pub(crate) scope: Scope,
+    pub(crate) atmosphere: Atmosphere,
+    pub(crate) shooter: Shooter,
+    pub(crate) time_step: Time,
 }
 
 #[derive(Debug)]
 pub struct Atmosphere {
-    pub(crate) temperature: ThermodynamicTemperature, // Temperature (F)
-    pub(crate) pressure: Pressure,                    // Pressure (InHg)
-    pub(crate) humidity: Numeric,                     // Humidity (0-1)
-    pub(crate) wind: Wind,
+    pub(crate) temperature: ThermodynamicTemperature,
+    pub(crate) pressure: Pressure,
+    pub(crate) humidity: Numeric,
+    pub(crate) wind: Wind
 }
 
 #[derive(Debug)]
 pub struct Flags {
-    pub(crate) coriolis: bool, // Whether or not to calculate coriolis/eotvos effect
-    pub(crate) drag: bool,     // Whether or not to calculate drag
-    pub(crate) gravity: bool,  // Whether or not to calculate gravity
+    pub(crate) coriolis: bool,
+    pub(crate) drag: bool,
+    pub(crate) gravity: bool,
 }
 
 #[derive(Debug)]
@@ -53,24 +53,24 @@ pub struct Projectile {
 pub struct Scope {
     pub(crate) yaw: Angle,
     pub(crate) pitch: Angle,
-    pub(crate) roll: Angle,    // Scope Roll (Cant) (Degrees)
-    pub(crate) height: Length, // Scope Height (inches)
-    pub(crate) offset: Length, // Scope Offset Windage (left/right boreline) (inches)
+    pub(crate) roll: Angle,
+    pub(crate) height: Length,
+    pub(crate) offset: Length,
 }
 
 #[derive(Debug)]
 pub struct Shooter {
-    pub(crate) yaw: Angle, // Bearing (0 North, 90 East) (degrees) (Coriolis/Eotvos Effect)
-    pub(crate) pitch: Angle, // Line of Sight angle (degrees)
-    pub(crate) roll: Angle, // Roll relative to shooters position, ie, scope alligned with rifle
-    pub(crate) latitude: Angle, // Lattitude (Coriolis/Eotvos Effect)
+    pub(crate) yaw: Angle,
+    pub(crate) pitch: Angle,
+    pub(crate) roll: Angle,
+    pub(crate) latitude: Angle,
 }
 
 #[derive(Debug)]
 pub struct Wind {
-    pub(crate) yaw: Angle,         // Wind Angle (degrees)
-    pub(crate) pitch: Angle,       // Wind Pitch (degrees)
-    pub(crate) velocity: Velocity, // Wind Velocity (miles/hour)
+    pub(crate) yaw: Angle,
+    pub(crate) pitch: Angle,
+    pub(crate) velocity: Velocity,
 }
 
 #[derive(Debug)]
@@ -123,7 +123,6 @@ impl<D> SimulationBuilder<D>
 where
     D: DragInit,
 {
-    // Initialize drag table with atmospheric conditions and projectile bc
     pub fn init(mut self) -> Simulation<D> {
         self.0.drag = Some(D::new(&self.0));
         self.0
