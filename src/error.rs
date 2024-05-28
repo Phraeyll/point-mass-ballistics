@@ -1,4 +1,7 @@
-use crate::{units::Angle, Numeric};
+use crate::{
+    units::{Angle, ThermodynamicTemperature, Time},
+    Numeric,
+};
 
 use std::{error, fmt, result};
 
@@ -6,18 +9,38 @@ pub type Result<T, E = Error> = result::Result<T, E>;
 
 #[derive(Debug)]
 pub enum Error {
-    PositiveExpected(Numeric),
-    NegativeExpected(Numeric),
-    OutOfRange {
+    PositiveExpected {
+        value: Numeric,
+    },
+    NegativeExpected {
+        value: Numeric,
+    },
+    NumericOutOfRange {
+        value: Numeric,
         min: Numeric,
         max: Numeric,
     },
-    AngleRange {
+    AngleOutOfRange {
+        value: Angle,
+        min: Angle,
+        max: Angle,
+    },
+    ThermodynamicTemperatureOutOfRange {
+        value: ThermodynamicTemperature,
+        min: ThermodynamicTemperature,
+        max: ThermodynamicTemperature,
+    },
+    TimeOutOfRange {
+        value: Time,
+        min: Time,
+        max: Time,
+    },
+    ZeroAngleOutOfRange {
         count: u64,
         pitch: Angle,
         yaw: Angle,
     },
-    AngleNotChanging {
+    ZeroAngleNotChanging {
         count: u64,
         pitch: Angle,
         yaw: Angle,
@@ -26,25 +49,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Self::PositiveExpected(err) => write!(f, "Positive Expected Error: {:?}", err),
-            Self::NegativeExpected(err) => write!(f, "Negative Expected Error: {:?}", err),
-            Self::OutOfRange { min, max } => write!(
-                f,
-                "Within Range Expected Error => min: {:#?} - {:#?}",
-                min, max
-            ),
-            Self::AngleRange { count, pitch, yaw } => write!(
-                f,
-                "{}: Outside Valid Range Error => pitch: {:#?}, yaw: {:#?}",
-                count, pitch, yaw
-            ),
-            Self::AngleNotChanging { count, pitch, yaw } => write!(
-                f,
-                "{}: Angle Not Changing Error => pitch: {:#?}, yaw: {:#?}",
-                count, pitch, yaw
-            ),
-        }
+        write!(f, "{self:#?}")
     }
 }
 

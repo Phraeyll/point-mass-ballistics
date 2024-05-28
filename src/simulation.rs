@@ -3,14 +3,9 @@ use crate::{
     error::{Error, Result},
     physics::DragInit,
     units::{
-        angle::radian,
-        length::meter,
-        mass::kilogram,
-        pressure::pascal,
-        thermodynamic_temperature::{degree_celsius as celsius, kelvin},
-        time::second,
-        velocity::meter_per_second,
-        Angle, ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
+        angle::radian, length::meter, mass::kilogram, pressure::pascal,
+        thermodynamic_temperature::degree_celsius, time::second, velocity::meter_per_second, Angle,
+        ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
     },
     Numeric,
 };
@@ -141,25 +136,19 @@ impl<D> SimulationBuilder<D> {
             self.0.time_step = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<second>(),
-                max: max.get::<second>(),
-            })
+            Err(Error::TimeOutOfRange { value, min, max })
         }
     }
 
     // Atmosphere
     pub fn set_temperature(mut self, value: ThermodynamicTemperature) -> Result<Self> {
-        let min = ThermodynamicTemperature::new::<celsius>(-80.0);
-        let max = ThermodynamicTemperature::new::<celsius>(50.0);
+        let min = ThermodynamicTemperature::new::<degree_celsius>(-80.0);
+        let max = ThermodynamicTemperature::new::<degree_celsius>(50.0);
         if value >= min && value <= max {
             self.0.atmosphere.temperature = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<kelvin>(),
-                max: max.get::<kelvin>(),
-            })
+            Err(Error::ThermodynamicTemperatureOutOfRange { value, min, max })
         }
     }
 
@@ -168,7 +157,9 @@ impl<D> SimulationBuilder<D> {
             self.0.atmosphere.pressure = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value.get::<pascal>()))
+            Err(Error::PositiveExpected {
+                value: value.get::<pascal>(),
+            })
         }
     }
 
@@ -179,7 +170,7 @@ impl<D> SimulationBuilder<D> {
             self.0.atmosphere.humidity = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange { min, max })
+            Err(Error::NumericOutOfRange { value, min, max })
         }
     }
 
@@ -207,10 +198,7 @@ impl<D> SimulationBuilder<D> {
             self.0.shooter.pitch = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<radian>(),
-                max: max.get::<radian>(),
-            })
+            Err(Error::AngleOutOfRange { value, min, max })
         }
     }
 
@@ -221,10 +209,7 @@ impl<D> SimulationBuilder<D> {
             self.0.shooter.latitude = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<radian>(),
-                max: max.get::<radian>(),
-            })
+            Err(Error::AngleOutOfRange { value, min, max })
         }
     }
 
@@ -235,10 +220,7 @@ impl<D> SimulationBuilder<D> {
             self.0.shooter.yaw = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<radian>(),
-                max: max.get::<radian>(),
-            })
+            Err(Error::AngleOutOfRange { value, min, max })
         }
     }
 
@@ -248,7 +230,9 @@ impl<D> SimulationBuilder<D> {
             self.0.atmosphere.wind.velocity = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value.get::<meter_per_second>()))
+            Err(Error::PositiveExpected {
+                value: value.get::<meter_per_second>(),
+            })
         }
     }
 
@@ -259,10 +243,7 @@ impl<D> SimulationBuilder<D> {
             self.0.atmosphere.wind.yaw = value;
             Ok(self)
         } else {
-            Err(Error::OutOfRange {
-                min: min.get::<radian>(),
-                max: max.get::<radian>(),
-            })
+            Err(Error::AngleOutOfRange { value, min, max })
         }
     }
 
@@ -298,7 +279,9 @@ impl<D> SimulationBuilder<D> {
             self.0.projectile.caliber = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value.get::<meter>()))
+            Err(Error::PositiveExpected {
+                value: value.get::<meter>(),
+            })
         }
     }
 
@@ -307,7 +290,9 @@ impl<D> SimulationBuilder<D> {
             self.0.projectile.velocity = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value.get::<meter_per_second>()))
+            Err(Error::PositiveExpected {
+                value: value.get::<meter_per_second>(),
+            })
         }
     }
 
@@ -316,7 +301,9 @@ impl<D> SimulationBuilder<D> {
             self.0.projectile.weight = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value.get::<kilogram>()))
+            Err(Error::PositiveExpected {
+                value: value.get::<kilogram>(),
+            })
         }
     }
 
@@ -325,7 +312,7 @@ impl<D> SimulationBuilder<D> {
             self.0.projectile.bc = value;
             Ok(self)
         } else {
-            Err(Error::PositiveExpected(value))
+            Err(Error::PositiveExpected { value: value })
         }
     }
 }

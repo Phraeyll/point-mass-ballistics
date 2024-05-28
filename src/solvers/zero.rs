@@ -77,9 +77,9 @@ where
             // Ignore first time, since both should be still be 0.0 at this point
             && count != 1
         {
-            Some(Err(Error::AngleNotChanging { count, pitch, yaw }))
+            Some(Err(Error::ZeroAngleNotChanging { count, pitch, yaw }))
         } else if (pitch >= DEG_45 || pitch <= -DEG_90) || (yaw >= DEG_90 || yaw <= -DEG_90) {
-            Some(Err(Error::AngleRange { count, pitch, yaw }))
+            Some(Err(Error::ZeroAngleOutOfRange { count, pitch, yaw }))
         } else if let Some(packet) = self.sim.into_iter().fuse().find(&self.finder) {
             self.elevation_adjustment = (self.elevation_adjuster)(&packet);
             self.windage_adjustment = (self.windage_adjuster)(&packet);
