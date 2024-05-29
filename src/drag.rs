@@ -106,30 +106,21 @@ impl<const N: usize, X, Y> Table<N, X, Y> {
         <Y as Sub>::Output: Div<<X as Sub>::Output>,
         <X as Sub>::Output: Mul<<<Y as Sub>::Output as Div<<X as Sub>::Output>>::Output>,
     {
-        // Find values in table to interpolate
         let j = search(&self.x, x);
-
-        // Bound to lowest index
-        if j == 0 {
-            return self.y[j];
-        }
-
         let i = j - 1;
 
         // Bound to highest index
         if j == N {
             return self.y[i];
-        };
+        }
 
-        let (x0, y0) = (self.x[i], self.y[i]);
-        let (x1, y1) = (self.x[j], self.y[j]);
+        let x0 = *unsafe { self.x.get_unchecked(i) };
+        let x1 = *unsafe { self.x.get_unchecked(j) };
 
-        // Linear interpolation
-        let y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
-        // let y = (y0 * (x1 - x0)) / (x1 - x0) + (y1 * (x - x0) - y0 * (x - x0)) / (x1 - x0);
-        // let y = (y1 * x - y1 * x0 - y0 * x + y0 * x0 + y0 * x1 - y0 * x0) / (x1 - x0);
-        // let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
-        y
+        let y0 = *unsafe { self.y.get_unchecked(i) };
+        let y1 = *unsafe { self.y.get_unchecked(j) };
+
+        y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
     }
 }
 
