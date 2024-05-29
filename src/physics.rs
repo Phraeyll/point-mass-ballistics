@@ -42,7 +42,7 @@ where
     // which can be further reduced to FRAC_PI_8 (due to the multiplication by -0.5)
     // -FRAC_PI_8 can be inlined into table at compile time
 
-    // a = -0.5 * cd * rho * V * v * area * i * 1/m
+    // a = -0.5 * cd(v) * rho * V * v * area * i * 1/m
     // i = sd/bc
     // sd = m/d^2
     // i = m/d^2 * (1/bc)
@@ -51,8 +51,8 @@ where
     // area = (1/4) * d^2 * pi
     // area = pi/4 * d^2
 
-    // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * i * 1/m
-    // a = -0.5 * cd * rho * V * v * pi/4 * d^2 * m/d^2 * 1/bc * 1/m
+    // a = -0.5 * cd(v) * rho * V * v * pi/4 * d^2 * i * 1/m
+    // a = -0.5 * cd(v) * rho * V * v * pi/4 * d^2 * m/d^2 * 1/bc * 1/m
     // a = -pi/8 * cd(v) * V * v * rho * (1/bc)
     // this means constants can be moved and multipled into "y's" of drag table
 
