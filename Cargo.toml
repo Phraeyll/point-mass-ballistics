@@ -5,5 +5,9 @@ edition = "2021"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
-nalgebra = "0.32.5"
 uom = "0.36.0"
+
+[dependencies.nalgebra]
+version = "0.32.5"
+default-features = false
+features = ["std"]
