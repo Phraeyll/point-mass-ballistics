@@ -14,13 +14,9 @@ pub mod g8;
 pub mod gi;
 pub mod gs;
 
-const fn len<const N: usize>(_: [(); N]) -> usize {
-    N
-}
-
 macro_rules! count {
     ($($t:tt),* $(,)?) => {
-        len([$(void!($t)),*])
+        [$(void!($t)),*].len()
     };
 }
 use count;
