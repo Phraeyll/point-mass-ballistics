@@ -113,7 +113,7 @@ impl<const N: usize, X, Y> Table<N, X, Y> {
             return self.y[j];
         }
 
-        // set i after check above to prevent overflow on subtraction when j == 0
+        // Set i after check above to prevent overflow on subtraction when j == 0
         let i = j - 1;
 
         // Bound to highest index
