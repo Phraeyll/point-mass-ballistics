@@ -93,37 +93,18 @@ where
 impl<const N: usize, X, Y> Table<N, X, Y> {
     pub fn lerp(&self, x: X) -> Y
     where
-        X: Copy + PartialOrd + Sub,
-        Y:
-            Copy
-                + Sub
-                + Add<
-                    <<X as Sub>::Output as Mul<
-                        <<Y as Sub>::Output as Div<<X as Sub>::Output>>::Output,
-                    >>::Output,
-                    Output = Y,
-                >,
-        <Y as Sub>::Output: Div<<X as Sub>::Output>,
-        <X as Sub>::Output: Mul<<<Y as Sub>::Output as Div<<X as Sub>::Output>>::Output>,
+        X: Copy + PartialOrd + Sub<Output = X> + Mul<<Y as Div<X>>::Output, Output = Y>,
+        Y: Copy + Sub<Output = Y> + Add<Output = Y> + Div<X>,
     {
         let j = search(&self.x, x);
-
-        // Bound to lowest index
         if j == 0 {
             return self.y[j];
         }
-
-        // Set i after check above to prevent overflow on subtraction when j == 0
         let i = j - 1;
-
-        // Bound to highest index
         if j == N {
             return self.y[i];
         }
-
-        let (x0, y0) = (self.x[i], self.y[i]);
-        let (x1, y1) = (self.x[j], self.y[j]);
-
+        let (x0, y0, x1, y1) = (self.x[i], self.y[i], self.x[j], self.y[j]);
         y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
     }
 }
