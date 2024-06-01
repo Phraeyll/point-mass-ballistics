@@ -122,7 +122,7 @@ where
         // 3.) invariants listed below in variable assignments (left can only grow, right can only shrink)
         // 4.) loop condition maintains invariants; not entered when right <= left
         if *unsafe { slice.get_unchecked(mid) } < x {
-            left = mid + 1; // left >= previous
+            left = mid + 1; // left > previous
         } else {
             right = mid; // right < previous
         }
