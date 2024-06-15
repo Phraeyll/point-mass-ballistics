@@ -3,7 +3,7 @@ pub use crate::{
     units::{ReciprocalLength, Velocity},
 };
 
-use std::ops::{Add, Deref, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
 pub mod g1;
 pub mod g2;
@@ -38,14 +38,7 @@ macro_rules! table {
         };
 
         #[derive(Debug)]
-        pub struct Drag(<Self as Deref>::Target);
-
-        impl Deref for Drag {
-            type Target = Table<{ count!($($x),*) }, Velocity, ReciprocalLength>;
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
+        pub struct Drag(Table<{ count!($($x),*) }, Velocity, ReciprocalLength>);
 
         impl DragInit for Drag {
             fn new(simulation: &Simulation<Self>) -> Self {
@@ -63,6 +56,12 @@ macro_rules! table {
                 })
             }
         }
+
+        impl DragFunction for Drag {
+            fn cd(&self, velocity: Velocity) -> ReciprocalLength {
+                self.0.lerp(velocity)
+            }
+        }
     };
 }
 use table;
@@ -71,15 +70,6 @@ use table;
 pub struct Table<const N: usize, X, Y> {
     x: [X; N],
     y: [Y; N],
-}
-
-impl<const N: usize, T> DragFunction for T
-where
-    T: Deref<Target = Table<N, Velocity, ReciprocalLength>>,
-{
-    fn cd(&self, velocity: Velocity) -> ReciprocalLength {
-        self.lerp(velocity)
-    }
 }
 
 impl<const N: usize, X, Y> Table<N, X, Y> {
