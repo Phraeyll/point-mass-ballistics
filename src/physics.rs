@@ -3,8 +3,8 @@ use crate::{
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
         acceleration, angular_velocity, area::square_inch, length, mass::pound, my_quantity,
-        thermodynamic_temperature::degree_celsius as celsius, typenum::P2, velocity, Acceleration,
-        Angle, AngularVelocity, Area, ArealMassDensity, ConstZero, Length, Mass, MassDensity,
+        thermodynamic_temperature::degree_celsius, typenum::P2, velocity, Acceleration, Angle,
+        AngularVelocity, Area, ArealMassDensity, ConstZero, Length, Mass, MassDensity,
         MolarHeatCapacity, MolarMass, Pressure, Ratio, ReciprocalLength, Velocity,
     },
     vectors::{Cross, MyVector3, Norm},
@@ -192,7 +192,7 @@ impl Atmosphere {
 
     // Temperature in celsius
     fn celsius(&self) -> Numeric {
-        self.temperature.get::<celsius>()
+        self.temperature.get::<degree_celsius>()
     }
 }
 
