@@ -122,18 +122,19 @@ pub trait Norm {
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Cross<&DimVector3<Dr, Ur, V>>
     for DimVector3<Dl, Ul, V>
 where
-    Dl: Dimension,
+    Dl: Dimension<
+        L: Add<Dr::L>,
+        M: Add<Dr::M>,
+        T: Add<Dr::T>,
+        I: Add<Dr::I>,
+        Th: Add<Dr::Th>,
+        N: Add<Dr::N>,
+        J: Add<Dr::J>,
+    >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Conversion<V> + Scalar + Copy + ClosedAdd + ClosedMul + ClosedSub,
-    Dl::L: Add<Dr::L>,
-    Dl::M: Add<Dr::M>,
-    Dl::T: Add<Dr::T>,
-    Dl::I: Add<Dr::I>,
-    Dl::Th: Add<Dr::Th>,
-    Dl::N: Add<Dr::N>,
-    Dl::J: Add<Dr::J>,
 {
     type Output = DimVector3<SumDimension<Dl, Dr>, Ul, V>;
     fn cross(&self, rhs: &DimVector3<Dr, Ur, V>) -> Self::Output {
@@ -146,8 +147,12 @@ where
     D: Dimension,
     U: Units<V>,
     U: Units<<V as SimdComplexField>::SimdRealField>,
-    V: Conversion<V> + Scalar + Copy + SimdComplexField,
-    V::SimdRealField: Num + Conversion<<V as SimdComplexField>::SimdRealField> + Scalar + Copy,
+    V: Conversion<V>
+        + Scalar
+        + Copy
+        + SimdComplexField<
+            SimdRealField: Num + Conversion<<V as SimdComplexField>::SimdRealField> + Scalar + Copy,
+        >,
 {
     type Output = Quantity<D, U, <V as SimdComplexField>::SimdRealField>;
     fn norm(&self) -> Self::Output {

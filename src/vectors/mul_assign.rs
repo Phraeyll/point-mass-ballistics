@@ -27,18 +27,19 @@ where
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<Quantity<Dr, Ur, V>>
     for DimVector3<Dl, Ul, V>
 where
-    Dl: Dimension,
+    Dl: Dimension<
+        L: Add<Dr::L>,
+        M: Add<Dr::M>,
+        T: Add<Dr::T>,
+        I: Add<Dr::I>,
+        Th: Add<Dr::Th>,
+        N: Add<Dr::N>,
+        J: Add<Dr::J>,
+    >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedMul,
-    Dl::L: Add<Dr::L>,
-    Dl::M: Add<Dr::M>,
-    Dl::T: Add<Dr::T>,
-    Dl::I: Add<Dr::I>,
-    Dl::Th: Add<Dr::Th>,
-    Dl::N: Add<Dr::N>,
-    Dl::J: Add<Dr::J>,
 {
     fn mul_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
         MulAssign::mul_assign(&mut self.value, rhs.value)
@@ -47,18 +48,19 @@ where
 impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> DivAssign<Quantity<Dr, Ur, V>>
     for DimVector3<Dl, Ul, V>
 where
-    Dl: Dimension,
+    Dl: Dimension<
+        L: Sub<Dr::L>,
+        M: Sub<Dr::M>,
+        T: Sub<Dr::T>,
+        I: Sub<Dr::I>,
+        Th: Sub<Dr::Th>,
+        N: Sub<Dr::N>,
+        J: Sub<Dr::J>,
+    >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
     V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
-    Dl::L: Sub<Dr::L>,
-    Dl::M: Sub<Dr::M>,
-    Dl::T: Sub<Dr::T>,
-    Dl::I: Sub<Dr::I>,
-    Dl::Th: Sub<Dr::Th>,
-    Dl::N: Sub<Dr::N>,
-    Dl::J: Sub<Dr::J>,
 {
     fn div_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
         DivAssign::div_assign(&mut self.value, rhs.value)
