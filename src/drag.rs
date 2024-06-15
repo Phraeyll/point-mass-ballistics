@@ -37,12 +37,15 @@ macro_rules! table {
             simulation::Simulation,
         };
 
-        const SIZE: usize = count!($($x),*);
-
-        type Tabl = Table<{ SIZE }, Velocity, ReciprocalLength>;
-
         #[derive(Debug)]
-        pub struct Drag(Tabl);
+        pub struct Drag(<Self as Deref>::Target);
+
+        impl Deref for Drag {
+            type Target = Table<{ count!($($x),*) }, Velocity, ReciprocalLength>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
 
         impl DragInit for Drag {
             fn new(simulation: &Simulation<Self>) -> Self {
@@ -58,13 +61,6 @@ macro_rules! table {
                         ),*
                     ],
                 })
-            }
-        }
-
-        impl Deref for Drag {
-            type Target = Tabl;
-            fn deref(&self) -> &Self::Target {
-                &self.0
             }
         }
     };
