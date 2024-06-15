@@ -146,15 +146,9 @@ impl<D: ?Sized, U: ?Sized, V> Norm for DimVector3<D, U, V>
 where
     D: Dimension,
     U: Units<V>,
-    U: Units<<V as SimdComplexField>::SimdRealField>,
-    V: Conversion<V>
-        + Scalar
-        + Copy
-        + SimdComplexField<
-            SimdRealField: Num + Conversion<<V as SimdComplexField>::SimdRealField> + Scalar + Copy,
-        >,
+    V: Conversion<V> + Scalar + Copy + SimdComplexField<SimdRealField = V>,
 {
-    type Output = Quantity<D, U, <V as SimdComplexField>::SimdRealField>;
+    type Output = Quantity<D, U, V>;
     fn norm(&self) -> Self::Output {
         quantity!(self.value.norm())
     }
