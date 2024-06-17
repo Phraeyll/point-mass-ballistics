@@ -8,6 +8,6 @@ authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 uom = "0.36.0"
 
 [dependencies.nalgebra]
-version = "0.32.5"
+version = "0.32.6"
 default-features = false
 features = ["std"]
