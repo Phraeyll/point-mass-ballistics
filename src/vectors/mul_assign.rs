@@ -4,11 +4,11 @@ use crate::units::{Conversion, Dimension, Num, Quantity, Units};
 
 use std::ops::{Add, DivAssign, MulAssign, Sub};
 
-use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
+use nalgebra::{base::Scalar, ClosedDivAssign, ClosedMulAssign};
 
 impl<D: ?Sized, U: ?Sized, V> MulAssign<V> for DimVector3<D, U, V>
 where
-    V: Scalar + Copy + ClosedMul,
+    V: Scalar + Copy + ClosedMulAssign,
 {
     fn mul_assign(&mut self, rhs: V) {
         MulAssign::mul_assign(&mut self.value, rhs)
@@ -17,7 +17,7 @@ where
 
 impl<D: ?Sized, U: ?Sized, V> DivAssign<V> for DimVector3<D, U, V>
 where
-    V: Scalar + Copy + ClosedDiv,
+    V: Scalar + Copy + ClosedDivAssign,
 {
     fn div_assign(&mut self, rhs: V) {
         DivAssign::div_assign(&mut self.value, rhs)
@@ -39,7 +39,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedMul,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedMulAssign,
 {
     fn mul_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
         MulAssign::mul_assign(&mut self.value, rhs.value)
@@ -60,7 +60,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDivAssign,
 {
     fn div_assign(&mut self, rhs: Quantity<Dr, Ur, V>) {
         DivAssign::div_assign(&mut self.value, rhs.value)

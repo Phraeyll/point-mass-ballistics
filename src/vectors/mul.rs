@@ -4,11 +4,11 @@ use crate::units::{Conversion, Dimension, Num, Quantity, Units};
 
 use std::ops::{Add, Div, Mul, Sub};
 
-use nalgebra::{base::Scalar, ClosedDiv, ClosedMul};
+use nalgebra::{base::Scalar, ClosedDivAssign, ClosedMulAssign};
 
 impl<D: ?Sized, U: ?Sized, V> Mul<V> for DimVector3<D, U, V>
 where
-    V: Scalar + Copy + ClosedMul,
+    V: Scalar + Copy + ClosedMulAssign,
 {
     type Output = DimVector3<D, U, V>;
     fn mul(self, rhs: V) -> Self::Output {
@@ -18,7 +18,7 @@ where
 
 impl<D: ?Sized, U: ?Sized, V> Div<V> for DimVector3<D, U, V>
 where
-    V: Scalar + Copy + ClosedDiv,
+    V: Scalar + Copy + ClosedDivAssign,
 {
     type Output = DimVector3<D, U, V>;
     fn div(self, rhs: V) -> Self::Output {
@@ -41,7 +41,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedMul,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedMulAssign,
 {
     type Output = DimVector3<SumDimension<Dl, Dr>, Ul, V>;
     fn mul(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {
@@ -64,7 +64,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Num + Conversion<V> + Scalar + Copy + ClosedDiv,
+    V: Num + Conversion<V> + Scalar + Copy + ClosedDivAssign,
 {
     type Output = DimVector3<DiffDimension<Dl, Dr>, Ul, V>;
     fn div(self, rhs: Quantity<Dr, Ur, V>) -> Self::Output {

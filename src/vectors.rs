@@ -11,7 +11,8 @@ use crate::{
 use std::{fmt, marker::PhantomData, ops::Add};
 
 use nalgebra::{
-    base::Scalar, ClosedAdd, ClosedMul, ClosedSub, Rotation3, SimdComplexField, Vector3,
+    base::Scalar, ClosedAddAssign, ClosedMulAssign, ClosedSubAssign, Rotation3, SimdComplexField,
+    Vector3,
 };
 
 mod add;
@@ -134,7 +135,7 @@ where
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
-    V: Conversion<V> + Scalar + Copy + ClosedAdd + ClosedMul + ClosedSub,
+    V: Conversion<V> + Scalar + Copy + ClosedAddAssign + ClosedMulAssign + ClosedSubAssign,
 {
     type Output = DimVector3<SumDimension<Dl, Dr>, Ul, V>;
     fn cross(&self, rhs: &DimVector3<Dr, Ur, V>) -> Self::Output {
