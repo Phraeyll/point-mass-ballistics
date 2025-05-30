@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["Phraeyll <Phraeyll@users.noreply.github.com>"]
 
 [dependencies]
-uom = "0.36.0"
+uom = "0.37.0"
 
 [dependencies.nalgebra]
 version = "0.33.2"
