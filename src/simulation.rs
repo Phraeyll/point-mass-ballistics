@@ -1,13 +1,13 @@
 use crate::{
+    Numeric,
     consts::{FRAC_PI_2, PI},
     error::{Error, Result},
     physics::DragInit,
     units::{
+        Angle, ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
         angle::radian, length::meter, mass::kilogram, pressure::pascal,
-        thermodynamic_temperature::degree_celsius, time::second, velocity::meter_per_second, Angle,
-        ConstZero, Length, Mass, Pressure, ThermodynamicTemperature, Time, Velocity,
+        thermodynamic_temperature::degree_celsius, time::second, velocity::meter_per_second,
     },
-    Numeric,
 };
 
 #[derive(Debug)]

@@ -1,18 +1,18 @@
 use crate::{
+    Numeric,
     units::{
+        Angle, ConstZero, Conversion, Dimension, ISQ, MyUnits, Num, Quantity, Units,
         angle::radian,
         quantity,
         typenum::operator_aliases::{Diff, Sum},
-        Angle, ConstZero, Conversion, Dimension, MyUnits, Num, Quantity, Units, ISQ,
     },
-    Numeric,
 };
 
 use std::{fmt, marker::PhantomData, ops::Add};
 
 use nalgebra::{
-    base::Scalar, ClosedAddAssign, ClosedMulAssign, ClosedSubAssign, Rotation3, SimdComplexField,
-    Vector3,
+    ClosedAddAssign, ClosedMulAssign, ClosedSubAssign, Rotation3, SimdComplexField, Vector3,
+    base::Scalar,
 };
 
 mod add;
@@ -124,14 +124,14 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> Cross<&DimVector3<Dr, Ur
     for DimVector3<Dl, Ul, V>
 where
     Dl: Dimension<
-        L: Add<Dr::L>,
-        M: Add<Dr::M>,
-        T: Add<Dr::T>,
-        I: Add<Dr::I>,
-        Th: Add<Dr::Th>,
-        N: Add<Dr::N>,
-        J: Add<Dr::J>,
-    >,
+            L: Add<Dr::L>,
+            M: Add<Dr::M>,
+            T: Add<Dr::T>,
+            I: Add<Dr::I>,
+            Th: Add<Dr::Th>,
+            N: Add<Dr::N>,
+            J: Add<Dr::J>,
+        >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,

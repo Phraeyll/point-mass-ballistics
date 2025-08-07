@@ -1,6 +1,6 @@
 use crate::{
-    units::{Angle, ThermodynamicTemperature, Time},
     Numeric,
+    units::{Angle, ThermodynamicTemperature, Time},
 };
 
 use std::{error, fmt, result};

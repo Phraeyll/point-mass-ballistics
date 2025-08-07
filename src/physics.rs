@@ -1,14 +1,14 @@
 use crate::{
+    Numeric,
     consts::PI,
     simulation::{Atmosphere, Projectile, Scope, Shooter, Simulation, Wind},
     units::{
+        Acceleration, Angle, AngularVelocity, Area, ArealMassDensity, ConstZero, Length, Mass,
+        MassDensity, MolarHeatCapacity, MolarMass, Pressure, Ratio, ReciprocalLength, Velocity,
         acceleration, angular_velocity, area::square_inch, length, mass::pound, my_quantity,
-        thermodynamic_temperature::degree_celsius, typenum::P2, velocity, Acceleration, Angle,
-        AngularVelocity, Area, ArealMassDensity, ConstZero, Length, Mass, MassDensity,
-        MolarHeatCapacity, MolarMass, Pressure, Ratio, ReciprocalLength, Velocity,
+        thermodynamic_temperature::degree_celsius, typenum::P2, velocity,
     },
     vectors::{Cross, MyVector3, Norm},
-    Numeric,
 };
 
 pub trait DragFunction {

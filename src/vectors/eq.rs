@@ -2,7 +2,7 @@ use super::DimVector3;
 
 use std::cmp::{Ordering, PartialEq, PartialOrd};
 
-use nalgebra::{base::Scalar, ClosedAddAssign};
+use nalgebra::{ClosedAddAssign, base::Scalar};
 
 impl<D: ?Sized, U: ?Sized, V> PartialEq<DimVector3<D, U, V>> for DimVector3<D, U, V>
 where

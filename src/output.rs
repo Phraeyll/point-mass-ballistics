@@ -2,8 +2,8 @@ use crate::{
     physics::DragFunction,
     simulation::Simulation,
     units::{
-        acceleration, length, length::meter, typenum::P2, velocity, Acceleration, Angle, ConstZero,
-        Energy, Length, Ratio, Time, Velocity,
+        Acceleration, Angle, ConstZero, Energy, Length, Ratio, Time, Velocity, acceleration,
+        length, length::meter, typenum::P2, velocity,
     },
     vectors::{MyVector3, Norm},
 };

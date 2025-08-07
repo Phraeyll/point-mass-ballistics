@@ -4,7 +4,7 @@ use crate::units::{Conversion, Dimension, Num, Quantity, Units};
 
 use std::ops::{Add, DivAssign, MulAssign, Sub};
 
-use nalgebra::{base::Scalar, ClosedDivAssign, ClosedMulAssign};
+use nalgebra::{ClosedDivAssign, ClosedMulAssign, base::Scalar};
 
 impl<D: ?Sized, U: ?Sized, V> MulAssign<V> for DimVector3<D, U, V>
 where
@@ -28,14 +28,14 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> MulAssign<Quantity<Dr, U
     for DimVector3<Dl, Ul, V>
 where
     Dl: Dimension<
-        L: Add<Dr::L>,
-        M: Add<Dr::M>,
-        T: Add<Dr::T>,
-        I: Add<Dr::I>,
-        Th: Add<Dr::Th>,
-        N: Add<Dr::N>,
-        J: Add<Dr::J>,
-    >,
+            L: Add<Dr::L>,
+            M: Add<Dr::M>,
+            T: Add<Dr::T>,
+            I: Add<Dr::I>,
+            Th: Add<Dr::Th>,
+            N: Add<Dr::N>,
+            J: Add<Dr::J>,
+        >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,
@@ -49,14 +49,14 @@ impl<Dl: ?Sized, Dr: ?Sized, Ul: ?Sized, Ur: ?Sized, V> DivAssign<Quantity<Dr, U
     for DimVector3<Dl, Ul, V>
 where
     Dl: Dimension<
-        L: Sub<Dr::L>,
-        M: Sub<Dr::M>,
-        T: Sub<Dr::T>,
-        I: Sub<Dr::I>,
-        Th: Sub<Dr::Th>,
-        N: Sub<Dr::N>,
-        J: Sub<Dr::J>,
-    >,
+            L: Sub<Dr::L>,
+            M: Sub<Dr::M>,
+            T: Sub<Dr::T>,
+            I: Sub<Dr::I>,
+            Th: Sub<Dr::Th>,
+            N: Sub<Dr::N>,
+            J: Sub<Dr::J>,
+        >,
     Dr: Dimension,
     Ul: Units<V>,
     Ur: Units<V>,

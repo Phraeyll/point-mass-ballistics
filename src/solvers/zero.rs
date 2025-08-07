@@ -6,7 +6,7 @@ use crate::{
     physics::DragFunction,
     simulation::Scope,
     simulation::Simulation,
-    units::{angle, my_quantity, Angle, ConstZero, Length, MyQuantity},
+    units::{Angle, ConstZero, Length, MyQuantity, angle, my_quantity},
 };
 
 // This angle will trace the longest possible trajectory for a projectile (45 degrees)

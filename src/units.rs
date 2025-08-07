@@ -12,9 +12,10 @@ pub use uom::si::{
 };
 
 pub(crate) use uom::{
+    ConstZero, Conversion,
     num_traits::Num,
-    si::{Dimension, Quantity, Units, ISQ, SI},
-    typenum, ConstZero, Conversion,
+    si::{Dimension, ISQ, Quantity, SI, Units},
+    typenum,
 };
 
 pub(crate) type MyUnits = SI<Numeric>;

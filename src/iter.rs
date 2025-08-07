@@ -2,7 +2,7 @@ use crate::{
     output::Packet,
     physics::DragFunction,
     simulation::Simulation,
-    units::{length, typenum::P2, velocity, ConstZero, Time},
+    units::{ConstZero, Time, length, typenum::P2, velocity},
     vectors::MyVector3,
 };
 

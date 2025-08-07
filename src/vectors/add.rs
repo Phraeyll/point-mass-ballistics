@@ -2,7 +2,7 @@ use super::DimVector3;
 
 use std::ops::{Add, Sub};
 
-use nalgebra::{base::Scalar, ClosedAddAssign, ClosedSubAssign};
+use nalgebra::{ClosedAddAssign, ClosedSubAssign, base::Scalar};
 
 impl<D: ?Sized, U: ?Sized, V> Add<DimVector3<D, U, V>> for DimVector3<D, U, V>
 where
